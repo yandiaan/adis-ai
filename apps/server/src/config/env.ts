@@ -3,12 +3,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),
-
-  DB_HOST: z.string().default('localhost'),
-  DB_PORT: z.coerce.number().default(5432),
-  DB_NAME: z.string(),
-  DB_USER: z.string(),
-  DB_PASS: z.string(),
+  DASHSCOPE_API_KEY: z.string().min(1, 'DASHSCOPE_API_KEY is required'),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -13,8 +13,9 @@
  */
 
 import OpenAI from 'openai';
+import { env } from '@/config/env';
 
-const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY || '';
+const DASHSCOPE_API_KEY = env.DASHSCOPE_API_KEY;
 const DASHSCOPE_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const DASHSCOPE_API_BASE = 'https://dashscope-intl.aliyuncs.com/api/v1';
 
