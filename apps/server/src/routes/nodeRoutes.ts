@@ -1,6 +1,13 @@
 import { Router, type Router as RouterType } from 'express';
 import { z } from 'zod';
-import { generateText, generateImage, generateVideo, pollTask } from '@/services/ai-service';
+import {
+  generateText,
+  generateImage,
+  editImage,
+  generateVideo,
+  generateVideoFromImage,
+  pollTask,
+} from '@/services/ai-service';
 
 const router: RouterType = Router();
 
@@ -100,8 +107,8 @@ const imageGeneratorSchema = z.object({
       'landscape-1024x768',
       'story-576x1024',
     ]),
-    steps: z.number().min(10).max(50),
     seed: z.number().nullable(),
+    prompt_extend: z.boolean().optional(),
   }),
   inputs: z.object({
     prompt: z
@@ -140,30 +147,55 @@ router.post('/image-generator/run', async (req, res, next) => {
       return;
     }
 
-    // DashScope returns a task ID — poll until completion
-    const taskId = await generateImage({
-      prompt: promptData.prompt,
-      negative_prompt: promptData.negativePrompt,
-      size: dimensionMap[config.dimensions] || '1024*1024',
-      steps: config.steps,
-      seed: config.seed ?? undefined,
-      ref_image_url: (inputs.image?.data as { url: string })?.url,
-    });
+    const size = dimensionMap[config.dimensions] || '1024*1024';
 
-    const urls = await pollTask(taskId);
-    const imageUrl = urls[0];
-    if (!imageUrl) throw new Error('No image generated');
+    if (config.mode === 'img2img' && inputs.image?.data) {
+      // Image editing mode — use Qwen-Image-Edit (synchronous)
+      const urls = await editImage({
+        images: [(inputs.image.data as { url: string }).url],
+        text: promptData.prompt,
+        size,
+        negative_prompt: promptData.negativePrompt,
+        prompt_extend: config.prompt_extend,
+        seed: config.seed ?? undefined,
+      });
 
-    const [w, h] = (dimensionMap[config.dimensions] || '1024*1024').split('*').map(Number);
+      const imageUrl = urls[0];
+      if (!imageUrl) throw new Error('No image generated');
 
-    res.json({
-      output: {
-        type: 'image',
-        data: { url: imageUrl, width: w, height: h },
-        timestamp: Date.now(),
-      },
-      duration_ms: Date.now() - startTime,
-    });
+      const [w, h] = size.split('*').map(Number);
+      res.json({
+        output: {
+          type: 'image',
+          data: { url: imageUrl, width: w, height: h },
+          timestamp: Date.now(),
+        },
+        duration_ms: Date.now() - startTime,
+      });
+    } else {
+      // Text-to-image mode — async task
+      const taskId = await generateImage({
+        prompt: promptData.prompt,
+        negative_prompt: promptData.negativePrompt,
+        size,
+        prompt_extend: config.prompt_extend,
+        seed: config.seed ?? undefined,
+      });
+
+      const urls = await pollTask(taskId);
+      const imageUrl = urls[0];
+      if (!imageUrl) throw new Error('No image generated');
+
+      const [w, h] = size.split('*').map(Number);
+      res.json({
+        output: {
+          type: 'image',
+          data: { url: imageUrl, width: w, height: h },
+          timestamp: Date.now(),
+        },
+        duration_ms: Date.now() - startTime,
+      });
+    }
   } catch (err) {
     next(err);
   }
@@ -173,9 +205,10 @@ router.post('/image-generator/run', async (req, res, next) => {
 const videoGeneratorSchema = z.object({
   config: z.object({
     mode: z.enum(['text2video', 'img2video']),
-    duration: z.enum(['3s', '5s', '10s']),
-    resolution: z.enum(['480p', '720p']),
-    fps: z.union([z.literal(24), z.literal(30)]),
+    duration: z.number().int().min(2).max(15),
+    resolution: z.enum(['480P', '720P', '1080P']),
+    shot_type: z.enum(['single', 'multi']).optional(),
+    prompt_extend: z.boolean().optional(),
   }),
   inputs: z.object({
     prompt: z
@@ -191,8 +224,20 @@ const videoGeneratorSchema = z.object({
         data: z.object({ url: z.string() }),
       })
       .optional(),
+    audio: z
+      .object({
+        type: z.literal('audio'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
   }),
 });
+
+const resolutionToSizeMap: Record<string, string> = {
+  '480P': '854*480',
+  '720P': '1280*720',
+  '1080P': '1920*1080',
+};
 
 router.post('/video-generator/run', async (req, res, next) => {
   try {
@@ -207,28 +252,42 @@ router.post('/video-generator/run', async (req, res, next) => {
       return;
     }
 
-    const durationNum = config.duration.replace('s', '');
+    const audioUrl = (inputs.audio?.data as { url: string })?.url;
+    let taskId: string;
 
-    const taskId = await generateVideo({
-      prompt: promptData.prompt,
-      negative_prompt: promptData.negativePrompt,
-      duration: durationNum,
-      resolution: config.resolution,
-      fps: config.fps,
-      ref_image_url: (inputs.image?.data as { url: string })?.url,
-    });
+    if (config.mode === 'img2video' && inputs.image?.data) {
+      // Image-to-video: uses resolution param (e.g., "720P")
+      taskId = await generateVideoFromImage({
+        prompt: promptData.prompt,
+        img_url: (inputs.image.data as { url: string }).url,
+        resolution: config.resolution,
+        duration: config.duration,
+        shot_type: config.shot_type,
+        prompt_extend: config.prompt_extend,
+        audio_url: audioUrl,
+      });
+    } else {
+      // Text-to-video: uses size param (e.g., "1280*720")
+      taskId = await generateVideo({
+        prompt: promptData.prompt,
+        size: resolutionToSizeMap[config.resolution] || '1280*720',
+        duration: config.duration,
+        shot_type: config.shot_type,
+        prompt_extend: config.prompt_extend,
+        audio_url: audioUrl,
+      });
+    }
 
     const urls = await pollTask(taskId, 120, 5000); // Videos take longer
     const videoUrl = urls[0];
     if (!videoUrl) throw new Error('No video generated');
 
-    const durationSec = parseInt(durationNum, 10);
-    const [w, h] = config.resolution === '720p' ? [1280, 720] : [854, 480];
+    const [w, h] = (resolutionToSizeMap[config.resolution] || '1280*720').split('*').map(Number);
 
     res.json({
       output: {
         type: 'video',
-        data: { url: videoUrl, duration: durationSec, width: w, height: h },
+        data: { url: videoUrl, duration: config.duration, width: w, height: h },
         timestamp: Date.now(),
       },
       duration_ms: Date.now() - startTime,

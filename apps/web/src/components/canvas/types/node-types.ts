@@ -110,7 +110,7 @@ export type ImageDimension =
 export interface ImageGeneratorConfig {
   mode: ImageGenMode;
   dimensions: ImageDimension;
-  steps: number;
+  prompt_extend?: boolean;
   seed: number | null;
 }
 
@@ -119,14 +119,14 @@ export interface ImageGeneratorData extends BaseNodeData {
 }
 
 export type VideoGenMode = 'text2video' | 'img2video';
-export type VideoDuration = '3s' | '5s' | '10s';
-export type VideoResolution = '480p' | '720p';
+export type VideoResolution = '480P' | '720P' | '1080P';
 
 export interface VideoGeneratorConfig {
   mode: VideoGenMode;
-  duration: VideoDuration;
+  duration: number;
   resolution: VideoResolution;
-  fps: 24 | 30;
+  shot_type?: 'single' | 'multi';
+  prompt_extend?: boolean;
 }
 
 export interface VideoGeneratorData extends BaseNodeData {
@@ -325,15 +325,16 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
   imageGenerator: {
     mode: 'text2img',
     dimensions: 'square-1024',
-    steps: 30,
+    prompt_extend: true,
     seed: null,
   } satisfies ImageGeneratorConfig,
 
   videoGenerator: {
     mode: 'text2video',
-    duration: '5s',
-    resolution: '720p',
-    fps: 24,
+    duration: 5,
+    resolution: '720P',
+    shot_type: 'single',
+    prompt_extend: true,
   } satisfies VideoGeneratorConfig,
 
   textOverlay: {

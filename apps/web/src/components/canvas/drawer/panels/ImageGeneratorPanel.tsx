@@ -69,20 +69,21 @@ export function ImageGeneratorPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <div>
-          <div className="flex justify-between items-center">
-            <label className="block text-white/70 text-xs font-medium mb-2">Steps</label>
-            <span className="text-white/60 text-[13px] font-medium">{config.steps}</span>
-          </div>
-          <input
-            type="range"
-            min="10"
-            max="50"
-            step="5"
-            value={config.steps}
-            onChange={(e) => updateConfig({ steps: Number(e.target.value) })}
-            className="w-full h-2 rounded bg-white/10 outline-none cursor-pointer"
-          />
+        <label className="block text-white/70 text-xs font-medium mb-2">Prompt Extend</label>
+        <div className="flex gap-2">
+          {([true, false] as const).map((val) => (
+            <button
+              key={String(val)}
+              onClick={() => updateConfig({ prompt_extend: val })}
+              className={`motion-lift motion-press focus-ring-orange flex-1 p-2.5 rounded-xl border cursor-pointer text-white text-xs transition-colors ${
+                (config.prompt_extend ?? true) === val
+                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                  : 'border-white/10 bg-white/5 hover:bg-white/7'
+              }`}
+            >
+              {val ? 'On' : 'Off'}
+            </button>
+          ))}
         </div>
       </div>
 

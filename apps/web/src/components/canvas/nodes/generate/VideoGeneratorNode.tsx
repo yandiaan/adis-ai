@@ -16,7 +16,7 @@ export function VideoGeneratorNode({ data, selected }: NodeProps<VideoGeneratorD
     >
       <div className="flex items-center gap-1.5 text-[11px] text-white/50">
         <span className="inline-flex items-center gap-1.5 text-white/30">
-          <Video size={12} className="text-white/35" /> Wan · {config.fps}fps
+          <Video size={12} className="text-white/35" /> Wan · {config.duration}s · {config.resolution}
         </span>
       </div>
     </CompactNode>

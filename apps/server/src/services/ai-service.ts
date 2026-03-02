@@ -1,6 +1,7 @@
 /**
  * AI service facade — delegates AI operations to DashScope (Alibaba Model Studio).
- * Uses Qwen for text generation and Wan for image/video generation.
+ * Uses Qwen for text generation, Qwen-Image/Wan for image generation,
+ * Qwen-Image-Edit for image editing, and Wan for video generation.
  */
 
 import * as dashscope from '@/services/dashscope';
@@ -18,7 +19,7 @@ export async function generateText(params: {
 }
 
 /**
- * Generate image using Wan model.
+ * Generate image using Qwen-Image or Wan model.
  * Returns a task ID for polling.
  */
 export async function generateImage(params: {
@@ -27,27 +28,64 @@ export async function generateImage(params: {
   negative_prompt?: string;
   size?: string;
   n?: number;
-  steps?: number;
+  prompt_extend?: boolean;
+  watermark?: boolean;
   seed?: number;
-  ref_image_url?: string;
 }): Promise<string> {
   return dashscope.generateImage(params);
 }
 
 /**
- * Generate video using Wan model.
+ * Edit images using Qwen-Image-Edit model.
+ * Returns output image URLs directly (synchronous).
+ */
+export async function editImage(params: {
+  model?: string;
+  images: string[];
+  text: string;
+  n?: number;
+  size?: string;
+  negative_prompt?: string;
+  prompt_extend?: boolean;
+  watermark?: boolean;
+  seed?: number;
+}): Promise<string[]> {
+  return dashscope.editImage(params);
+}
+
+/**
+ * Generate video from text using Wan model.
  * Returns a task ID for polling.
  */
 export async function generateVideo(params: {
   model?: string;
   prompt: string;
-  negative_prompt?: string;
-  duration?: string;
-  resolution?: string;
-  fps?: number;
-  ref_image_url?: string;
+  size?: string;
+  duration?: number;
+  shot_type?: 'single' | 'multi';
+  prompt_extend?: boolean;
+  watermark?: boolean;
+  audio_url?: string;
 }): Promise<string> {
   return dashscope.generateVideo(params);
+}
+
+/**
+ * Generate video from image using Wan i2v model.
+ * Returns a task ID for polling.
+ */
+export async function generateVideoFromImage(params: {
+  model?: string;
+  prompt: string;
+  img_url: string;
+  resolution?: string;
+  duration?: number;
+  shot_type?: 'single' | 'multi';
+  prompt_extend?: boolean;
+  watermark?: boolean;
+  audio_url?: string;
+}): Promise<string> {
+  return dashscope.generateVideoFromImage(params);
 }
 
 /**

@@ -1,14 +1,13 @@
 import { useReactFlow } from '@xyflow/react';
 import { ArrowRight, Image, Type, Video } from 'lucide-react';
-import type { VideoGeneratorData, VideoDuration, VideoResolution } from '../../types/node-types';
+import type { VideoGeneratorData, VideoResolution } from '../../types/node-types';
 
 type Props = {
   nodeId: string;
   data: VideoGeneratorData;
 };
 
-const DURATIONS: VideoDuration[] = ['3s', '5s', '10s'];
-const RESOLUTIONS: VideoResolution[] = ['480p', '720p'];
+const RESOLUTIONS: VideoResolution[] = ['480P', '720P', '1080P'];
 
 export function VideoGeneratorPanel({ nodeId, data }: Props) {
   const { updateNodeData } = useReactFlow();
@@ -45,21 +44,20 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Duration</label>
-        <div className="flex gap-2">
-          {DURATIONS.map((dur) => (
-            <button
-              key={dur}
-              onClick={() => updateConfig({ duration: dur })}
-              className={`motion-lift motion-press focus-ring-orange flex-1 p-2.5 rounded-xl border cursor-pointer text-white text-[13px] transition-colors ${
-                config.duration === dur
-                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
-                  : 'border-white/10 bg-white/5 hover:bg-white/7'
-              }`}
-            >
-              {dur}
-            </button>
-          ))}
+        <div>
+          <div className="flex justify-between items-center">
+            <label className="block text-white/70 text-xs font-medium mb-2">Duration</label>
+            <span className="text-white/60 text-[13px] font-medium">{config.duration}s</span>
+          </div>
+          <input
+            type="range"
+            min="2"
+            max="15"
+            step="1"
+            value={config.duration}
+            onChange={(e) => updateConfig({ duration: Number(e.target.value) })}
+            className="w-full h-2 rounded bg-white/10 outline-none cursor-pointer"
+          />
         </div>
       </div>
 
@@ -83,19 +81,38 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">FPS</label>
+        <label className="block text-white/70 text-xs font-medium mb-2">Shot Type</label>
         <div className="flex gap-2">
-          {([24, 30] as const).map((fps) => (
+          {(['single', 'multi'] as const).map((type) => (
             <button
-              key={fps}
-              onClick={() => updateConfig({ fps })}
+              key={type}
+              onClick={() => updateConfig({ shot_type: type })}
               className={`motion-lift motion-press focus-ring-orange flex-1 p-2.5 rounded-xl border cursor-pointer text-white text-[13px] transition-colors ${
-                config.fps === fps
+                (config.shot_type ?? 'single') === type
                   ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
                   : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
-              {fps} fps
+              {type === 'single' ? 'Single' : 'Multi-shot'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <label className="block text-white/70 text-xs font-medium mb-2">Prompt Extend</label>
+        <div className="flex gap-2">
+          {([true, false] as const).map((val) => (
+            <button
+              key={String(val)}
+              onClick={() => updateConfig({ prompt_extend: val })}
+              className={`motion-lift motion-press focus-ring-orange flex-1 p-2.5 rounded-xl border cursor-pointer text-white text-xs transition-colors ${
+                (config.prompt_extend ?? true) === val
+                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                  : 'border-white/10 bg-white/5 hover:bg-white/7'
+              }`}
+            >
+              {val ? 'On' : 'Off'}
             </button>
           ))}
         </div>

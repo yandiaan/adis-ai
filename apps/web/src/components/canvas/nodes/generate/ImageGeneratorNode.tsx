@@ -24,7 +24,7 @@ export function ImageGeneratorNode({ data, selected }: NodeProps<ImageGeneratorD
     >
       <div className="flex items-center gap-1.5 text-[11px] text-white/50">
         <span className="inline-flex items-center gap-1.5 text-white/30">
-          <Zap size={12} className="text-white/35" /> Wan · {config.steps} steps
+          <Zap size={12} className="text-white/35" /> Wan · {config.dimensions}
         </span>
       </div>
     </CompactNode>

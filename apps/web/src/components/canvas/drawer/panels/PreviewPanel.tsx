@@ -1,6 +1,8 @@
 import { useReactFlow } from '@xyflow/react';
 
 import type { PreviewData, PreviewPreset, FitMode } from '../../types/node-types';
+import { useExecutionContext } from '../../execution/ExecutionContext';
+import type { ImageData, VideoData } from '../../types/port-types';
 
 type Props = {
   nodeId: string;
@@ -22,6 +24,14 @@ export function PreviewPanel({ nodeId, data }: Props) {
   const { updateNodeData } = useReactFlow();
   const config = data.config;
 
+  const { getNodeState } = useExecutionContext();
+  const execState = getNodeState(nodeId);
+  const output = execState?.output ?? null;
+
+  const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
+  const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;
+  const mediaUrl = imageUrl ?? videoUrl;
+
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
   };
@@ -37,6 +47,34 @@ export function PreviewPanel({ nodeId, data }: Props) {
 
   return (
     <>
+      {/* Live preview */}
+      {mediaUrl && (
+        <div className="flex flex-col gap-3">
+          <label className="block text-white/70 text-xs font-medium mb-2">Preview</label>
+          <div
+            className="w-full rounded-xl overflow-hidden border border-white/10 flex items-center justify-center"
+            style={{ backgroundColor: config.backgroundColor, maxHeight: 220 }}
+          >
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt="Output preview"
+                className="w-full max-h-[220px]"
+                style={{ objectFit: config.fit }}
+              />
+            ) : (
+              <video
+                src={videoUrl!}
+                className="w-full max-h-[220px]"
+                style={{ objectFit: config.fit }}
+                controls
+                playsInline
+              />
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         <label className="block text-white/70 text-xs font-medium mb-2">Platform Preset</label>
         <div className="grid grid-cols-3 gap-1.5">
