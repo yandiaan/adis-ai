@@ -18,7 +18,7 @@ import { ExecutionContext } from './execution/ExecutionContext';
 import { runPipeline } from './execution/runner';
 import { FlowToolbar } from './FlowToolbar';
 import { nodeTypes } from './nodes';
-import { NodeDetailDrawer } from './drawer/NodeDetailDrawer';
+import { AnimatedNodeDetailDrawer } from './drawer/AnimatedNodeDetailDrawer';
 import type { CustomNodeData } from './types/node-types';
 
 export function FlowCanvasInner() {
@@ -88,7 +88,7 @@ export function FlowCanvasInner() {
         </ReactFlow>
 
         {/* Node Detail Drawer */}
-        <NodeDetailDrawer
+        <AnimatedNodeDetailDrawer
           selectedNode={currentSelectedNode as Node<CustomNodeData> | null}
           onClose={handleCloseDrawer}
         />
