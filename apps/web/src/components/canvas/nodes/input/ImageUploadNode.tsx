@@ -1,10 +1,21 @@
 import type { NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
-import type { ImageUploadData } from '../../types/node-types';
+import type { ImageUploadNode } from '../../types/node-types';
 
-export function ImageUploadNode({ data, selected }: NodeProps<ImageUploadData>) {
+const SERVER_URL = 'http://localhost:3000';
+
+function getImageUrl(previewUrl: string | null): string | null {
+  if (!previewUrl) return null;
+  if (previewUrl.startsWith('/uploads/')) {
+    return `${SERVER_URL}${previewUrl}`;
+  }
+  return previewUrl;
+}
+
+export function ImageUploadNode({ data, selected }: NodeProps<ImageUploadNode>) {
   const { config } = data;
   const hasImage = config.previewUrl !== null;
+  const imageUrl = getImageUrl(config.previewUrl);
 
   return (
     <CompactNode
@@ -14,9 +25,9 @@ export function ImageUploadNode({ data, selected }: NodeProps<ImageUploadData>) 
       subtitle={hasImage ? `${config.fileName} (${config.fileSizeMB?.toFixed(1)}MB)` : undefined}
       selected={selected}
     >
-      {hasImage ? (
+      {hasImage && imageUrl ? (
         <img
-          src={config.previewUrl!}
+          src={imageUrl}
           alt="Upload preview"
           className="w-full h-[60px] object-cover rounded-md"
         />

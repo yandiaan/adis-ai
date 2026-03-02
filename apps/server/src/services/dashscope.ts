@@ -14,10 +14,57 @@
 
 import OpenAI from 'openai';
 import { env } from '@/config/env';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 const DASHSCOPE_API_KEY = env.DASHSCOPE_API_KEY;
 const DASHSCOPE_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const DASHSCOPE_API_BASE = 'https://dashscope-intl.aliyuncs.com/api/v1';
+
+/**
+ * Convert image URL to Base64 data URL if it's a local file.
+ * DashScope API requires either a public URL (http/https) or Base64 data URL.
+ */
+async function convertImageToBase64(imageUrl: string): Promise<string> {
+  console.log('[convertImageToBase64] Original URL:', imageUrl);
+
+  // If it's already a public URL or data URL, return as-is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('data:')) {
+    console.log('[convertImageToBase64] Using public URL as-is');
+    return imageUrl;
+  }
+
+  // Handle local file paths (e.g., /uploads/filename.jpg or uploads/filename.jpg)
+  let fileName: string | null = null;
+  if (imageUrl.startsWith('/uploads/')) {
+    fileName = imageUrl.replace('/uploads/', '');
+  } else if (imageUrl.startsWith('uploads/')) {
+    fileName = imageUrl.replace('uploads/', '');
+  } else if (!imageUrl.includes('://') && !imageUrl.startsWith('/')) {
+    // Assume it's just a filename in the uploads folder
+    fileName = imageUrl;
+  }
+
+  if (fileName) {
+    const filePath = join(process.cwd(), 'uploads', fileName);
+    console.log('[convertImageToBase64] Reading file:', filePath);
+    try {
+      const buffer = await readFile(filePath);
+      const ext = fileName.split('.').pop()?.toLowerCase() || 'png';
+      const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+      const base64Url = `data:${mimeType};base64,${buffer.toString('base64')}`;
+      console.log('[convertImageToBase64] Converted to base64, length:', base64Url.length);
+      return base64Url;
+    } catch (err) {
+      console.error('[convertImageToBase64] Failed to read file:', err);
+      throw new Error(`Failed to read image file: ${fileName}`);
+    }
+  }
+
+  // Unknown format, throw error
+  console.error('[convertImageToBase64] Unknown image URL format:', imageUrl);
+  throw new Error(`Invalid image URL format. Must be http/https URL, data URL, or /uploads/ path. Got: ${imageUrl}`);
+}
 
 function createClient(): OpenAI {
   if (!DASHSCOPE_API_KEY) {
@@ -152,7 +199,7 @@ function getAuthHeaders() {
 export async function generateText(params: TextGenerationParams): Promise<string> {
   const client = createClient();
   const completion = await client.chat.completions.create({
-    model: params.model || 'qwen-plus',
+    model: params.model || 'qwen2.5-vl-3b-instruct',
     messages: params.messages,
     temperature: params.temperature ?? 0.7,
     max_tokens: params.max_tokens ?? 1500,
@@ -170,7 +217,7 @@ export async function generateText(params: TextGenerationParams): Promise<string
  */
 export async function generateImage(params: ImageGenerationParams): Promise<string> {
   const body = {
-    model: params.model || 'qwen-image-plus',
+    model: params.model || 'z-image-turbo',
     input: {
       prompt: params.prompt,
     },
@@ -211,7 +258,8 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
 export async function editImage(params: ImageEditParams): Promise<string[]> {
   const content: Array<{ image?: string; text?: string }> = [];
   for (const imageUrl of params.images) {
-    content.push({ image: imageUrl });
+    const convertedUrl = await convertImageToBase64(imageUrl);
+    content.push({ image: convertedUrl });
   }
   content.push({ text: params.text });
 
@@ -264,7 +312,7 @@ export async function editImage(params: ImageEditParams): Promise<string[]> {
  */
 export async function generateVideo(params: TextToVideoParams): Promise<string> {
   const body = {
-    model: params.model || 'wan2.6-t2v',
+    model: params.model || 'wan2.2-t2v-plus',
     input: {
       prompt: params.prompt,
       ...(params.audio_url && { audio_url: params.audio_url }),

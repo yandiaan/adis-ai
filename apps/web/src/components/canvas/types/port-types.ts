@@ -50,9 +50,17 @@ export interface StyleData {
 // Union of all data payloads
 export type PortPayload = TextData | PromptData | ImageData | VideoData | StyleData;
 
+// Cache metadata for PromptEnhancer to avoid re-running with same input
+export interface PromptEnhancerCacheMeta {
+  inputText: string;
+  configHash: string;
+}
+
 // Node output — carries typed data through edges
 export interface NodeOutput {
   type: PortDataType;
   data: PortPayload;
   timestamp: number;
+  // Internal cache metadata (not part of the port payload)
+  _cacheMeta?: PromptEnhancerCacheMeta;
 }

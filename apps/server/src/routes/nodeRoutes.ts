@@ -197,6 +197,7 @@ router.post('/image-generator/run', async (req, res, next) => {
       });
     }
   } catch (err) {
+    console.log(err);
     next(err);
   }
 });
@@ -293,6 +294,7 @@ router.post('/video-generator/run', async (req, res, next) => {
       duration_ms: Date.now() - startTime,
     });
   } catch (err) {
+    console.log(err);
     next(err);
   }
 });

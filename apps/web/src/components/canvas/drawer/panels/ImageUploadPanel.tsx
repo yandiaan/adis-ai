@@ -1,6 +1,10 @@
 import { useReactFlow } from '@xyflow/react';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import type { ImageUploadData } from '../../types/node-types';
+
+const API_BASE = 'http://localhost:3000/api';
+const SERVER_URL = 'http://localhost:3000';
 
 type Props = {
   nodeId: string;
@@ -10,24 +14,60 @@ type Props = {
 export function ImageUploadPanel({ nodeId, data }: Props) {
   const { updateNodeData } = useReactFlow();
   const config = data.config;
+  const [isUploading, setIsUploading] = useState(false);
 
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFile = async (file: File): Promise<string> => {
+    const response = await fetch(`${API_BASE}/upload/image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+      },
+      body: file,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Upload failed: ${error}`);
+    }
+
+    const data = await response.json();
+    return data.url; // Returns "/uploads/{filename}"
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size / 1024 / 1024 > config.maxSizeMB) {
       alert(`File exceeds ${config.maxSizeMB}MB limit`);
       return;
     }
-    const url = URL.createObjectURL(file);
+
+    // Create a local preview URL for immediate display
+    const previewUrl = URL.createObjectURL(file);
     updateConfig({
-      previewUrl: url,
+      previewUrl,
       fileName: file.name,
       fileSizeMB: file.size / 1024 / 1024,
     });
+
+    // Upload the file to server
+    setIsUploading(true);
+    try {
+      const serverUrl = await uploadFile(file);
+      // Update with the server URL that can be used by other nodes
+      updateConfig({
+        previewUrl: serverUrl,
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Upload failed');
+      // Keep the preview URL for display, but mark as not uploaded
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleClear = () => {
@@ -41,17 +81,29 @@ export function ImageUploadPanel({ nodeId, data }: Props) {
         {config.previewUrl ? (
           <div>
             <img
-              src={config.previewUrl}
+              src={config.previewUrl.startsWith('/uploads/') ? `${SERVER_URL}${config.previewUrl}` : config.previewUrl}
               alt="Preview"
               className="w-full max-h-[200px] object-contain rounded-lg mb-2"
+              onError={(e) => console.error('[ImageUploadPanel] Image failed to load:', e.currentTarget.src)}
+              onLoad={() => console.log('[ImageUploadPanel] Image loaded successfully')}
             />
             <div className="flex justify-between items-center text-xs text-white/50">
               <span>
                 {config.fileName} ({config.fileSizeMB?.toFixed(1)}MB)
+                {isUploading && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-blue-400">
+                    <Loader2 size={12} className="animate-spin" />
+                    Uploading...
+                  </span>
+                )}
+                {!isUploading && config.previewUrl.startsWith('/uploads/') && (
+                  <span className="ml-2 text-green-400">✓ Uploaded</span>
+                )}
               </span>
               <button
                 onClick={handleClear}
-                className="motion-lift motion-press focus-ring-orange bg-red-400/10 border border-red-400/30 text-red-300 px-2.5 py-1 rounded-md cursor-pointer text-[11px] hover:bg-red-400/15 transition-colors"
+                disabled={isUploading}
+                className="motion-lift motion-press focus-ring-orange bg-red-400/10 border border-red-400/30 text-red-300 px-2.5 py-1 rounded-md cursor-pointer text-[11px] hover:bg-red-400/15 transition-colors disabled:opacity-50"
               >
                 Clear
               </button>

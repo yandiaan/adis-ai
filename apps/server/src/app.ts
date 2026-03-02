@@ -12,14 +12,28 @@ import { errorHandler } from '@/middleware/errorHandler';
 const app: Application = express();
 
 // Security & utility middleware
-app.use(helmet());
+// Configure helmet to allow images from same origin and data URLs
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+    },
+  },
+}));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Static uploads directory
-app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+// Static uploads directory with proper CORS headers
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+}, express.static(join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/api', router);
