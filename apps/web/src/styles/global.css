@@ -1,12 +1,23 @@
 @import 'tailwindcss';
+@import './animations.css';
 
 @theme {
   --color-primary: #fe733a;
   --color-background: #121212;
   --font-family-roboto: 'Roboto', sans-serif;
+
+  /* Editor neutrals (centralize existing hard-coded values) */
+  --color-surface-panel: #282828;
+  --color-surface-node: #1e1e2e;
 }
 
 @layer base {
+  :root {
+    /* shadcn-style tokens for components that rely on them */
+    --primary: 18 99% 61%;
+    --ring: 18 99% 61%;
+  }
+
   body {
     @apply bg-background text-white;
     font-family: 'Roboto', sans-serif;
