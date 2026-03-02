@@ -6,8 +6,11 @@ import { topologySort } from './topology';
 import { collectNodeInputs } from './inputCollector';
 import type { PipelineRunResult, NodeRunResponse } from './types';
 import type { NodeOutput } from '../types/port-types';
+import type { LogEntry } from './logStore';
 
 const API_BASE = 'http://localhost:3000/api/node';
+
+export type LogCallback = (entry: Omit<LogEntry, 'id' | 'timestamp'>) => void;
 
 /**
  * Convert a non-runnable node's data into a NodeOutput.
@@ -68,10 +71,19 @@ export async function runPipeline(
   nodes: Node[],
   edges: Edge[],
   store: ExecutionStore,
+  logger?: LogCallback,
 ): Promise<PipelineRunResult> {
   const runId = `run-${Date.now()}`;
   const startTime = Date.now();
   store.setPipelineRunning(true, runId);
+
+  logger?.({
+    level: 'info',
+    nodeId: null,
+    nodeType: null,
+    nodeLabel: null,
+    message: `Pipeline started (${nodes.length} nodes, ${edges.length} edges)`,
+  });
 
   // Local map to track outputs during this run (avoids stale React state reads)
   const outputMap = new Map<string, NodeOutput>();
@@ -89,9 +101,21 @@ export async function runPipeline(
         // Server-executed node
         store.setNodeState(nodeId, { status: 'running', progress: 0, error: null });
 
+        const nodeLabel = ((node.data as Record<string, unknown>).label as string) || nodeType;
+        logger?.({
+          level: 'info',
+          nodeId,
+          nodeType,
+          nodeLabel,
+          message: `Running node: ${nodeLabel}`,
+        });
+
         try {
           const inputs = collectNodeInputs(nodeId, edges, outputMap);
+          const nodeStart = Date.now();
           const response = await executeNodeOnServer(nodeType, node.data, inputs);
+          const durationMs = Date.now() - nodeStart;
+
           store.setNodeState(nodeId, {
             status: 'done',
             output: response.output,
@@ -99,12 +123,33 @@ export async function runPipeline(
             lastRunAt: Date.now(),
           });
           outputMap.set(nodeId, response.output);
+
+          logger?.({
+            level: 'success',
+            nodeId,
+            nodeType,
+            nodeLabel,
+            message: `${nodeLabel} completed — output type: ${response.output.type}`,
+            durationMs,
+            details: { output: response.output } as Record<string, unknown>,
+          });
         } catch (err) {
+          const errorMsg = err instanceof Error ? err.message : 'Unknown error';
           store.setNodeState(nodeId, {
             status: 'error',
-            error: err instanceof Error ? err.message : 'Unknown error',
+            error: errorMsg,
             progress: 0,
           });
+
+          logger?.({
+            level: 'error',
+            nodeId,
+            nodeType,
+            nodeLabel,
+            message: `${nodeLabel} failed: ${errorMsg}`,
+            details: { error: errorMsg } as Record<string, unknown>,
+          });
+
           // Stop pipeline on error
           break;
         }
@@ -128,20 +173,41 @@ export async function runPipeline(
     }
 
     store.setPipelineRunning(false);
+
+    const totalDuration = Date.now() - startTime;
+    logger?.({
+      level: 'info',
+      nodeId: null,
+      nodeType: null,
+      nodeLabel: null,
+      message: `Pipeline completed in ${(totalDuration / 1000).toFixed(2)}s`,
+      durationMs: totalDuration,
+    });
+
     return {
       runId,
       success: true,
       nodeResults: store.nodeStates,
-      duration: Date.now() - startTime,
+      duration: totalDuration,
     };
   } catch (err) {
     store.setPipelineRunning(false);
+
+    const errorMsg = err instanceof Error ? err.message : 'Pipeline failed';
+    logger?.({
+      level: 'error',
+      nodeId: null,
+      nodeType: null,
+      nodeLabel: null,
+      message: `Pipeline failed: ${errorMsg}`,
+    });
+
     return {
       runId,
       success: false,
       nodeResults: store.nodeStates,
       duration: Date.now() - startTime,
-      error: err instanceof Error ? err.message : 'Pipeline failed',
+      error: errorMsg,
     };
   }
 }

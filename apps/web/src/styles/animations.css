@@ -107,6 +107,36 @@
     animation: panelOutRight var(--motion-fast) var(--motion-ease-out) both;
   }
 
+  @keyframes panelInBottom {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 100%, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes panelOutBottom {
+    from {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      opacity: 0;
+      transform: translate3d(0, 100%, 0);
+    }
+  }
+
+  .animate-panel-in-bottom {
+    animation: panelInBottom 350ms var(--motion-ease-out) both;
+  }
+
+  .animate-panel-out-bottom {
+    animation: panelOutBottom 200ms var(--motion-ease-inout) both;
+  }
+
   .motion-lift {
     transition-property: transform, box-shadow, border-color, background-color, opacity;
     transition-duration: var(--motion-fast);
@@ -175,7 +205,9 @@
 
     .animate-dock-in,
     .animate-panel-in-right,
-    .animate-panel-out-right {
+    .animate-panel-out-right,
+    .animate-panel-in-bottom,
+    .animate-panel-out-bottom {
       animation: none;
     }
   }

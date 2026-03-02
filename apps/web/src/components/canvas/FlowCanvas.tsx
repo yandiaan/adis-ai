@@ -14,9 +14,11 @@ import { useFlowNodes } from './hooks/useFlowNodes';
 import { useMouseMode } from './hooks/useMouseMode';
 import { useTemplateLoader } from './hooks/useTemplateLoader';
 import { useExecutionStore } from './execution/store';
+import { useLogStore } from './execution/logStore';
 import { ExecutionContext } from './execution/ExecutionContext';
 import { runPipeline } from './execution/runner';
 import { FlowToolbar } from './FlowToolbar';
+import { LogPanel } from './LogPanel';
 import { nodeTypes } from './nodes';
 import { AnimatedNodeDetailDrawer } from './drawer/AnimatedNodeDetailDrawer';
 import type { CustomNodeData } from './types/node-types';
@@ -26,7 +28,9 @@ export function FlowCanvasInner() {
     useFlowNodes();
   const { mode, setMode } = useMouseMode();
   const [selectedNode, setSelectedNode] = useState<Node<CustomNodeData> | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
   const executionStore = useExecutionStore();
+  const logStore = useLogStore();
 
   // Load template from URL params on mount
   useTemplateLoader(setNodes, setEdges);
@@ -44,8 +48,13 @@ export function FlowCanvasInner() {
   }, []);
 
   const handleRunPipeline = useCallback(async () => {
-    await runPipeline(nodes, edges, executionStore);
-  }, [nodes, edges, executionStore]);
+    setLogOpen(true); // Auto-open log panel on run
+    await runPipeline(nodes, edges, executionStore, logStore.addLog);
+  }, [nodes, edges, executionStore, logStore.addLog]);
+
+  const handleToggleLog = useCallback(() => {
+    setLogOpen((prev) => !prev);
+  }, []);
 
   // Keep drawer in sync with node data changes
   const currentSelectedNode = selectedNode
@@ -56,6 +65,8 @@ export function FlowCanvasInner() {
     () => ({ getNodeState: executionStore.getNodeState }),
     [executionStore.getNodeState],
   );
+
+  const logErrorCount = logStore.logs.filter((l) => l.level === 'error').length;
 
   return (
     <ExecutionContext.Provider value={executionContextValue}>
@@ -84,8 +95,22 @@ export function FlowCanvasInner() {
             onAddNode={addNode}
             onRunPipeline={handleRunPipeline}
             pipelineRunning={executionStore.pipelineRunning}
+            logCount={logStore.logs.length}
+            logErrorCount={logErrorCount}
+            logOpen={logOpen}
+            onToggleLog={handleToggleLog}
           />
         </ReactFlow>
+
+        {/* Log Panel */}
+        <LogPanel
+          logs={logStore.logs}
+          isOpen={logOpen}
+          onToggle={handleToggleLog}
+          onClear={logStore.clearLogs}
+          pipelineRunning={executionStore.pipelineRunning}
+          drawerOpen={!!currentSelectedNode}
+        />
 
         {/* Node Detail Drawer */}
         <AnimatedNodeDetailDrawer

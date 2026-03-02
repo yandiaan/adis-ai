@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { TooltipProvider } from '../ui/tooltip';
 import type { PipelineTemplate } from '../canvas/templates';
 import { SidebarHeader } from './components/SidebarHeader';
@@ -32,6 +32,10 @@ export function WorkspaceSidebar({ onSelectTemplate, onNewWorkflow, onBackToLand
   // Carousel logic
   useCarousel(9, (newIndex) => setCurrentNodeIndex(newIndex));
   useCarouselDelay(isExpanded, setShowCarousel);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', isExpanded ? '256px' : '64px');
+  }, [isExpanded]);
 
   // Handlers
   const handleTemplateClick = (template: PipelineTemplate) => {

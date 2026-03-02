@@ -11,6 +11,7 @@ import {
   MousePointer2,
   Play,
   Plus,
+  ScrollText,
   Search,
   X,
 } from 'lucide-react';
@@ -25,6 +26,10 @@ type Props = {
   onAddNode: (type: CustomNodeType) => void;
   onRunPipeline?: () => void;
   pipelineRunning?: boolean;
+  logCount?: number;
+  logErrorCount?: number;
+  logOpen?: boolean;
+  onToggleLog?: () => void;
 };
 
 const categoryOrder: (keyof typeof NODE_CATEGORIES)[] = [
@@ -69,6 +74,10 @@ export function FlowToolbar({
   onAddNode,
   onRunPipeline,
   pipelineRunning = false,
+  logCount = 0,
+  logErrorCount = 0,
+  logOpen = false,
+  onToggleLog,
 }: Props) {
   const [menuMounted, setMenuMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -665,6 +674,47 @@ export function FlowToolbar({
                   {pipelineRunning ? 'Running…' : 'Run Pipeline'}
                 </TooltipContent>
               </Tooltip>
+            )}
+
+            {/* Log toggle */}
+            {onToggleLog && (
+              <>
+                <div className="w-px h-7 bg-white/10 mx-1" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onToggleLog}
+                      aria-label="Toggle log panel"
+                      className="motion-lift motion-press focus-ring-orange relative grid place-items-center w-10 h-10 rounded-xl border"
+                      style={{
+                        borderColor: logOpen
+                          ? 'rgba(139, 92, 246, 0.65)'
+                          : 'rgba(255,255,255,0.16)',
+                        background: logOpen ? 'rgba(139, 92, 246, 0.14)' : 'rgba(255,255,255,0.03)',
+                        color: logOpen ? 'rgba(139, 92, 246, 1)' : 'rgba(255,255,255,0.65)',
+                        boxShadow: logOpen
+                          ? '0 0 0 2px rgba(139, 92, 246, 0.12)'
+                          : '0 0 0 0 rgba(0,0,0,0)',
+                      }}
+                    >
+                      <ScrollText size={18} />
+                      {logCount > 0 && (
+                        <span
+                          className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
+                          style={{
+                            background:
+                              logErrorCount > 0 ? 'rgb(239, 68, 68)' : 'rgba(139, 92, 246, 0.85)',
+                            color: 'white',
+                          }}
+                        >
+                          {logCount > 99 ? '99+' : logCount}
+                        </span>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{logOpen ? 'Hide logs' : 'Show logs'}</TooltipContent>
+                </Tooltip>
+              </>
             )}
           </div>
         </div>
