@@ -80,7 +80,7 @@ export default function LandingPanel({ onHideLanding }: { onHideLanding?: () => 
           </div>
         </aside>
         <section className="flex-1 flex items-center ml-24 mb-8 justify-end relative overflow-hidden">
-          <DynamicPanel activeIndex={activeIndex} />
+          <DynamicPanel activeIndex={activeIndex} onGetStarted={handleClick} />
         </section>
         <img
           ref={svgRef2}

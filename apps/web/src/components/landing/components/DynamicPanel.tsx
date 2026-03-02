@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { sectionsData } from '../sections/sectionsConfig';
 
-export function DynamicPanel({ activeIndex = 0 }: { activeIndex?: number }) {
+export function DynamicPanel({
+  activeIndex = 0,
+  onGetStarted,
+}: {
+  activeIndex?: number;
+  onGetStarted?: () => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [prevIndex, setPrevIndex] = useState(0);
 
@@ -36,9 +42,9 @@ export function DynamicPanel({ activeIndex = 0 }: { activeIndex?: number }) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full bg-[#282828] rounded-lg overflow-hidden"
+      className="relative w-full h-full bg-surface-panel rounded-lg overflow-hidden"
     >
-      <CurrentComponent />
+      <CurrentComponent onGetStarted={onGetStarted} />
     </div>
   );
 }

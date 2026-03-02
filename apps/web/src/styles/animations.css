@@ -194,6 +194,50 @@
     background-clip: content-box;
   }
 
+  /* MagicUI: Marquee */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-100% - var(--gap))); }
+  }
+  @keyframes marquee-vertical {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-100% - var(--gap))); }
+  }
+  .animate-marquee {
+    animation: marquee var(--duration) linear infinite;
+  }
+  .animate-marquee-vertical {
+    animation: marquee-vertical var(--duration) linear infinite;
+  }
+
+  /* MagicUI: Orbit */
+  @keyframes orbit {
+    0% {
+      transform:
+        rotate(calc(var(--angle) * 1deg))
+        translateX(calc(var(--radius) * 1px))
+        rotate(calc(var(--angle) * -1deg));
+    }
+    100% {
+      transform:
+        rotate(calc(var(--angle) * 1deg + 360deg))
+        translateX(calc(var(--radius) * 1px))
+        rotate(calc(var(--angle) * -1deg - 360deg));
+    }
+  }
+  .animate-orbit {
+    animation: orbit calc(var(--duration) * 1s) linear infinite;
+  }
+
+  /* MagicUI: Ripple */
+  @keyframes ripple {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(0.9); }
+  }
+  .animate-ripple {
+    animation: ripple 3s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .motion-lift:hover {
       transform: none;

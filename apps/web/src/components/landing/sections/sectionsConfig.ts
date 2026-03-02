@@ -4,6 +4,10 @@ import { NodeBasedSection } from './NodeBasedSection';
 import { TemplatesSection } from './TemplatesSection';
 import { ContributorsSection } from './ContributorsSection';
 
+export interface SectionProps {
+  onGetStarted?: () => void;
+}
+
 export const sectionsData = [
   {
     id: 'about',

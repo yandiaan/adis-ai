@@ -20,6 +20,8 @@ import type { NodeCategory } from './types/node-types';
 import { renderNodeTypeIcon } from './icons/nodeTypeIcon';
 import { renderNodeCategoryIcon } from './icons/nodeCategoryIcon';
 
+const LOG_PANEL_HEIGHT = 280;
+
 type Props = {
   mode: MouseMode;
   onModeChange: (mode: MouseMode) => void;
@@ -197,9 +199,10 @@ export function FlowToolbar({
     <Panel position="bottom-center">
       <TooltipProvider delayDuration={200}>
         <div
-          className="animate-dock-in pointer-events-auto mb-4 px-2 py-2 rounded-2xl shadow-[0_14px_44px_rgba(0,0,0,0.55)] glass-surface"
+          className="animate-dock-in pointer-events-auto px-2 py-2 rounded-2xl shadow-[0_14px_44px_rgba(0,0,0,0.55)] glass-surface"
           style={{
-            marginBottom: 'calc(env(safe-area-inset-bottom) + 16px)',
+            marginBottom: `calc(env(safe-area-inset-bottom) + 16px + ${logOpen ? LOG_PANEL_HEIGHT : 0}px)`,
+            transition: 'margin-bottom 0.22s ease-in-out',
             borderColor:
               'color-mix(in srgb, var(--editor-accent) 22%, var(--editor-border-subtle))',
             boxShadow:
@@ -639,82 +642,98 @@ export function FlowToolbar({
               <TooltipContent side="top">Pan</TooltipContent>
             </Tooltip>
 
+            {/* Log toggle */}
+            {onToggleLog && (
+              <>
+                <div className="w-px h-7 bg-white/10 mx-1" />
+                <button
+                  onClick={onToggleLog}
+                  aria-label="Toggle log panel"
+                  className="motion-lift motion-press focus-ring-orange flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-xl border"
+                  style={{
+                    borderColor: logOpen ? 'rgba(139, 92, 246, 0.65)' : 'rgba(255,255,255,0.16)',
+                    background: logOpen ? 'rgba(139, 92, 246, 0.14)' : 'rgba(255,255,255,0.03)',
+                    color: logOpen ? 'rgba(139, 92, 246, 1)' : 'rgba(255,255,255,0.65)',
+                    boxShadow: logOpen
+                      ? '0 0 0 2px rgba(139, 92, 246, 0.12)'
+                      : '0 0 0 0 rgba(0,0,0,0)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span
+                    className="relative grid place-items-center w-7 h-7 rounded-lg border"
+                    style={{
+                      borderColor: logOpen ? 'rgba(139, 92, 246, 0.45)' : 'rgba(255,255,255,0.12)',
+                      background: logOpen ? 'rgba(139, 92, 246, 0.12)' : 'rgba(255,255,255,0.03)',
+                    }}
+                  >
+                    <ScrollText size={14} />
+                    {logCount > 0 && (
+                      <span
+                        className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                        style={{
+                          background:
+                            logErrorCount > 0 ? 'rgb(239, 68, 68)' : 'rgba(139, 92, 246, 0.9)',
+                          color: 'white',
+                        }}
+                      >
+                        {logCount > 99 ? '99+' : logCount}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
+                    Logs{logCount > 0 && !logOpen ? ` (${logCount > 99 ? '99+' : logCount})` : ''}
+                  </span>
+                </button>
+              </>
+            )}
+
+            {/* Spacer — pushes Run + Log to the far right */}
+            {onRunPipeline && <div className="flex-1" />}
+
             {/* Divider */}
             {onRunPipeline && <div className="w-px h-7 bg-white/10 mx-1" />}
 
             {/* Run */}
             {onRunPipeline && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={onRunPipeline}
-                    disabled={pipelineRunning}
-                    aria-label="Run pipeline"
-                    className="motion-lift motion-press focus-ring-orange grid place-items-center w-11 h-11 rounded-2xl border"
-                    style={{
-                      borderColor: pipelineRunning
-                        ? 'rgba(255,255,255,0.14)'
-                        : 'var(--editor-accent-75)',
-                      background: pipelineRunning
-                        ? 'rgba(255,255,255,0.03)'
-                        : 'var(--editor-accent-16)',
-                      color: pipelineRunning ? 'rgba(255,255,255,0.55)' : 'var(--editor-accent)',
-                      cursor: pipelineRunning ? 'not-allowed' : 'pointer',
-                      boxShadow: pipelineRunning ? 'none' : '0 10px 26px rgba(0,0,0,0.25)',
-                    }}
-                  >
-                    {pipelineRunning ? (
-                      <Loader2 size={18} className="animate-spin" />
-                    ) : (
-                      <Play size={18} />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
+              <button
+                onClick={onRunPipeline}
+                disabled={pipelineRunning}
+                aria-label="Run pipeline"
+                className="motion-lift motion-press focus-ring-orange flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-xl border"
+                style={{
+                  borderColor: pipelineRunning
+                    ? 'rgba(255,255,255,0.14)'
+                    : 'var(--editor-accent-75)',
+                  background: pipelineRunning
+                    ? 'rgba(255,255,255,0.03)'
+                    : 'var(--editor-accent-16)',
+                  color: pipelineRunning ? 'rgba(255,255,255,0.55)' : 'var(--editor-accent)',
+                  cursor: pipelineRunning ? 'not-allowed' : 'pointer',
+                  boxShadow: pipelineRunning ? 'none' : '0 10px 26px rgba(0,0,0,0.25)',
+                }}
+              >
+                <span
+                  className="grid place-items-center w-7 h-7 rounded-lg border"
+                  style={{
+                    borderColor: pipelineRunning
+                      ? 'rgba(255,255,255,0.10)'
+                      : 'var(--editor-accent-45)',
+                    background: pipelineRunning
+                      ? 'rgba(255,255,255,0.03)'
+                      : 'var(--editor-accent-12)',
+                  }}
+                >
+                  {pipelineRunning ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Play size={14} />
+                  )}
+                </span>
+                <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
                   {pipelineRunning ? 'Running…' : 'Run Pipeline'}
-                </TooltipContent>
-              </Tooltip>
-            )}
-
-            {/* Log toggle */}
-            {onToggleLog && (
-              <>
-                <div className="w-px h-7 bg-white/10 mx-1" />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={onToggleLog}
-                      aria-label="Toggle log panel"
-                      className="motion-lift motion-press focus-ring-orange relative grid place-items-center w-10 h-10 rounded-xl border"
-                      style={{
-                        borderColor: logOpen
-                          ? 'rgba(139, 92, 246, 0.65)'
-                          : 'rgba(255,255,255,0.16)',
-                        background: logOpen ? 'rgba(139, 92, 246, 0.14)' : 'rgba(255,255,255,0.03)',
-                        color: logOpen ? 'rgba(139, 92, 246, 1)' : 'rgba(255,255,255,0.65)',
-                        boxShadow: logOpen
-                          ? '0 0 0 2px rgba(139, 92, 246, 0.12)'
-                          : '0 0 0 0 rgba(0,0,0,0)',
-                      }}
-                    >
-                      <ScrollText size={18} />
-                      {logCount > 0 && (
-                        <span
-                          className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
-                          style={{
-                            background:
-                              logErrorCount > 0 ? 'rgb(239, 68, 68)' : 'rgba(139, 92, 246, 0.85)',
-                            color: 'white',
-                          }}
-                        >
-                          {logCount > 99 ? '99+' : logCount}
-                        </span>
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">{logOpen ? 'Hide logs' : 'Show logs'}</TooltipContent>
-                </Tooltip>
-              </>
+                </span>
+              </button>
             )}
           </div>
         </div>

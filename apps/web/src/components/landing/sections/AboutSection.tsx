@@ -66,7 +66,7 @@ export function AboutSection() {
 
       <div
         ref={textRef}
-        className="absolute left-1/2 top-1/2 -translate-y-1/2 w-[450px] z-10 pointer-events-none"
+        className="absolute left-1/2 top-1/2 -translate-y-1/2 w-112.5 z-10 pointer-events-none"
       >
         <h2 className="text-5xl font-bold italic mb-4 text-white uppercase tracking-tighter">
           Redefining Digital Expression
