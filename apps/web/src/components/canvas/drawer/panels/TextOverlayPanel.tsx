@@ -8,7 +8,11 @@ type Props = {
   data: TextOverlayData;
 };
 
-const POSITIONS: TextPosition[] = ['top', 'center', 'bottom', 'custom'];
+const POSITION_GRID: TextPosition[][] = [
+  ['top-left', 'top-center', 'top-right'],
+  ['center-left', 'center', 'center-right'],
+  ['bottom-left', 'bottom-center', 'bottom-right'],
+];
 const FONTS: { value: FontFamily; label: string }[] = [
   { value: 'inter', label: 'Inter' },
   { value: 'impact', label: 'Impact' },
@@ -78,18 +82,18 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
         <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Position</label>
-        <div className="flex gap-1.5">
-          {POSITIONS.map((pos) => (
+        <div className="grid grid-cols-3 gap-0.5 w-full">
+          {POSITION_GRID.flat().map((pos) => (
             <button
               key={pos}
               onClick={() => updateConfig({ position: pos })}
-              className={`motion-lift motion-press focus-ring-orange flex-1 p-2 rounded-xl border cursor-pointer text-white text-[11px] transition-colors ${
-                config.position === pos
-                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
-                  : 'border-white/10 bg-white/5 hover:bg-white/7'
-              }`}
+              className="h-7 rounded-sm flex items-center justify-center transition-colors"
+              style={{
+                backgroundColor: config.position === pos ? 'rgba(248,113,113,0.4)' : 'rgba(255,255,255,0.04)',
+                border: config.position === pos ? '1px solid rgba(248,113,113,0.7)' : '1px solid transparent',
+              }}
             >
-              {pos}
+              {config.position === pos && <span className="text-[8px] text-[#f87171] font-bold">T</span>}
             </button>
           ))}
         </div>

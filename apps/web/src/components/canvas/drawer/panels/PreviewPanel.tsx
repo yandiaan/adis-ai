@@ -1,4 +1,4 @@
-import { useReactFlow } from '@xyflow/react';
+import { useReactFlow, useEdges } from '@xyflow/react';
 
 import type { PreviewData, PreviewPreset, FitMode } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
@@ -25,8 +25,10 @@ export function PreviewPanel({ nodeId, data }: Props) {
   const config = data.config;
 
   const { getNodeState } = useExecutionContext();
-  const execState = getNodeState(nodeId);
-  const output = execState?.output ?? null;
+  const edges = useEdges();
+  const incomingEdge = edges.find(e => e.target === nodeId);
+  const upstreamState = incomingEdge ? getNodeState(incomingEdge.source) : null;
+  const output = upstreamState?.output ?? null;
 
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
   const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;

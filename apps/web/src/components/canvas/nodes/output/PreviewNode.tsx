@@ -1,5 +1,5 @@
 import type { Node, NodeProps } from '@xyflow/react';
-import { useNodeId } from '@xyflow/react';
+import { useNodeId, useEdges } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { PreviewData } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
@@ -16,10 +16,12 @@ const PRESET_META: Record<string, { label: string; aspect: [number, number] }> =
 
 export function PreviewNode({ data, selected }: NodeProps<Node<PreviewData>>) {
   const { config } = data;
-  const nodeId = useNodeId();
+  const nodeId = useNodeId()!;
+  const edges = useEdges();
   const { getNodeState } = useExecutionContext();
-  const execState = nodeId ? getNodeState(nodeId) : null;
-  const output = execState?.output ?? null;
+  const incomingEdge = edges.find(e => e.target === nodeId);
+  const upstreamState = incomingEdge ? getNodeState(incomingEdge.source) : null;
+  const output = upstreamState?.output ?? null;
 
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
   const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;

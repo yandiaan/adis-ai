@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import {
   Blend,
   Brush,
-  Copyright,
   Crop,
   Download,
   Eraser,
@@ -14,15 +13,17 @@ import {
   LayoutGrid,
   LayoutTemplate,
   Layers,
-  Palette,
+  Replace,
   ScanFace,
   ScanText,
   SlidersHorizontal,
   Sparkles,
   Star,
   TextCursorInput,
+  Trash2,
   Type,
   Video,
+  Wand2,
   ZoomIn,
 } from 'lucide-react';
 import type { CustomNodeType } from '../types/node-types';
@@ -43,8 +44,6 @@ export function renderNodeTypeIcon(nodeType: CustomNodeType, options: IconOption
       return <ImageUp size={size} className={className} />;
     case 'templatePreset':
       return <LayoutTemplate size={size} className={className} />;
-    case 'colorPalette':
-      return <Palette size={size} className={className} />;
 
     // Transform
     case 'promptEnhancer':
@@ -59,6 +58,12 @@ export function renderNodeTypeIcon(nodeType: CustomNodeType, options: IconOption
       return <Eraser size={size} className={className} />;
     case 'faceCrop':
       return <ScanFace size={size} className={className} />;
+    case 'objectRemover':
+      return <Trash2 size={size} className={className} />;
+    case 'backgroundReplacer':
+      return <Replace size={size} className={className} />;
+    case 'styleTransfer':
+      return <Wand2 size={size} className={className} />;
 
     // Generate
     case 'imageGenerator':
@@ -87,8 +92,6 @@ export function renderNodeTypeIcon(nodeType: CustomNodeType, options: IconOption
       return <Eye size={size} className={className} />;
     case 'export':
       return <Download size={size} className={className} />;
-    case 'watermark':
-      return <Copyright size={size} className={className} />;
 
     default:
       return <Layers size={size} className={className} />;

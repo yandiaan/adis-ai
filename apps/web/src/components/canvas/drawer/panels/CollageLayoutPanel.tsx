@@ -47,6 +47,9 @@ export function CollageLayoutPanel({ nodeId, data }: Props) {
             </button>
           ))}
         </div>
+        {config.layout === '4-grid' && (
+          <p className="text-[10px] text-yellow-400/70 mt-1">⚠ API supports max 3 images — 4th image will be ignored</p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">

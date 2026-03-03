@@ -9,13 +9,15 @@ export type CustomNodeType =
   | 'textPrompt'
   | 'imageUpload'
   | 'templatePreset'
-  | 'colorPalette'
   | 'promptEnhancer'
   | 'styleConfig'
   | 'imageToText'
   | 'translateText'
   | 'backgroundRemover'
   | 'faceCrop'
+  | 'objectRemover'
+  | 'backgroundReplacer'
+  | 'styleTransfer'
   | 'imageGenerator'
   | 'videoGenerator'
   | 'inpainting'
@@ -26,8 +28,7 @@ export type CustomNodeType =
   | 'colorFilter'
   | 'collageLayout'
   | 'preview'
-  | 'export'
-  | 'watermark';
+  | 'export';
 
 // Base node data interface
 export interface BaseNodeData extends Record<string, unknown> {
@@ -66,19 +67,6 @@ export interface TemplatePresetConfig {
 
 export interface TemplatePresetData extends BaseNodeData {
   config: TemplatePresetConfig;
-}
-
-export type ColorPaletteMode = 'preset' | 'custom' | 'extract';
-export type ColorPalettePreset = 'ramadan' | 'lebaran' | 'pastel' | 'neon' | 'monochrome' | 'earth';
-
-export interface ColorPaletteConfig {
-  mode: ColorPaletteMode;
-  palette: string[];
-  presetName: ColorPalettePreset;
-}
-
-export interface ColorPaletteData extends BaseNodeData {
-  config: ColorPaletteConfig;
 }
 
 // --- TRANSFORM NODES ---
@@ -166,6 +154,35 @@ export interface FaceCropData extends BaseNodeData {
   config: FaceCropConfig;
 }
 
+// --- NEW TRANSFORM NODES ---
+
+export interface ObjectRemoverConfig {
+  target: string;
+  mode: 'auto' | 'describe';
+}
+export interface ObjectRemoverData extends BaseNodeData {
+  config: ObjectRemoverConfig;
+}
+
+export type BgReplacementType = 'blur' | 'solid-color' | 'ai-generated';
+export interface BackgroundReplacerConfig {
+  replacementType: BgReplacementType;
+  color: string;
+  backgroundPrompt: string;
+}
+export interface BackgroundReplacerData extends BaseNodeData {
+  config: BackgroundReplacerConfig;
+}
+
+export type StyleStrength = 'subtle' | 'moderate' | 'strong';
+export interface StyleTransferConfig {
+  stylePrompt: string;
+  strength: StyleStrength;
+}
+export interface StyleTransferData extends BaseNodeData {
+  config: StyleTransferConfig;
+}
+
 // --- GENERATE NODES ---
 
 export type ImageGenMode = 'text2img' | 'img2img';
@@ -227,7 +244,10 @@ export interface ImageUpscalerData extends BaseNodeData {
 
 // --- COMPOSE NODES ---
 
-export type TextPosition = 'top' | 'center' | 'bottom' | 'custom';
+export type TextPosition =
+  | 'top-left' | 'top-center' | 'top-right'
+  | 'center-left' | 'center' | 'center-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right';
 export type FontFamily = 'inter' | 'impact' | 'arabic-display' | 'comic-neue';
 export type TextEffect = 'none' | 'shadow' | 'glow' | 'gradient';
 
@@ -328,12 +348,11 @@ export interface PreviewData extends BaseNodeData {
   config: PreviewConfig;
 }
 
-export type ExportFormat = 'png' | 'jpg' | 'webp' | 'mp4' | 'gif';
-export type ShareTarget = 'download' | 'whatsapp' | 'clipboard';
+export type ExportFormat = 'png' | 'jpg' | 'webp' | 'mp4';
+export type ShareTarget = 'download' | 'whatsapp' | 'clipboard' | 'copy-url';
 
 export interface ExportConfig {
   format: ExportFormat;
-  quality: number;
   shareTarget: ShareTarget;
 }
 
@@ -341,37 +360,20 @@ export interface ExportData extends BaseNodeData {
   config: ExportConfig;
 }
 
-export type WatermarkPosition =
-  | 'bottom-right'
-  | 'bottom-left'
-  | 'top-right'
-  | 'top-left'
-  | 'center';
-export type WatermarkStyle = 'text' | 'brand-logo';
-
-export interface WatermarkConfig {
-  text: string;
-  position: WatermarkPosition;
-  opacity: number;
-  style: WatermarkStyle;
-}
-
-export interface WatermarkData extends BaseNodeData {
-  config: WatermarkConfig;
-}
-
 // Union type of all node data
 export type CustomNodeData =
   | TextPromptData
   | ImageUploadData
   | TemplatePresetData
-  | ColorPaletteData
   | PromptEnhancerData
   | StyleConfigData
   | ImageToTextData
   | TranslateTextData
   | BackgroundRemoverData
   | FaceCropData
+  | ObjectRemoverData
+  | BackgroundReplacerData
+  | StyleTransferData
   | ImageGeneratorData
   | VideoGeneratorData
   | InpaintingData
@@ -382,20 +384,21 @@ export type CustomNodeData =
   | ColorFilterData
   | CollageLayoutData
   | PreviewData
-  | ExportData
-  | WatermarkData;
+  | ExportData;
 
 // Typed node definitions
 export type TextPromptNode = Node<TextPromptData, 'textPrompt'>;
 export type ImageUploadNode = Node<ImageUploadData, 'imageUpload'>;
 export type TemplatePresetNode = Node<TemplatePresetData, 'templatePreset'>;
-export type ColorPaletteNode = Node<ColorPaletteData, 'colorPalette'>;
 export type PromptEnhancerNode = Node<PromptEnhancerData, 'promptEnhancer'>;
 export type StyleConfigNode = Node<StyleConfigData, 'styleConfig'>;
 export type ImageToTextNode = Node<ImageToTextData, 'imageToText'>;
 export type TranslateTextNode = Node<TranslateTextData, 'translateText'>;
 export type BackgroundRemoverNode = Node<BackgroundRemoverData, 'backgroundRemover'>;
 export type FaceCropNode = Node<FaceCropData, 'faceCrop'>;
+export type ObjectRemoverNode = Node<ObjectRemoverData, 'objectRemover'>;
+export type BackgroundReplacerNode = Node<BackgroundReplacerData, 'backgroundReplacer'>;
+export type StyleTransferNode = Node<StyleTransferData, 'styleTransfer'>;
 export type ImageGeneratorNode = Node<ImageGeneratorData, 'imageGenerator'>;
 export type VideoGeneratorNode = Node<VideoGeneratorData, 'videoGenerator'>;
 export type InpaintingNode = Node<InpaintingData, 'inpainting'>;
@@ -407,20 +410,21 @@ export type ColorFilterNode = Node<ColorFilterData, 'colorFilter'>;
 export type CollageLayoutNode = Node<CollageLayoutData, 'collageLayout'>;
 export type PreviewNode = Node<PreviewData, 'preview'>;
 export type ExportNode = Node<ExportData, 'export'>;
-export type WatermarkNode = Node<WatermarkData, 'watermark'>;
 
 // Union of all custom nodes
 export type CustomNode =
   | TextPromptNode
   | ImageUploadNode
   | TemplatePresetNode
-  | ColorPaletteNode
   | PromptEnhancerNode
   | StyleConfigNode
   | ImageToTextNode
   | TranslateTextNode
   | BackgroundRemoverNode
   | FaceCropNode
+  | ObjectRemoverNode
+  | BackgroundReplacerNode
+  | StyleTransferNode
   | ImageGeneratorNode
   | VideoGeneratorNode
   | InpaintingNode
@@ -431,8 +435,7 @@ export type CustomNode =
   | ColorFilterNode
   | CollageLayoutNode
   | PreviewNode
-  | ExportNode
-  | WatermarkNode;
+  | ExportNode;
 
 // Port schemas for each node type
 export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
@@ -494,10 +497,6 @@ export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
     inputs: [{ id: 'media', type: 'media', label: 'Media', required: true }],
     outputs: [],
   },
-  colorPalette: {
-    inputs: [{ id: 'image', type: 'image', label: 'Source Image', required: false }],
-    outputs: [{ id: 'style', type: 'style', label: 'Palette/Style', required: true }],
-  },
   imageToText: {
     inputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
     outputs: [{ id: 'text', type: 'text', label: 'Description', required: true }],
@@ -513,6 +512,24 @@ export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
   faceCrop: {
     inputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
     outputs: [{ id: 'image', type: 'image', label: 'Face', required: true }],
+  },
+  objectRemover: {
+    inputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
+    outputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
+  },
+  backgroundReplacer: {
+    inputs: [
+      { id: 'image', type: 'image', label: 'Image', required: true },
+      { id: 'bgImage', type: 'image', label: 'BG Image', required: false },
+    ],
+    outputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
+  },
+  styleTransfer: {
+    inputs: [
+      { id: 'image', type: 'image', label: 'Image', required: true },
+      { id: 'styleImage', type: 'image', label: 'Style Image', required: false },
+    ],
+    outputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
   },
   inpainting: {
     inputs: [
@@ -546,13 +563,9 @@ export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
     ],
     outputs: [{ id: 'image', type: 'image', label: 'Collage', required: true }],
   },
-  watermark: {
-    inputs: [{ id: 'media', type: 'media', label: 'Media', required: true }],
-    outputs: [{ id: 'media', type: 'media', label: 'Media', required: true }],
-  },
 };
 
-// Default configs for each node type
+// Default configsfor each node type
 export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
   textPrompt: {
     text: '',
@@ -604,7 +617,7 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
 
   textOverlay: {
     text: '',
-    position: 'bottom',
+    position: 'bottom-center',
     font: 'inter',
     fontSize: 48,
     fontColor: '#ffffff',
@@ -622,15 +635,8 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
 
   export: {
     format: 'png',
-    quality: 90,
     shareTarget: 'download',
   } satisfies ExportConfig,
-
-  colorPalette: {
-    mode: 'preset',
-    palette: ['#C9A84C', '#8B6914', '#F5DEB3', '#2C1810', '#D4AF37'],
-    presetName: 'ramadan',
-  } satisfies ColorPaletteConfig,
 
   imageToText: {
     detailLevel: 'detailed',
@@ -650,6 +656,22 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     margin: 20,
     format: 'square',
   } satisfies FaceCropConfig,
+
+  objectRemover: {
+    target: '',
+    mode: 'auto',
+  } satisfies ObjectRemoverConfig,
+
+  backgroundReplacer: {
+    replacementType: 'ai-generated',
+    color: '#ffffff',
+    backgroundPrompt: '',
+  } satisfies BackgroundReplacerConfig,
+
+  styleTransfer: {
+    stylePrompt: '',
+    strength: 'moderate',
+  } satisfies StyleTransferConfig,
 
   inpainting: {
     mode: 'auto',
@@ -683,15 +705,9 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     borderRadius: 12,
   } satisfies CollageLayoutConfig,
 
-  watermark: {
-    text: '© ADIS AI',
-    position: 'bottom-right',
-    opacity: 60,
-    style: 'text',
-  } satisfies WatermarkConfig,
 };
 
-// Runnable node types (have a "Run" button)
+// Runnable node types(have a "Run" button)
 export const RUNNABLE_NODE_TYPES: CustomNodeType[] = [
   'promptEnhancer',
   'imageGenerator',
@@ -700,6 +716,9 @@ export const RUNNABLE_NODE_TYPES: CustomNodeType[] = [
   'translateText',
   'backgroundRemover',
   'faceCrop',
+  'objectRemover',
+  'backgroundReplacer',
+  'styleTransfer',
   'inpainting',
   'imageUpscaler',
   'textOverlay',

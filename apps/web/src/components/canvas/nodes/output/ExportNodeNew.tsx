@@ -1,5 +1,5 @@
 import type { Node, NodeProps } from '@xyflow/react';
-import { useNodeId } from '@xyflow/react';
+import { useNodeId, useEdges } from '@xyflow/react';
 import type { ReactNode } from 'react';
 import { ArrowDown, Clipboard, Download, MessageCircle } from 'lucide-react';
 import { CompactNode } from '../CompactNode';
@@ -8,7 +8,7 @@ import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData, VideoData } from '../../types/port-types';
 
 const FORMAT_COLOR: Record<string, string> = {
-  png: '#60a5fa', jpg: '#34d399', webp: '#a78bfa', mp4: '#f472b6', gif: '#fbbf24',
+  png: '#60a5fa', jpg: '#34d399', webp: '#a78bfa', mp4: '#f472b6',
 };
 const SHARE_ICONS: Record<string, ReactNode> = {
   download: <ArrowDown size={9} />,
@@ -18,10 +18,12 @@ const SHARE_ICONS: Record<string, ReactNode> = {
 
 export function ExportNode({ data, selected }: NodeProps<Node<ExportData>>) {
   const { config } = data;
-  const nodeId = useNodeId();
+  const nodeId = useNodeId()!;
+  const edges = useEdges();
   const { getNodeState } = useExecutionContext();
-  const execState = nodeId ? getNodeState(nodeId) : null;
-  const output = execState?.output ?? null;
+  const incomingEdge = edges.find(e => e.target === nodeId);
+  const upstreamState = incomingEdge ? getNodeState(incomingEdge.source) : null;
+  const output = upstreamState?.output ?? null;
 
   const mediaUrl =
     output?.type === 'image' ? (output.data as ImageData).url
@@ -44,18 +46,6 @@ export function ExportNode({ data, selected }: NodeProps<Node<ExportData>>) {
           style={{ backgroundColor: `${fmtColor}22`, color: fmtColor, border: `1px solid ${fmtColor}44` }}
         >
           {config.format.toUpperCase()}
-        </div>
-        <div className="flex-1">
-          {/* Quality bar */}
-          <div className="h-1.5 rounded-full bg-white/8 overflow-hidden mb-1">
-            <div
-              className="h-full rounded-full"
-              style={{ width: `${config.quality}%`, backgroundColor: fmtColor, opacity: 0.7 }}
-            />
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[9px] text-white/30">Quality {config.quality}%</span>
-          </div>
         </div>
       </div>
       <div className="flex items-center gap-1.5">

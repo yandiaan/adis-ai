@@ -1012,4 +1012,181 @@ router.post('/collage-layout/run', async (req, res, next) => {
   }
 });
 
+// --- Object Remover ---
+const objectRemoverSchema = z.object({
+  config: z.object({
+    target: z.string(),
+    mode: z.enum(['auto', 'describe']).default('auto'),
+  }),
+  inputs: z.object({
+    image: z.object({
+      type: z.literal('image'),
+      data: z.object({ url: z.string() }),
+    }),
+  }),
+});
+
+router.post('/object-remover/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = objectRemoverSchema.parse(req.body);
+
+    const imageUrl = inputs.image.data.url;
+
+    const instruction =
+      config.mode === 'describe' && config.target
+        ? `Remove the ${config.target} from this image and fill the removed area naturally to blend with the surrounding background`
+        : 'Remove the main subject from this image and fill the removed area naturally to blend with the surrounding background';
+
+    const urls = await editImage({
+      images: [imageUrl],
+      text: instruction,
+      model: 'qwen-image-edit-max',
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Background Replacer ---
+const backgroundReplacerSchema = z.object({
+  config: z.object({
+    replacementType: z.enum(['blur', 'solid-color', 'ai-generated']),
+    color: z.string().optional(),
+    backgroundPrompt: z.string().optional(),
+  }),
+  inputs: z.object({
+    image: z.object({
+      type: z.literal('image'),
+      data: z.object({ url: z.string() }),
+    }),
+    bgImage: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/background-replacer/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = backgroundReplacerSchema.parse(req.body);
+
+    const imageUrl = inputs.image.data.url;
+    const bgImageUrl = inputs.bgImage?.data?.url;
+
+    let instruction: string;
+    if (bgImageUrl) {
+      instruction =
+        'Replace the background of the subject in this image with the background from the second image, preserving the subject perfectly';
+    } else if (config.replacementType === 'blur') {
+      instruction =
+        'Remove the background from this image and replace it with a soft blurred version of the original background';
+    } else if (config.replacementType === 'solid-color') {
+      instruction = `Remove the background from this image and replace it with a solid ${config.color || 'white'} color background`;
+    } else {
+      instruction = config.backgroundPrompt
+        ? `Remove the background from this image and replace it with: ${config.backgroundPrompt}`
+        : 'Remove the background from this image and replace it with a clean professional background';
+    }
+
+    const images = bgImageUrl ? [imageUrl, bgImageUrl] : [imageUrl];
+    const urls = await editImage({ images, text: instruction });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Style Transfer ---
+const styleTransferSchema = z.object({
+  config: z.object({
+    stylePrompt: z.string().default(''),
+    strength: z.enum(['subtle', 'moderate', 'strong']).default('moderate'),
+  }),
+  inputs: z.object({
+    image: z.object({
+      type: z.literal('image'),
+      data: z.object({ url: z.string() }),
+    }),
+    styleImage: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+const STRENGTH_LABELS: Record<string, string> = {
+  subtle: 'slight',
+  moderate: 'noticeable',
+  strong: 'dramatic',
+};
+
+router.post('/style-transfer/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = styleTransferSchema.parse(req.body);
+
+    const imageUrl = inputs.image.data.url;
+    const styleImageUrl = inputs.styleImage?.data?.url;
+    const strengthLabel = STRENGTH_LABELS[config.strength];
+
+    let instruction: string;
+    if (styleImageUrl) {
+      instruction = `Transform the content of the first image using the artistic style from the second image. Apply a ${strengthLabel} style transformation while preserving the main subject and composition`;
+    } else if (config.stylePrompt) {
+      instruction = `Apply ${config.stylePrompt} style to this image with a ${strengthLabel} transformation. Preserve the main subject and composition`;
+    } else {
+      instruction = 'Apply an artistic style transformation to this image';
+    }
+
+    const images = styleImageUrl ? [imageUrl, styleImageUrl] : [imageUrl];
+    const urls = await editImage({ images, text: instruction });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
 export default router;

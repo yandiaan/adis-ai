@@ -85,13 +85,6 @@ export const NODE_TYPE_CONFIGS: NodeTypeConfig[] = [
     icon: '📋',
     description: 'Start from a pre-built template',
   },
-  {
-    type: 'colorPalette',
-    category: 'input',
-    label: 'Color Palette',
-    icon: '🎨',
-    description: 'Define or extract a color palette for styling',
-  },
   // Transform nodes
   {
     type: 'promptEnhancer',
@@ -134,6 +127,27 @@ export const NODE_TYPE_CONFIGS: NodeTypeConfig[] = [
     label: 'Face Crop',
     icon: '👤',
     description: 'Auto-detect and crop face from image',
+  },
+  {
+    type: 'objectRemover',
+    category: 'transform',
+    label: 'Object Remover',
+    icon: '🗑️',
+    description: 'Remove objects or subjects from images with AI',
+  },
+  {
+    type: 'backgroundReplacer',
+    category: 'transform',
+    label: 'Background Replacer',
+    icon: '🖼️',
+    description: 'Replace image background with blur, color, or AI-generated scene',
+  },
+  {
+    type: 'styleTransfer',
+    category: 'transform',
+    label: 'Style Transfer',
+    icon: '🎨',
+    description: 'Apply artistic style from an image or text description',
   },
   // Generate nodes
   {
@@ -215,16 +229,9 @@ export const NODE_TYPE_CONFIGS: NodeTypeConfig[] = [
     icon: '💾',
     description: 'Export and share your creation',
   },
-  {
-    type: 'watermark',
-    category: 'output',
-    label: 'Watermark',
-    icon: '©️',
-    description: 'Add text or logo watermark to media',
-  },
 ];
 
-// Group node types by category
+// Group node typesby category
 export const NODE_TYPES_BY_CATEGORY = NODE_TYPE_CONFIGS.reduce(
   (acc, config) => {
     if (!acc[config.category]) {

@@ -9,10 +9,15 @@ const POSITION_MAP: Record<
   string,
   { top?: string; bottom?: string; left: string; transform: string }
 > = {
-  top: { top: '8%', bottom: undefined, left: '50%', transform: 'translateX(-50%)' },
-  center: { top: '50%', bottom: undefined, left: '50%', transform: 'translate(-50%,-50%)' },
-  bottom: { top: undefined, bottom: '8%', left: '50%', transform: 'translateX(-50%)' },
-  custom: { top: '50%', bottom: undefined, left: '50%', transform: 'translate(-50%,-50%)' },
+  'top-left':      { top: '8%',  bottom: undefined, left: '8%',  transform: 'none' },
+  'top-center':    { top: '8%',  bottom: undefined, left: '50%', transform: 'translateX(-50%)' },
+  'top-right':     { top: '8%',  bottom: undefined, left: 'auto', transform: 'none' },
+  'center-left':   { top: '50%', bottom: undefined, left: '8%',  transform: 'translateY(-50%)' },
+  'center':        { top: '50%', bottom: undefined, left: '50%', transform: 'translate(-50%,-50%)' },
+  'center-right':  { top: '50%', bottom: undefined, left: 'auto', transform: 'translateY(-50%)' },
+  'bottom-left':   { top: undefined, bottom: '8%',  left: '8%',  transform: 'none' },
+  'bottom-center': { top: undefined, bottom: '8%',  left: '50%', transform: 'translateX(-50%)' },
+  'bottom-right':  { top: undefined, bottom: '8%',  left: 'auto', transform: 'none' },
 };
 
 export function TextOverlayNode({ data, selected }: NodeProps<Node<TextOverlayData>>) {
@@ -58,7 +63,7 @@ export function TextOverlayNode({ data, selected }: NodeProps<Node<TextOverlayDa
         ? `${config.text.slice(0, 24)}…`
         : config.text
       : '—';
-  const pos = POSITION_MAP[config.position] ?? POSITION_MAP.bottom;
+  const pos = POSITION_MAP[config.position] ?? POSITION_MAP['bottom-center'];
 
   return (
     <CompactNode nodeType="textOverlay" icon="" title={data.label} selected={selected}>
