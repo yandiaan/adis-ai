@@ -194,6 +194,11 @@
     background-clip: content-box;
   }
 
+  /* Edge flow animation — data flowing through wires during pipeline run */
+  @keyframes edgeFlow {
+    to { stroke-dashoffset: -18; }
+  }
+
   /* MagicUI: Marquee */
   @keyframes marquee {
     from { transform: translateX(0); }

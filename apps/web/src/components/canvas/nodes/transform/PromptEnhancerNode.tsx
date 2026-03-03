@@ -2,7 +2,7 @@ import { useNodeId } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { PromptEnhancerData } from '../../types/node-types';
-import type { TextData } from '../../types/port-types';
+import type { TextData, PromptData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 
 const CREATIVITY_STEPS = ['precise', 'balanced', 'creative'] as const;
@@ -18,7 +18,13 @@ export function PromptEnhancerNode({ data, selected }: NodeProps<Node<PromptEnha
   const execState = nodeId ? getNodeState(nodeId) : null;
   const isRunning = execState?.status === 'running';
   const isDone = execState?.status === 'done';
-  const outputText = isDone ? (execState?.output?.type === 'text' ? (execState.output.data as TextData).text : null) : null;
+  const outputText = isDone
+    ? execState?.output?.type === 'text'
+      ? (execState.output.data as TextData).text
+      : execState?.output?.type === 'prompt'
+        ? (execState.output.data as PromptData).prompt
+        : null
+    : null;
 
   const creativeIdx = CREATIVITY_STEPS.indexOf(config.creativity as (typeof CREATIVITY_STEPS)[number]);
   const toneColor = TONE_COLORS[config.tone] ?? '#a78bfa';

@@ -23,6 +23,9 @@ import { runPipeline } from './execution/runner';
 import { FlowToolbar } from './FlowToolbar';
 import { LogPanel } from './LogPanel';
 import { nodeTypes } from './nodes';
+import { AnimatedEdge } from './nodes/edges/AnimatedEdge';
+
+const edgeTypes = { default: AnimatedEdge };
 import { AnimatedNodeDetailDrawer } from './drawer/AnimatedNodeDetailDrawer';
 import { ConnectPortMenu, type ConnectMenuState } from './ConnectPortMenu';
 import { NODE_PORT_SCHEMAS } from './types/node-types';
@@ -174,8 +177,11 @@ export function FlowCanvasInner() {
     : null;
 
   const executionContextValue = useMemo(
-    () => ({ getNodeState: executionStore.getNodeState }),
-    [executionStore.getNodeState],
+    () => ({
+      getNodeState: executionStore.getNodeState,
+      pipelineRunning: executionStore.pipelineRunning,
+    }),
+    [executionStore.getNodeState, executionStore.pipelineRunning],
   );
 
   const logErrorCount = logStore.logs.filter((l) => l.level === 'error').length;
@@ -187,6 +193,7 @@ export function FlowCanvasInner() {
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes as any}
+          edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={handleConnect}

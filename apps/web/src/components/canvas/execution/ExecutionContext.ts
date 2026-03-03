@@ -4,10 +4,12 @@ import { createDefaultExecutionState } from './types';
 
 export interface ExecutionContextValue {
   getNodeState: (nodeId: string) => NodeExecutionState;
+  pipelineRunning: boolean;
 }
 
 const defaultValue: ExecutionContextValue = {
   getNodeState: () => createDefaultExecutionState(),
+  pipelineRunning: false,
 };
 
 export const ExecutionContext = createContext<ExecutionContextValue>(defaultValue);
