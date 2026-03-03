@@ -2,6 +2,8 @@ import { useReactFlow } from '@xyflow/react';
 import { ArrowRight, Image, Type } from 'lucide-react';
 
 import type { ImageGeneratorData, ImageDimension } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -97,6 +99,20 @@ export function ImageGeneratorPanel({ nodeId, data }: Props) {
           className="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-white text-sm outline-none box-border focus:border-[var(--editor-accent-65)] transition-colors"
         />
       </div>
+
+      {config.mode === 'text2img' ? (
+        <ModelPicker
+          options={MODEL_OPTIONS.imageGeneration}
+          value={config.model ?? 'wan2.1-t2i-turbo'}
+          onChange={(model) => updateConfig({ model })}
+        />
+      ) : (
+        <ModelPicker
+          options={MODEL_OPTIONS.imageEditing}
+          value={config.imageEditModel ?? 'qwen-image-edit-plus'}
+          onChange={(imageEditModel) => updateConfig({ imageEditModel })}
+        />
+      )}
     </>
   );
 }

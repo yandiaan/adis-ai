@@ -6,6 +6,8 @@ import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageGeneratorData } from '../../types/node-types';
 import type { ImageData } from '../../types/port-types';
 import { ImageIcon, Settings2 } from 'lucide-react';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const DIM_LABELS: Record<string, string> = {
   'square-1024':        '1:1',
@@ -160,6 +162,14 @@ export function ImageGeneratorNode({ id, data, selected }: NodeProps<Node<ImageG
             <span className="text-[9px] text-[#4ade80]">auto-extend</span>
           </>
         )}
+        {/* Model selector */}
+        <div className="w-full mt-1">
+          <NodeModelSelect
+            options={config.mode === 'text2img' ? MODEL_OPTIONS.imageGeneration : MODEL_OPTIONS.imageEditing}
+            value={(config.mode === 'text2img' ? config.model : config.imageEditModel) ?? (config.mode === 'text2img' ? 'wan2.1-t2i-turbo' : 'qwen-image-edit-plus')}
+            onChange={(m) => config.mode === 'text2img' ? updateConfig({ model: m }) : updateConfig({ imageEditModel: m })}
+          />
+        </div>
       </div>
     </CompactNode>
   );

@@ -2,6 +2,8 @@ import { useReactFlow } from '@xyflow/react';
 import type { ReactNode } from 'react';
 import { Columns2, Grid2X2, LayoutDashboard, LayoutGrid, Rows2 } from 'lucide-react';
 import type { CollageLayoutData, CollageLayoutStyle } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -90,6 +92,12 @@ export function CollageLayoutPanel({ nodeId, data }: Props) {
           Connect two Image nodes (Image A + Image B inputs) to create a collage.
         </div>
       </div>
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

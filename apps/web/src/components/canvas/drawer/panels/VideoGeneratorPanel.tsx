@@ -1,6 +1,8 @@
 import { useReactFlow } from '@xyflow/react';
 import { ArrowRight, Image, Type, Video } from 'lucide-react';
 import type { VideoGeneratorData, VideoResolution } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -117,6 +119,20 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
           ))}
         </div>
       </div>
+
+      {config.mode === 'text2video' ? (
+        <ModelPicker
+          options={MODEL_OPTIONS.textToVideo}
+          value={config.model ?? 'wan2.1-t2v-turbo'}
+          onChange={(model) => updateConfig({ model })}
+        />
+      ) : (
+        <ModelPicker
+          options={MODEL_OPTIONS.imageToVideo}
+          value={config.imageVideoModel ?? 'wan2.1-i2v-turbo'}
+          onChange={(imageVideoModel) => updateConfig({ imageVideoModel })}
+        />
+      )}
     </>
   );
 }

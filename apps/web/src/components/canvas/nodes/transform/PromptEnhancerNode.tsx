@@ -1,9 +1,11 @@
-import { useNodeId } from '@xyflow/react';
+import { useNodeId, useReactFlow } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { PromptEnhancerData } from '../../types/node-types';
 import type { TextData, PromptData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const CREATIVITY_STEPS = ['precise', 'balanced', 'creative'] as const;
 const TONE_COLORS: Record<string, string> = {
@@ -11,11 +13,13 @@ const TONE_COLORS: Record<string, string> = {
 };
 const LANG_CODE: Record<string, string> = { id: 'ID', en: 'EN', mixed: 'MIX' };
 
-export function PromptEnhancerNode({ data, selected }: NodeProps<Node<PromptEnhancerData>>) {
+export function PromptEnhancerNode({ id, data, selected }: NodeProps<Node<PromptEnhancerData>>) {
   const { config } = data;
   const nodeId = useNodeId();
+  const { updateNodeData } = useReactFlow();
   const { getNodeState } = useExecutionContext();
   const execState = nodeId ? getNodeState(nodeId) : null;
+  const updateConfig = (updates: Partial<typeof config>) => updateNodeData(id, { config: { ...config, ...updates } });
   const isRunning = execState?.status === 'running';
   const isDone = execState?.status === 'done';
   const outputText = isDone
@@ -60,6 +64,18 @@ export function PromptEnhancerNode({ data, selected }: NodeProps<Node<PromptEnha
         <span className="text-[10px] font-bold text-white/55 tracking-wider ml-auto" title={config.language}>{LANG_CODE[config.language] ?? config.language.toUpperCase()}</span>
       </div>
     
+      {/* ── Model ── */}
+      <div className="mt-2.5 pt-2.5 flex items-center gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span className="text-[9px] text-white/25 uppercase tracking-wider shrink-0">Model</span>
+        <div className="flex-1 min-w-0">
+          <NodeModelSelect
+            options={MODEL_OPTIONS.textGeneration}
+            value={config.model ?? 'qwen-flash'}
+            onChange={(m) => updateConfig({ model: m })}
+          />
+        </div>
+      </div>
+
       {/* ── Output preview ──────────────────────────────── */}
       {(isRunning || isDone) && (
         <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>

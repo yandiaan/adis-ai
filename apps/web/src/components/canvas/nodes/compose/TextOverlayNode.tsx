@@ -1,31 +1,36 @@
-import { useNodeId, useEdges } from '@xyflow/react';
+import { useNodeId, useEdges, useReactFlow } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { TextOverlayData } from '../../types/node-types';
 import type { ImageData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const POSITION_MAP: Record<
   string,
   { top?: string; bottom?: string; left: string; transform: string }
 > = {
-  'top-left':      { top: '8%',  bottom: undefined, left: '8%',  transform: 'none' },
-  'top-center':    { top: '8%',  bottom: undefined, left: '50%', transform: 'translateX(-50%)' },
-  'top-right':     { top: '8%',  bottom: undefined, left: 'auto', transform: 'none' },
-  'center-left':   { top: '50%', bottom: undefined, left: '8%',  transform: 'translateY(-50%)' },
-  'center':        { top: '50%', bottom: undefined, left: '50%', transform: 'translate(-50%,-50%)' },
-  'center-right':  { top: '50%', bottom: undefined, left: 'auto', transform: 'translateY(-50%)' },
-  'bottom-left':   { top: undefined, bottom: '8%',  left: '8%',  transform: 'none' },
-  'bottom-center': { top: undefined, bottom: '8%',  left: '50%', transform: 'translateX(-50%)' },
-  'bottom-right':  { top: undefined, bottom: '8%',  left: 'auto', transform: 'none' },
+  'top-left': { top: '8%', bottom: undefined, left: '8%', transform: 'none' },
+  'top-center': { top: '8%', bottom: undefined, left: '50%', transform: 'translateX(-50%)' },
+  'top-right': { top: '8%', bottom: undefined, left: 'auto', transform: 'none' },
+  'center-left': { top: '50%', bottom: undefined, left: '8%', transform: 'translateY(-50%)' },
+  center: { top: '50%', bottom: undefined, left: '50%', transform: 'translate(-50%,-50%)' },
+  'center-right': { top: '50%', bottom: undefined, left: 'auto', transform: 'translateY(-50%)' },
+  'bottom-left': { top: undefined, bottom: '8%', left: '8%', transform: 'none' },
+  'bottom-center': { top: undefined, bottom: '8%', left: '50%', transform: 'translateX(-50%)' },
+  'bottom-right': { top: undefined, bottom: '8%', left: 'auto', transform: 'none' },
 };
 
-export function TextOverlayNode({ data, selected }: NodeProps<Node<TextOverlayData>>) {
+export function TextOverlayNode({ id, data, selected }: NodeProps<Node<TextOverlayData>>) {
   const { config } = data;
   const nodeId = useNodeId();
+  const { updateNodeData } = useReactFlow();
   const edges = useEdges();
   const { getNodeState } = useExecutionContext();
   const execState = nodeId ? getNodeState(nodeId) : null;
+  const updateConfig = (updates: Partial<typeof config>) =>
+    updateNodeData(id, { config: { ...config, ...updates } });
   const isRunning = execState?.status === 'running';
   const isDone = execState?.status === 'done';
   const outputImage = isDone
@@ -96,6 +101,21 @@ export function TextOverlayNode({ data, selected }: NodeProps<Node<TextOverlayDa
             {config.effect}
           </span>
         )}
+      </div>
+
+      {/* ── Model ── */}
+      <div
+        className="mt-2.5 pt-2.5 flex items-center gap-2"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <span className="text-[9px] text-white/25 uppercase tracking-wider shrink-0">Model</span>
+        <div className="flex-1 min-w-0">
+          <NodeModelSelect
+            options={MODEL_OPTIONS.imageEditing}
+            value={config.model ?? 'qwen-image-edit-plus'}
+            onChange={(m) => updateConfig({ model: m })}
+          />
+        </div>
       </div>
 
       {/* ── Output preview ──────────────────────────────── */}

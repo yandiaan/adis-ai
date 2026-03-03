@@ -2,6 +2,8 @@ import { useReactFlow } from '@xyflow/react';
 import type { ReactNode } from 'react';
 import { Blend, Layers, Scissors, Square } from 'lucide-react';
 import type { BackgroundRemoverData, BgOutputType } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -59,6 +61,12 @@ export function BackgroundRemoverPanel({ nodeId, data }: Props) {
           subjects.
         </div>
       </div>
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

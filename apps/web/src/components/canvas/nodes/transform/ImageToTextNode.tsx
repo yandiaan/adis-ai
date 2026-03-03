@@ -1,18 +1,22 @@
-import { useNodeId } from '@xyflow/react';
+import { useNodeId, useReactFlow } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { ImageToTextData } from '../../types/node-types';
 import type { TextData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const DETAIL_BARS: Record<string, number> = { brief: 1, detailed: 2, artistic: 3 };
 const LANG_LABEL: Record<string, string> = { id: 'ID', en: 'EN' };
 
-export function ImageToTextNode({ data, selected }: NodeProps<Node<ImageToTextData>>) {
+export function ImageToTextNode({ id, data, selected }: NodeProps<Node<ImageToTextData>>) {
   const { config } = data;
   const nodeId = useNodeId();
+  const { updateNodeData } = useReactFlow();
   const { getNodeState } = useExecutionContext();
   const execState = nodeId ? getNodeState(nodeId) : null;
+  const updateConfig = (updates: Partial<typeof config>) => updateNodeData(id, { config: { ...config, ...updates } });
   const isRunning = execState?.status === 'running';
   const isDone = execState?.status === 'done';
   const outputText = isDone ? (execState?.output?.type === 'text' ? (execState.output.data as TextData).text : null) : null;
@@ -52,6 +56,18 @@ export function ImageToTextNode({ data, selected }: NodeProps<Node<ImageToTextDa
         <span className="text-[9px] text-white/35 ml-1">{config.detailLevel}</span>
       </div>
     
+      {/* ── Model ── */}
+      <div className="mt-2.5 pt-2.5 flex items-center gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span className="text-[9px] text-white/25 uppercase tracking-wider shrink-0">Model</span>
+        <div className="flex-1 min-w-0">
+          <NodeModelSelect
+            options={MODEL_OPTIONS.vision}
+            value={config.model ?? 'qwen2.5-vl-3b-instruct'}
+            onChange={(m) => updateConfig({ model: m })}
+          />
+        </div>
+      </div>
+
       {/* ── Output preview ──────────────────────────────── */}
       {(isRunning || isDone) && (
         <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>

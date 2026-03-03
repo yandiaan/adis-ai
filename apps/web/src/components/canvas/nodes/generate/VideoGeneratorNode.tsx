@@ -6,6 +6,8 @@ import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { VideoGeneratorData } from '../../types/node-types';
 import type { NodePortSchema, VideoData } from '../../types/port-types';
 import { Film, Settings2 } from 'lucide-react';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const RES_LABELS: Record<string, string> = { '480P': '480p', '720P': '720p', '1080P': '1080p' };
 
@@ -150,7 +152,11 @@ export function VideoGeneratorNode({ id, data, selected }: NodeProps<Node<VideoG
         <Settings2 size={10} className="text-white/25 shrink-0" />
         <div className="flex items-center gap-1">
           <span className="text-[9px] text-white/25">Model</span>
-          <span className="text-[9px] text-white/50 font-medium">Wan 2.1</span>
+          <NodeModelSelect
+            options={config.mode === 'text2video' ? MODEL_OPTIONS.textToVideo : MODEL_OPTIONS.imageToVideo}
+            value={(config.mode === 'text2video' ? config.model : config.imageVideoModel) ?? (config.mode === 'text2video' ? 'wan2.1-t2v-turbo' : 'wan2.1-i2v-turbo')}
+            onChange={(m) => config.mode === 'text2video' ? updateConfig({ model: m }) : updateConfig({ imageVideoModel: m })}
+          />
         </div>
         <div className="w-px h-3 bg-white/10" />
         <div className="flex items-center gap-1">

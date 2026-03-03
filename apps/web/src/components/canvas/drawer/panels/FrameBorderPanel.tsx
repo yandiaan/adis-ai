@@ -2,6 +2,8 @@ import { useReactFlow } from '@xyflow/react';
 import type { ReactNode } from 'react';
 import { Camera, FileText, Flower2, Moon, X, Zap } from 'lucide-react';
 import type { FrameBorderData, FrameStyle } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -84,6 +86,12 @@ export function FrameBorderPanel({ nodeId, data }: Props) {
           </div>
         </>
       )}
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

@@ -1,6 +1,8 @@
 import { useReactFlow } from '@xyflow/react';
 import { X } from 'lucide-react';
 import type { StickerLayerData, StickerPack } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -89,6 +91,12 @@ export function StickerLayerPanel({ nodeId, data }: Props) {
           </div>
         </div>
       )}
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

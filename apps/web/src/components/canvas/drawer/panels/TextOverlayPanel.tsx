@@ -2,6 +2,8 @@ import { useReactFlow, useEdges } from '@xyflow/react';
 
 import type { TextOverlayData, TextPosition, FontFamily, TextEffect } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -180,6 +182,12 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
           ))}
         </div>
       </div>
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

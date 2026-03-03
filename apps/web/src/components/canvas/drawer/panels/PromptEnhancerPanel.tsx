@@ -6,6 +6,8 @@ import type {
   ContentType,
   ToneType,
 } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -120,6 +122,12 @@ export function PromptEnhancerPanel({ nodeId, data }: Props) {
           ))}
         </div>
       </div>
+
+      <ModelPicker
+        options={MODEL_OPTIONS.textGeneration}
+        value={config.model ?? 'qwen-flash'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

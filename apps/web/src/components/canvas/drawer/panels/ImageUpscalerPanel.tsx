@@ -1,6 +1,8 @@
 import { useReactFlow } from '@xyflow/react';
 import { Circle, CircleCheck } from 'lucide-react';
 import type { ImageUpscalerData, UpscaleScale } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -67,6 +69,12 @@ export function ImageUpscalerPanel({ nodeId, data }: Props) {
           Applies additional face-specific enhancement for portrait photos.
         </div>
       </div>
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

@@ -1,6 +1,9 @@
+import { useReactFlow } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { BackgroundReplacerData } from '../../types/node-types';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const TYPE_LABELS: Record<string, string> = {
   blur: 'Blur',
@@ -8,8 +11,10 @@ const TYPE_LABELS: Record<string, string> = {
   'ai-generated': 'AI Generated',
 };
 
-export function BackgroundReplacerNode({ data, selected }: NodeProps<Node<BackgroundReplacerData>>) {
+export function BackgroundReplacerNode({ id, data, selected }: NodeProps<Node<BackgroundReplacerData>>) {
   const { config } = data;
+  const { updateNodeData } = useReactFlow();
+  const updateConfig = (updates: Partial<typeof config>) => updateNodeData(id, { config: { ...config, ...updates } });
   const label = TYPE_LABELS[config.replacementType] ?? config.replacementType;
 
   return (
@@ -36,6 +41,17 @@ export function BackgroundReplacerNode({ data, selected }: NodeProps<Node<Backgr
                 : 'Gaussian blur'}
           </div>
           <div className="text-[9px] text-white/20 mt-0.5">BG Replacer</div>
+        </div>
+      </div>
+      {/* ── Model ── */}
+      <div className="mt-2.5 pt-2.5 flex items-center gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span className="text-[9px] text-white/25 uppercase tracking-wider shrink-0">Model</span>
+        <div className="flex-1 min-w-0">
+          <NodeModelSelect
+            options={MODEL_OPTIONS.imageEditing}
+            value={config.model ?? 'qwen-image-edit-plus'}
+            onChange={(m) => updateConfig({ model: m })}
+          />
         </div>
       </div>
     </CompactNode>

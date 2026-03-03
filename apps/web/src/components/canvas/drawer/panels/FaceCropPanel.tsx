@@ -1,6 +1,8 @@
 import { useReactFlow } from '@xyflow/react';
 import { Smartphone } from 'lucide-react';
 import type { FaceCropData, FaceCropFormat } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -69,6 +71,12 @@ export function FaceCropPanel({ nodeId, data }: Props) {
           pic pipelines.
         </div>
       </div>
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }

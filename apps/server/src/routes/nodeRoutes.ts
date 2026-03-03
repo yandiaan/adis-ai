@@ -19,6 +19,7 @@ const promptEnhancerSchema = z.object({
     contentType: z.enum(['wishes', 'meme', 'character', 'avatar', 'general']),
     tone: z.enum(['formal', 'casual', 'funny', 'heartfelt']),
     language: z.enum(['id', 'en', 'mixed']),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     text: z
@@ -50,6 +51,7 @@ router.post('/prompt-enhancer/run', async (req, res, next) => {
     const systemPrompt = buildPromptEnhancerSystem(config, styleData);
 
     const enhancedText = await generateText({
+      model: config.model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: inputText },
@@ -110,6 +112,8 @@ const imageGeneratorSchema = z.object({
     ]),
     seed: z.number().nullable(),
     prompt_extend: z.boolean().optional(),
+    model: z.string().optional(),
+    imageEditModel: z.string().optional(),
   }),
   inputs: z.object({
     prompt: z
@@ -153,6 +157,7 @@ router.post('/image-generator/run', async (req, res, next) => {
     if (config.mode === 'img2img' && inputs.image?.data) {
       // Image editing mode — use Qwen-Image-Edit (synchronous)
       const urls = await editImage({
+        model: config.imageEditModel,
         images: [(inputs.image.data as { url: string }).url],
         text: promptData.prompt,
         size,
@@ -176,6 +181,7 @@ router.post('/image-generator/run', async (req, res, next) => {
     } else {
       // Text-to-image mode — async task
       const taskId = await generateImage({
+        model: config.model,
         prompt: promptData.prompt,
         negative_prompt: promptData.negativePrompt,
         size,
@@ -211,6 +217,8 @@ const videoGeneratorSchema = z.object({
     resolution: z.enum(['480P', '720P', '1080P']),
     shot_type: z.enum(['single', 'multi']).optional(),
     prompt_extend: z.boolean().optional(),
+    model: z.string().optional(),
+    imageVideoModel: z.string().optional(),
   }),
   inputs: z.object({
     prompt: z
@@ -260,6 +268,7 @@ router.post('/video-generator/run', async (req, res, next) => {
     if (config.mode === 'img2video' && inputs.image?.data) {
       // Image-to-video: uses resolution param (e.g., "720P")
       taskId = await generateVideoFromImage({
+        model: config.imageVideoModel,
         prompt: promptData.prompt,
         img_url: (inputs.image.data as { url: string }).url,
         resolution: config.resolution,
@@ -271,6 +280,7 @@ router.post('/video-generator/run', async (req, res, next) => {
     } else {
       // Text-to-video: uses size param (e.g., "1280*720")
       taskId = await generateVideo({
+        model: config.model,
         prompt: promptData.prompt,
         size: resolutionToSizeMap[config.resolution] || '1280*720',
         duration: config.duration,
@@ -305,6 +315,7 @@ const imageToTextSchema = z.object({
   config: z.object({
     detailLevel: z.enum(['brief', 'detailed', 'artistic']),
     language: z.enum(['id', 'en']),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -336,6 +347,7 @@ router.post('/image-to-text/run', async (req, res, next) => {
       config.language === 'id' ? ' Respond in Indonesian.' : ' Respond in English.';
 
     const text = await describeImage({
+      model: config.model,
       image_url: imageUrl,
       system_prompt: detailPrompts[config.detailLevel] + langSuffix,
       max_tokens: config.detailLevel === 'brief' ? 100 : 500,
@@ -361,6 +373,7 @@ const translateTextSchema = z.object({
   config: z.object({
     sourceLang: z.enum(['auto', 'id', 'en', 'ar', 'zh']),
     targetLang: z.enum(['id', 'en', 'ar', 'zh']),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     text: z
@@ -395,7 +408,7 @@ router.post('/translate-text/run', async (req, res, next) => {
     const tgtLabel = LANG_NAMES[config.targetLang] || config.targetLang;
 
     const translated = await generateText({
-      model: 'qwen-flash',
+      model: config.model || 'qwen-flash',
       messages: [
         {
           role: 'system',
@@ -425,6 +438,7 @@ router.post('/translate-text/run', async (req, res, next) => {
 const backgroundRemoverSchema = z.object({
   config: z.object({
     outputType: z.enum(['transparent', 'white', 'blur']),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -454,6 +468,7 @@ router.post('/background-remover/run', async (req, res, next) => {
     };
 
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: outputInstructions[config.outputType],
     });
@@ -480,6 +495,7 @@ const faceCropSchema = z.object({
   config: z.object({
     margin: z.number(),
     format: z.enum(['square', 'portrait']),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -504,6 +520,7 @@ router.post('/face-crop/run', async (req, res, next) => {
 
     const aspect = config.format === 'square' ? 'square (1:1)' : 'portrait (3:4)';
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: `Detect and crop the main face in this image. Output a ${aspect} crop centered on the face with ${config.margin}px margin around it. Keep the face sharp and well-framed.`,
     });
@@ -530,6 +547,7 @@ const inpaintingSchema = z.object({
   config: z.object({
     mode: z.enum(['auto', 'manual']),
     strength: z.number().min(0).max(100),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -581,6 +599,7 @@ router.post('/inpainting/run', async (req, res, next) => {
           : 'Apply subtle modifications, keeping most of the original intact.';
 
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: `${promptText}. ${strengthNote}`,
     });
@@ -607,6 +626,7 @@ const imageUpscalerSchema = z.object({
   config: z.object({
     scale: z.union([z.literal(2), z.literal(4)]),
     enhanceFaces: z.boolean(),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -631,6 +651,7 @@ router.post('/image-upscaler/run', async (req, res, next) => {
 
     const faceNote = config.enhanceFaces ? ' Enhance and sharpen any faces in the image.' : '';
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: `Upscale this image by ${config.scale}x, enhancing details and sharpness while preserving the original content.${faceNote}`,
     });
@@ -662,6 +683,7 @@ const textOverlaySchema = z.object({
     fontColor: z.string(),
     stroke: z.boolean(),
     effect: z.enum(['none', 'shadow', 'glow', 'gradient']),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -701,6 +723,7 @@ router.post('/text-overlay/run', async (req, res, next) => {
       config.effect !== 'none' ? `, with a ${config.effect} text effect` : '';
 
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: `Add the text "${overlayText}" at the ${config.position} of the image in ${config.font} font at size ${config.fontSize}px in color ${config.fontColor}${strokeNote}${effectNote}. Keep the rest of the image unchanged.`,
     });
@@ -728,6 +751,7 @@ const frameBorderSchema = z.object({
     style: z.enum(['islamic', 'floral', 'polaroid', 'neon', 'torn-paper', 'none']),
     thickness: z.number(),
     color: z.string(),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -772,6 +796,7 @@ router.post('/frame-border/run', async (req, res, next) => {
     const styleDesc = styleDescriptions[config.style] || config.style;
 
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: `Add a ${styleDesc} frame/border around this image. Border thickness: ${config.thickness}px, color: ${config.color}. Keep the main subject fully visible inside.`,
     });
@@ -805,6 +830,7 @@ const stickerLayerSchema = z.object({
         size: z.number(),
       }),
     ),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -838,6 +864,7 @@ router.post('/sticker-layer/run', async (req, res, next) => {
         : `decorative ${config.pack} themed emoji stickers spread naturally around the image`;
 
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: `Add stickers/emoji overlays to this image: ${stickerList}. Make the stickers look natural and well-integrated with the image.`,
     });
@@ -864,6 +891,7 @@ const colorFilterSchema = z.object({
   config: z.object({
     preset: z.enum(['none', 'warm', 'vintage', 'eid-gold', 'sahur', 'cool', 'vibrant']),
     intensity: z.number().min(0).max(100),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z
@@ -916,6 +944,7 @@ router.post('/color-filter/run', async (req, res, next) => {
           : 'Apply it strongly.';
 
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: `Apply ${filterDesc} color filter/grade to this image. ${strengthNote} Keep the composition and subjects unchanged.`,
     });
@@ -943,6 +972,7 @@ const collageLayoutSchema = z.object({
     layout: z.enum(['2-horizontal', '2-vertical', '3-grid', '4-grid', 'mosaic']),
     gap: z.number(),
     borderRadius: z.number(),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image1: z
@@ -991,6 +1021,7 @@ router.post('/collage-layout/run', async (req, res, next) => {
     const layoutDesc = COLLAGE_DESCRIPTIONS[config.layout] || config.layout;
 
     const urls = await editImage({
+      model: config.model,
       images: imageUrls,
       text: `Combine these ${imageUrls.length} images into a collage arranged ${layoutDesc}. Gap between images: ${config.gap}px. Rounded corners: ${config.borderRadius}px. Output a single combined collage image.`,
     });
@@ -1017,6 +1048,7 @@ const objectRemoverSchema = z.object({
   config: z.object({
     target: z.string(),
     mode: z.enum(['auto', 'describe']).default('auto'),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z.object({
@@ -1039,9 +1071,9 @@ router.post('/object-remover/run', async (req, res, next) => {
         : 'Remove the main subject from this image and fill the removed area naturally to blend with the surrounding background';
 
     const urls = await editImage({
+      model: config.model,
       images: [imageUrl],
       text: instruction,
-      model: 'qwen-image-edit-plus',
     });
 
     const resultUrl = urls[0];
@@ -1067,6 +1099,7 @@ const backgroundReplacerSchema = z.object({
     replacementType: z.enum(['blur', 'solid-color', 'ai-generated']),
     color: z.string().optional(),
     backgroundPrompt: z.string().optional(),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z.object({
@@ -1106,7 +1139,7 @@ router.post('/background-replacer/run', async (req, res, next) => {
     }
 
     const images = bgImageUrl ? [imageUrl, bgImageUrl] : [imageUrl];
-    const urls = await editImage({ images, text: instruction });
+    const urls = await editImage({ model: config.model, images, text: instruction });
 
     const resultUrl = urls[0];
     if (!resultUrl) throw new Error('No image generated');
@@ -1130,6 +1163,7 @@ const styleTransferSchema = z.object({
   config: z.object({
     stylePrompt: z.string().default(''),
     strength: z.enum(['subtle', 'moderate', 'strong']).default('moderate'),
+    model: z.string().optional(),
   }),
   inputs: z.object({
     image: z.object({
@@ -1170,7 +1204,7 @@ router.post('/style-transfer/run', async (req, res, next) => {
     }
 
     const images = styleImageUrl ? [imageUrl, styleImageUrl] : [imageUrl];
-    const urls = await editImage({ images, text: instruction });
+    const urls = await editImage({ model: config.model, images, text: instruction });
 
     const resultUrl = urls[0];
     if (!resultUrl) throw new Error('No image generated');

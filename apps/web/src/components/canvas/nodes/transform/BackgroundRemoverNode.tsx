@@ -1,9 +1,11 @@
-import { useNodeId } from '@xyflow/react';
+import { useNodeId, useReactFlow } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { BackgroundRemoverData } from '../../types/node-types';
 import type { ImageData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const OUTPUT_CONFIG = {
   transparent: { label: 'Transparent', color: '#a78bfa', desc: 'Alpha channel' },
@@ -11,11 +13,18 @@ const OUTPUT_CONFIG = {
   blur: { label: 'Blur BG', color: '#60a5fa', desc: 'Gaussian blur' },
 } as const;
 
-export function BackgroundRemoverNode({ data, selected }: NodeProps<Node<BackgroundRemoverData>>) {
+export function BackgroundRemoverNode({
+  id,
+  data,
+  selected,
+}: NodeProps<Node<BackgroundRemoverData>>) {
   const { config } = data;
   const nodeId = useNodeId();
+  const { updateNodeData } = useReactFlow();
   const { getNodeState } = useExecutionContext();
   const execState = nodeId ? getNodeState(nodeId) : null;
+  const updateConfig = (updates: Partial<typeof config>) =>
+    updateNodeData(id, { config: { ...config, ...updates } });
   const isRunning = execState?.status === 'running';
   const isDone = execState?.status === 'done';
   const outputImage = isDone
@@ -50,6 +59,21 @@ export function BackgroundRemoverNode({ data, selected }: NodeProps<Node<Backgro
           </div>
           <div className="text-[9px] text-white/30">{output.desc}</div>
           <div className="text-[9px] text-white/20 mt-0.5">AI Matting</div>
+        </div>
+      </div>
+
+      {/* ── Model ── */}
+      <div
+        className="mt-2.5 pt-2.5 flex items-center gap-2"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <span className="text-[9px] text-white/25 uppercase tracking-wider shrink-0">Model</span>
+        <div className="flex-1 min-w-0">
+          <NodeModelSelect
+            options={MODEL_OPTIONS.imageEditing}
+            value={config.model ?? 'qwen-image-edit-plus'}
+            onChange={(m) => updateConfig({ model: m })}
+          />
         </div>
       </div>
 

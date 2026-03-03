@@ -1,5 +1,6 @@
 import type { Node } from '@xyflow/react';
 import type { NodePortSchema } from './port-types';
+import { getDefaultModel } from '../config/modelOptions';
 
 // Node categories
 export type NodeCategory = 'input' | 'transform' | 'generate' | 'compose' | 'output';
@@ -80,6 +81,7 @@ export interface PromptEnhancerConfig {
   contentType: ContentType;
   tone: ToneType;
   language: 'id' | 'en' | 'mixed';
+  model?: string;
 }
 
 export interface PromptEnhancerData extends BaseNodeData {
@@ -116,6 +118,7 @@ export type DetailLevel = 'brief' | 'detailed' | 'artistic';
 export interface ImageToTextConfig {
   detailLevel: DetailLevel;
   language: 'id' | 'en';
+  model?: string;
 }
 
 export interface ImageToTextData extends BaseNodeData {
@@ -127,6 +130,7 @@ export type TranslateLang = 'auto' | 'id' | 'en' | 'ar' | 'zh';
 export interface TranslateTextConfig {
   sourceLang: TranslateLang;
   targetLang: Exclude<TranslateLang, 'auto'>;
+  model?: string;
 }
 
 export interface TranslateTextData extends BaseNodeData {
@@ -137,6 +141,7 @@ export type BgOutputType = 'transparent' | 'white' | 'blur';
 
 export interface BackgroundRemoverConfig {
   outputType: BgOutputType;
+  model?: string;
 }
 
 export interface BackgroundRemoverData extends BaseNodeData {
@@ -148,6 +153,7 @@ export type FaceCropFormat = 'square' | 'portrait';
 export interface FaceCropConfig {
   margin: number;
   format: FaceCropFormat;
+  model?: string;
 }
 
 export interface FaceCropData extends BaseNodeData {
@@ -159,6 +165,7 @@ export interface FaceCropData extends BaseNodeData {
 export interface ObjectRemoverConfig {
   target: string;
   mode: 'auto' | 'describe';
+  model?: string;
 }
 export interface ObjectRemoverData extends BaseNodeData {
   config: ObjectRemoverConfig;
@@ -169,6 +176,7 @@ export interface BackgroundReplacerConfig {
   replacementType: BgReplacementType;
   color: string;
   backgroundPrompt: string;
+  model?: string;
 }
 export interface BackgroundReplacerData extends BaseNodeData {
   config: BackgroundReplacerConfig;
@@ -178,6 +186,7 @@ export type StyleStrength = 'subtle' | 'moderate' | 'strong';
 export interface StyleTransferConfig {
   stylePrompt: string;
   strength: StyleStrength;
+  model?: string;
 }
 export interface StyleTransferData extends BaseNodeData {
   config: StyleTransferConfig;
@@ -197,6 +206,8 @@ export interface ImageGeneratorConfig {
   dimensions: ImageDimension;
   prompt_extend?: boolean;
   seed: number | null;
+  model?: string;
+  imageEditModel?: string;
 }
 
 export interface ImageGeneratorData extends BaseNodeData {
@@ -214,6 +225,8 @@ export interface VideoGeneratorConfig {
   resolution: VideoResolution;
   shot_type?: 'single' | 'multi';
   prompt_extend?: boolean;
+  model?: string;
+  imageVideoModel?: string;
 }
 
 export interface VideoGeneratorData extends BaseNodeData {
@@ -225,6 +238,7 @@ export type InpaintingMode = 'auto' | 'manual';
 export interface InpaintingConfig {
   mode: InpaintingMode;
   strength: number;
+  model?: string;
 }
 
 export interface InpaintingData extends BaseNodeData {
@@ -236,6 +250,7 @@ export type UpscaleScale = 2 | 4;
 export interface ImageUpscalerConfig {
   scale: UpscaleScale;
   enhanceFaces: boolean;
+  model?: string;
 }
 
 export interface ImageUpscalerData extends BaseNodeData {
@@ -245,9 +260,15 @@ export interface ImageUpscalerData extends BaseNodeData {
 // --- COMPOSE NODES ---
 
 export type TextPosition =
-  | 'top-left' | 'top-center' | 'top-right'
-  | 'center-left' | 'center' | 'center-right'
-  | 'bottom-left' | 'bottom-center' | 'bottom-right';
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right';
 export type FontFamily = 'inter' | 'impact' | 'arabic-display' | 'comic-neue';
 export type TextEffect = 'none' | 'shadow' | 'glow' | 'gradient';
 
@@ -259,6 +280,7 @@ export interface TextOverlayConfig {
   fontColor: string;
   stroke: boolean;
   effect: TextEffect;
+  model?: string;
 }
 
 export interface TextOverlayData extends BaseNodeData {
@@ -271,6 +293,7 @@ export interface FrameBorderConfig {
   style: FrameStyle;
   thickness: number;
   color: string;
+  model?: string;
 }
 
 export interface FrameBorderData extends BaseNodeData {
@@ -289,6 +312,7 @@ export interface StickerItem {
 export interface StickerLayerConfig {
   pack: StickerPack;
   stickers: StickerItem[];
+  model?: string;
 }
 
 export interface StickerLayerData extends BaseNodeData {
@@ -307,6 +331,7 @@ export type ColorFilterPreset =
 export interface ColorFilterConfig {
   preset: ColorFilterPreset;
   intensity: number;
+  model?: string;
 }
 
 export interface ColorFilterData extends BaseNodeData {
@@ -319,6 +344,7 @@ export interface CollageLayoutConfig {
   layout: CollageLayoutStyle;
   gap: number;
   borderRadius: number;
+  model?: string;
 }
 
 export interface CollageLayoutData extends BaseNodeData {
@@ -590,6 +616,7 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     contentType: 'general',
     tone: 'casual',
     language: 'id',
+    model: getDefaultModel('textGeneration'),
   } satisfies PromptEnhancerConfig,
 
   styleConfig: {
@@ -604,6 +631,8 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     dimensions: 'square-1024',
     prompt_extend: true,
     seed: null,
+    model: getDefaultModel('imageGeneration'),
+    imageEditModel: getDefaultModel('imageEditing'),
   } satisfies ImageGeneratorConfig,
 
   videoGenerator: {
@@ -613,6 +642,8 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     resolution: '720P',
     shot_type: 'single',
     prompt_extend: true,
+    model: getDefaultModel('textToVideo'),
+    imageVideoModel: getDefaultModel('imageToVideo'),
   } satisfies VideoGeneratorConfig,
 
   textOverlay: {
@@ -623,6 +654,7 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     fontColor: '#ffffff',
     stroke: true,
     effect: 'shadow',
+    model: getDefaultModel('imageEditing'),
   } satisfies TextOverlayConfig,
 
   preview: {
@@ -641,70 +673,82 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
   imageToText: {
     detailLevel: 'detailed',
     language: 'id',
+    model: getDefaultModel('vision'),
   } satisfies ImageToTextConfig,
 
   translateText: {
     sourceLang: 'auto',
     targetLang: 'en',
+    model: getDefaultModel('textGeneration'),
   } satisfies TranslateTextConfig,
 
   backgroundRemover: {
     outputType: 'transparent',
+    model: getDefaultModel('imageEditing'),
   } satisfies BackgroundRemoverConfig,
 
   faceCrop: {
     margin: 20,
     format: 'square',
+    model: getDefaultModel('imageEditing'),
   } satisfies FaceCropConfig,
 
   objectRemover: {
     target: '',
     mode: 'auto',
+    model: getDefaultModel('imageEditing'),
   } satisfies ObjectRemoverConfig,
 
   backgroundReplacer: {
     replacementType: 'ai-generated',
     color: '#ffffff',
     backgroundPrompt: '',
+    model: getDefaultModel('imageEditing'),
   } satisfies BackgroundReplacerConfig,
 
   styleTransfer: {
     stylePrompt: '',
     strength: 'moderate',
+    model: getDefaultModel('imageEditing'),
   } satisfies StyleTransferConfig,
 
   inpainting: {
     mode: 'auto',
     strength: 75,
+    model: getDefaultModel('imageEditing'),
   } satisfies InpaintingConfig,
 
   imageUpscaler: {
     scale: 2,
     enhanceFaces: false,
+    model: getDefaultModel('imageEditing'),
   } satisfies ImageUpscalerConfig,
 
   frameBorder: {
     style: 'islamic',
     thickness: 20,
     color: '#C9A84C',
+    model: getDefaultModel('imageEditing'),
   } satisfies FrameBorderConfig,
 
   stickerLayer: {
     pack: 'ramadan',
     stickers: [],
+    model: getDefaultModel('imageEditing'),
   } satisfies StickerLayerConfig,
 
   colorFilter: {
     preset: 'warm',
     intensity: 60,
+    model: getDefaultModel('imageEditing'),
   } satisfies ColorFilterConfig,
 
   collageLayout: {
     layout: '2-horizontal',
     gap: 8,
     borderRadius: 12,
+    model: getDefaultModel('imageEditing'),
   } satisfies CollageLayoutConfig,
-
 };
 
 // Runnable node types(have a "Run" button)

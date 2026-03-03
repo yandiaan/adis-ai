@@ -1,9 +1,11 @@
-import { useNodeId } from '@xyflow/react';
+import { useNodeId, useReactFlow } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { CompactNode } from '../CompactNode';
 import type { ColorFilterData } from '../../types/node-types';
 import type { ImageData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
+import { NodeModelSelect } from '../shared/NodeModelSelect';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 const FILTER_META: Record<string, { gradient: string; label: string }> = {
   none:       { gradient: 'linear-gradient(90deg, #555, #888)', label: 'No Filter' },
@@ -15,11 +17,13 @@ const FILTER_META: Record<string, { gradient: string; label: string }> = {
   vibrant:    { gradient: 'linear-gradient(90deg, #f472b6, #fb923c)', label: 'Vibrant' },
 };
 
-export function ColorFilterNode({ data, selected }: NodeProps<Node<ColorFilterData>>) {
+export function ColorFilterNode({ id, data, selected }: NodeProps<Node<ColorFilterData>>) {
   const { config } = data;
   const nodeId = useNodeId();
+  const { updateNodeData } = useReactFlow();
   const { getNodeState } = useExecutionContext();
   const execState = nodeId ? getNodeState(nodeId) : null;
+  const updateConfig = (updates: Partial<typeof config>) => updateNodeData(id, { config: { ...config, ...updates } });
   const isRunning = execState?.status === 'running';
   const isDone = execState?.status === 'done';
   const outputImage = isDone ? (execState?.output?.type === 'image' ? (execState.output.data as ImageData) : null) : null;
@@ -52,6 +56,18 @@ export function ColorFilterNode({ data, selected }: NodeProps<Node<ColorFilterDa
         <span className="text-[9px] text-white/30 ml-auto">{config.intensity}%</span>
       </div>
     
+      {/* ── Model ── */}
+      <div className="mt-2.5 pt-2.5 flex items-center gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span className="text-[9px] text-white/25 uppercase tracking-wider shrink-0">Model</span>
+        <div className="flex-1 min-w-0">
+          <NodeModelSelect
+            options={MODEL_OPTIONS.imageEditing}
+            value={config.model ?? 'qwen-image-edit-plus'}
+            onChange={(m) => updateConfig({ model: m })}
+          />
+        </div>
+      </div>
+
       {/* ── Output preview ──────────────────────────────── */}
       {(isRunning || isDone) && (
         <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>

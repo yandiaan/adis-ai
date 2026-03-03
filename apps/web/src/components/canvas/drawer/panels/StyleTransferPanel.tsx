@@ -1,5 +1,7 @@
 import { useReactFlow } from '@xyflow/react';
 import type { StyleTransferData, StyleStrength } from '../../types/node-types';
+import { ModelPicker } from './ModelPicker';
+import { MODEL_OPTIONS } from '../../config/modelOptions';
 
 type Props = {
   nodeId: string;
@@ -62,6 +64,12 @@ export function StyleTransferPanel({ nodeId, data }: Props) {
       <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-300/80 text-xs">
         💡 Connect a Style Image port for image-based style transfer
       </div>
+
+      <ModelPicker
+        options={MODEL_OPTIONS.imageEditing}
+        value={config.model ?? 'qwen-image-edit-plus'}
+        onChange={(model) => updateConfig({ model })}
+      />
     </>
   );
 }
