@@ -1,39 +1,25 @@
 'use client';
 
-import { useRef } from 'react';
-import {
-  AnimatePresence,
-  motion,
-  type MotionProps,
-  useInView,
-  type UseInViewOptions,
-  type Variants,
-} from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 
 import { cn } from '@/lib/utils';
 
-type MarginType = UseInViewOptions['margin'];
-
-interface BlurFadeProps extends MotionProps {
+interface BlurFadeProps {
   children: React.ReactNode;
   className?: string;
-  variant?: {
-    hidden: { y: number };
-    visible: { y: number };
-  };
   duration?: number;
   delay?: number;
   offset?: number;
   direction?: 'up' | 'down' | 'left' | 'right';
   inView?: boolean;
-  inViewMargin?: MarginType;
+  inViewMargin?: string;
   blur?: string;
 }
 
 export function BlurFade({
   children,
   className,
-  variant,
   duration = 0.4,
   delay = 0,
   offset = 6,
@@ -41,43 +27,43 @@ export function BlurFade({
   inView = false,
   inViewMargin = '-50px',
   blur = '6px',
-  ...props
 }: BlurFadeProps) {
-  const ref = useRef(null);
-  const inViewResult = useInView(ref, { once: true, margin: inViewMargin });
-  const isInView = !inView || inViewResult;
-  const defaultVariants: Variants = {
-    hidden: {
-      [direction === 'left' || direction === 'right' ? 'x' : 'y']:
-        direction === 'right' || direction === 'down' ? -offset : offset,
-      opacity: 0,
-      filter: `blur(${blur})`,
-    },
-    visible: {
-      [direction === 'left' || direction === 'right' ? 'x' : 'y']: 0,
-      opacity: 1,
-      filter: `blur(0px)`,
-    },
-  };
-  const combinedVariants = variant || defaultVariants;
+  const ref = useRef<HTMLDivElement>(null);
+  // If inView=false, animate immediately on mount; otherwise wait for viewport
+  const [shouldAnimate, setShouldAnimate] = useState(!inView);
+
+  useEffect(() => {
+    if (!inView) return;
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldAnimate(true);
+          observer.unobserve(el);
+        }
+      },
+      { rootMargin: inViewMargin }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [inView, inViewMargin]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !shouldAnimate) return;
+    const axis = direction === 'left' || direction === 'right' ? 'x' : 'y';
+    const startVal = direction === 'right' || direction === 'down' ? -offset : offset;
+    gsap.fromTo(
+      el,
+      { [axis]: startVal, opacity: 0, filter: `blur(${blur})` },
+      { [axis]: 0, opacity: 1, filter: 'blur(0px)', duration, delay: 0.04 + delay, ease: 'power2.out' }
+    );
+  }, [shouldAnimate]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
-    <AnimatePresence>
-      <motion.div
-        ref={ref}
-        initial="hidden"
-        animate={isInView ? 'visible' : 'hidden'}
-        exit="hidden"
-        variants={combinedVariants}
-        transition={{
-          delay: 0.04 + delay,
-          duration,
-          ease: 'easeOut',
-        }}
-        className={cn(className)}
-        {...props}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <div ref={ref} className={cn(className)} style={shouldAnimate ? undefined : { opacity: 0 }}>
+      {children}
+    </div>
   );
 }

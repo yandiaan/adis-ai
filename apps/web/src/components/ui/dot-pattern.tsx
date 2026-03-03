@@ -1,5 +1,5 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 
 import { cn } from '@/lib/utils';
 
@@ -41,21 +41,54 @@ export function DotPattern({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  const dots = Array.from(
-    {
-      length: Math.ceil(dimensions.width / width) * Math.ceil(dimensions.height / height),
-    },
-    (_, i) => {
-      const col = i % Math.ceil(dimensions.width / width);
-      const row = Math.floor(i / Math.ceil(dimensions.width / width));
-      return {
-        x: col * width + cx,
-        y: row * height + cy,
-        delay: Math.random() * 5,
-        duration: Math.random() * 3 + 2,
-      };
-    },
+  const dots = useMemo(
+    () =>
+      Array.from(
+        {
+          length: Math.ceil(dimensions.width / width) * Math.ceil(dimensions.height / height),
+        },
+        (_, i) => {
+          const col = i % Math.ceil(dimensions.width / width);
+          const row = Math.floor(i / Math.ceil(dimensions.width / width));
+          return {
+            x: col * width + cx,
+            y: row * height + cy,
+            delay: Math.random() * 5,
+            duration: Math.random() * 3 + 2,
+          };
+        },
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dimensions.width, dimensions.height, width, height, cx, cy],
   );
+
+  // Apply GSAP glow animations after dots render
+  useEffect(() => {
+    if (!glow || !containerRef.current || dots.length === 0) return;
+    const circles = Array.from(containerRef.current.querySelectorAll('circle'));
+    circles.forEach((circle, i) => {
+      const dot = dots[i];
+      if (!dot) return;
+      gsap.fromTo(
+        circle,
+        { opacity: 0.4, attr: { r: cr } },
+        {
+          opacity: 1,
+          attr: { r: cr * 1.5 },
+          duration: dot.duration,
+          delay: dot.delay,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        },
+      );
+    });
+    return () => {
+      if (containerRef.current) {
+        gsap.killTweensOf(Array.from(containerRef.current.querySelectorAll('circle')));
+      }
+    };
+  }, [glow, dots, cr]);
 
   return (
     <svg
@@ -74,32 +107,13 @@ export function DotPattern({
         </radialGradient>
       </defs>
       {dots.map((dot, index) => (
-        <motion.circle
+        <circle
           key={`${dot.x}-${dot.y}-${index}`}
           cx={dot.x}
           cy={dot.y}
           r={cr}
           fill={glow ? `url(#${id}-gradient)` : 'currentColor'}
-          initial={glow ? { opacity: 0.4, scale: 1 } : {}}
-          animate={
-            glow
-              ? {
-                  opacity: [0.4, 1, 0.4],
-                  scale: [1, 1.5, 1],
-                }
-              : {}
-          }
-          transition={
-            glow
-              ? {
-                  duration: dot.duration,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  delay: dot.delay,
-                  ease: 'easeInOut',
-                }
-              : {}
-          }
+          style={glow ? { opacity: 0.4 } : undefined}
         />
       ))}
     </svg>

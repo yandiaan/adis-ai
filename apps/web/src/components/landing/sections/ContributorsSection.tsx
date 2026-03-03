@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { motion, useInView } from 'motion/react';
+import { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 import { Code2, Terminal, Palette } from 'lucide-react';
 
 const contributors = [
@@ -41,15 +41,28 @@ const contributors = [
 ];
 
 function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-10px' });
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    gsap.set(el, { opacity: 0, y: 18 });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          gsap.to(el, { opacity: 1, y: 0, duration: 0.55, delay: 0.18 + index * 0.1, ease: 'power3.out' });
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0, rootMargin: '-10px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [index]);
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={{ opacity: 0, y: 18 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay: 0.18 + index * 0.1, ease: [0.16, 1, 0.3, 1] }}
       className="relative rounded-xl overflow-hidden flex flex-col border border-white/6 bg-surface-panel hover:border-white/15 transition-all duration-300 hover:-translate-y-1"
     >
       {/* Top contributor badge */}
@@ -111,13 +124,29 @@ function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: num
           </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export function ContributorsSection() {
-  const headRef = useRef(null);
-  const headInView = useInView(headRef, { once: true });
+  const headRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = headRef.current;
+    if (!el) return;
+    gsap.set(el, { opacity: 0, y: -12 });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          gsap.to(el, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' });
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-surface-node">
@@ -140,18 +169,15 @@ export function ContributorsSection() {
       </div>
 
       {/* Header */}
-      <motion.div
+      <div
         ref={headRef}
-        initial={{ opacity: 0, y: -12 }}
-        animate={headInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 shrink-0 px-5 pt-5 pb-3 text-center"
       >
         <h2 className="text-3xl font-bold text-white tracking-tight">
           Built by <span className="text-primary">Architects</span> of the Future.
         </h2>
         <div className="h-1 w-16 bg-white/20 mx-auto rounded-full mt-3" />
-      </motion.div>
+      </div>
 
       {/* Cards */}
       <div className="relative z-10 flex-1 px-5 pb-4 min-h-0 overflow-hidden">

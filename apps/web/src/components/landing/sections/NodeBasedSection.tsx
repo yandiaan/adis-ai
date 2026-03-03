@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { motion, useInView } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 import {
   Type,
   Sparkles,
@@ -76,6 +76,35 @@ function WireConnector({
   delay: number;
   inView: boolean;
 }) {
+  const pathRef = useRef<SVGPathElement>(null);
+  const dotRef = useRef<SVGCircleElement>(null);
+
+  useEffect(() => {
+    const path = pathRef.current;
+    if (!path) return;
+    const len = path.getTotalLength();
+    gsap.set(path, { strokeDasharray: len, strokeDashoffset: len, opacity: 0 });
+    gsap.set(dotRef.current, { x: 0, y: 35, opacity: 0 });
+  }, []);
+
+  useEffect(() => {
+    const path = pathRef.current;
+    const dot = dotRef.current;
+    if (!inView || !path || !dot) return;
+
+    // Draw the path
+    const len = path.getTotalLength();
+    gsap.to(path, { strokeDashoffset: 0, opacity: 1, duration: 0.6, delay, ease: 'power2.out' });
+
+    // Animate the traveling dot
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1.5, delay: delay + 0.4 });
+    tl.set(dot, { x: 0, y: 35, opacity: 0 })
+      .to(dot, { x: 20, y: 35, opacity: 1, duration: 0.6, ease: 'sine.out' })
+      .to(dot, { x: 40, y: 35, opacity: 0, duration: 0.6, ease: 'sine.in' });
+
+    return () => { tl.kill(); gsap.killTweensOf(path); gsap.killTweensOf(dot); };
+  }, [inView, delay]);
+
   return (
     <div className="flex items-center justify-center w-10 shrink-0 relative" style={{ height: 70 }}>
       <svg
@@ -89,25 +118,19 @@ function WireConnector({
             <stop offset="100%" stopColor={toColor} stopOpacity="0.7" />
           </linearGradient>
         </defs>
-        <motion.path
+        <path
+          ref={pathRef}
           d="M 0 35 C 12 35, 28 35, 40 35"
           stroke={`url(#wire-${fromColor.replace('#', '')})`}
           strokeWidth="2"
           strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={inView ? { pathLength: 1, opacity: 1 } : {}}
-          transition={{ duration: 0.6, delay, ease: 'easeOut' }}
         />
-        {/* Animated dot traveling along the wire */}
-        {inView && (
-          <motion.circle
-            r="3"
-            fill={toColor}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0], x: [0, 40], y: [35, 35] }}
-            transition={{ duration: 1.2, delay: delay + 0.4, repeat: Infinity, repeatDelay: 1.5, ease: 'easeInOut' }}
-          />
-        )}
+        <circle
+          ref={dotRef}
+          r="3"
+          fill={toColor}
+          style={{ opacity: 0 }}
+        />
       </svg>
     </div>
   );
@@ -123,11 +146,20 @@ function StaticNode({
   index: number;
   inView: boolean;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.set(ref.current, { opacity: 0, y: 20, scale: 0.96 });
+  }, []);
+
+  useEffect(() => {
+    if (!inView || !ref.current) return;
+    gsap.to(ref.current, { opacity: 1, y: 0, scale: 1, duration: 0.55, delay: 0.2 + index * 0.12, ease: 'power3.out' });
+  }, [inView, index]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.96 }}
-      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ duration: 0.55, delay: 0.2 + index * 0.12, ease: [0.16, 1, 0.3, 1] }}
+    <div
+      ref={ref}
       className="relative rounded-xl overflow-visible flex-1 min-w-0 shrink-0"
       style={{
         background: 'var(--color-surface-node)',
@@ -195,13 +227,45 @@ function StaticNode({
           }}
         />
       )}
-    </motion.div>
+    </div>
   );
 }
 
 export function NodeBasedSection({ onGetStarted }: SectionProps) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
+  const pillsRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { setInView(true); observer.unobserve(el); }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    gsap.set(headerRef.current, { opacity: 0, y: -14 });
+    gsap.set(legendRef.current, { opacity: 0 });
+    gsap.set(pillsRef.current, { opacity: 0 });
+    gsap.set(ctaRef.current, { opacity: 0, y: 8 });
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
+    gsap.to(headerRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+    gsap.to(legendRef.current, { opacity: 1, duration: 0.5, delay: 0.8, ease: 'power2.out' });
+    gsap.to(pillsRef.current, { opacity: 1, duration: 0.5, delay: 0.9, ease: 'power2.out' });
+    gsap.to(ctaRef.current, { opacity: 1, y: 0, duration: 0.5, delay: 1.0, ease: 'power2.out' });
+  }, [inView]);
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-surface-node">
@@ -220,10 +284,8 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
 
       <div ref={ref} className="relative z-10 flex flex-col h-full px-5 py-5">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -14 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        <div
+          ref={headerRef}
           className="text-center mb-5 shrink-0"
         >
           <p className="text-white/30 text-[9px] font-bold tracking-[0.2em] uppercase mb-2">Visual Programming</p>
@@ -231,7 +293,7 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
           <p className="text-slate-500 text-[10px] mt-2 max-w-xs mx-auto">
             Connect intelligent building blocks to create powerful AI pipelines.
           </p>
-        </motion.div>
+        </div>
 
         {/* Pipeline preview */}
         <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-0">
@@ -253,10 +315,8 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
           </div>
 
           {/* Category legend */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.8, duration: 0.5 }}
+          <div
+            ref={legendRef}
             className="flex items-center justify-center gap-3 flex-wrap"
           >
             {[
@@ -271,26 +331,20 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
                 <span className="text-[8px] font-medium text-white/30">{cat.label}</span>
               </div>
             ))}
-          </motion.div>
+          </div>
 
           {/* Feature pills */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.9 }}
+          <div
+            ref={pillsRef}
             className="flex items-center justify-center gap-2 flex-wrap"
           >
             {['Drag & Drop', 'Auto-connect', 'Type Safety', '10+ Node Types'].map((tag) => (
               <span key={tag} className="text-white/30 text-[8px] font-medium bg-white/5 rounded-full px-2.5 py-1 border border-white/5">{tag}</span>
             ))}
-          </motion.div>
+          </div>
 
           {/* CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 1.0 }}
-          >
+          <div ref={ctaRef}>
             <button
               onClick={onGetStarted}
               className="cursor-pointer bg-primary text-white font-bold text-[9px] px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1"
@@ -298,7 +352,7 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
               Try the Editor
               <ArrowRight size={10} />
             </button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

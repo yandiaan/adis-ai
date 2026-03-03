@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { motion, useInView } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 import {
   Wand2,
   Smile,
@@ -97,11 +97,20 @@ function TemplateCard({
   inView: boolean;
   onGetStarted?: () => void;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.set(ref.current, { opacity: 0, x: index % 2 === 0 ? -16 : 16, y: 8 });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!inView || !ref.current) return;
+    gsap.to(ref.current, { opacity: 1, x: 0, y: 0, duration: 0.55, delay: 0.15 + index * 0.08, ease: 'power3.out' });
+  }, [inView, index]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: index % 2 === 0 ? -16 : 16, y: 8 }}
-      animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
-      transition={{ duration: 0.55, delay: 0.15 + index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+    <div
+      ref={ref}
       className="group rounded-xl border border-white/8 bg-surface-panel overflow-hidden hover:border-white/15 transition-all flex"
     >
       {/* Left accent strip */}
@@ -158,13 +167,39 @@ function TemplateCard({
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export function TemplatesSection({ onGetStarted }: SectionProps) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { setInView(true); observer.unobserve(el); }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    gsap.set(headerRef.current, { opacity: 0, y: -14 });
+    gsap.set(btnRef.current, { opacity: 0, y: 10 });
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
+    gsap.to(headerRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+    gsap.to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, delay: 0.55, ease: 'power2.out' });
+  }, [inView]);
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-surface-node">
@@ -181,10 +216,8 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
 
       <div ref={ref} className="relative z-10 flex flex-col h-full px-5 py-5">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -14 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        <div
+          ref={headerRef}
           className="text-center mb-4 shrink-0"
         >
           <p className="text-white/30 text-[9px] font-bold tracking-[0.2em] uppercase mb-2">Quick Start</p>
@@ -192,7 +225,7 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
           <p className="text-slate-500 text-[10px] mt-2 max-w-xs mx-auto">
             Pre-built AI pipelines. Each template is a complete node graph ready to run.
           </p>
-        </motion.div>
+        </div>
 
         <div className="flex-1 flex flex-col justify-center min-h-0 gap-3">
           {/* 2x2 template grid */}
@@ -203,11 +236,9 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
           </div>
 
           {/* Blank canvas card — full width */}
-          <motion.button
+          <button
+            ref={btnRef}
             onClick={onGetStarted}
-            initial={{ opacity: 0, y: 10 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.55, duration: 0.5 }}
             className="cursor-pointer w-full rounded-xl border-2 border-dashed border-white/10 hover:border-primary/40 bg-white/2 hover:bg-primary/5 transition-all p-3 flex items-center gap-3 group"
           >
             <div className="size-7 rounded-lg border-2 border-dashed border-white/15 group-hover:border-primary/40 flex items-center justify-center transition-colors">
@@ -218,7 +249,7 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
               <p className="text-white/25 text-[8px]">Empty canvas — drag in nodes and build your own pipeline</p>
             </div>
             <ArrowRight size={12} className="text-white/20 group-hover:text-primary transition-colors shrink-0" />
-          </motion.button>
+          </button>
         </div>
       </div>
     </div>

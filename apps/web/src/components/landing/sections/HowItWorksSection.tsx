@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { motion, useInView } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 import {
   Lightbulb,
   GitBranch,
@@ -57,11 +57,20 @@ function StepNode({
   index: number;
   inView: boolean;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.set(ref.current, { opacity: 0, y: 20 });
+  }, []);
+
+  useEffect(() => {
+    if (!inView || !ref.current) return;
+    gsap.to(ref.current, { opacity: 1, y: 0, duration: 0.5, delay: 0.15 + index * 0.08, ease: 'power3.out' });
+  }, [inView, index]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: 0.15 + index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+    <div
+      ref={ref}
       className="flex flex-col items-center gap-3 group flex-1 min-w-0"
     >
       {/* Icon node */}
@@ -109,13 +118,39 @@ function StepNode({
         <h3 className="text-white font-bold text-[11px] mb-0.5">{step.title}</h3>
         <p className="text-slate-400 text-[9px] leading-relaxed">{step.body}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export function HowItWorksSection({ onGetStarted }: SectionProps) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { setInView(true); observer.unobserve(el); }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    gsap.set(headerRef.current, { opacity: 0, y: -14 });
+    gsap.set(ctaRef.current, { opacity: 0, y: 10 });
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
+    gsap.to(headerRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+    gsap.to(ctaRef.current, { opacity: 1, y: 0, duration: 0.5, delay: 0.6, ease: 'power3.out' });
+  }, [inView]);
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-surface-node">
@@ -147,10 +182,8 @@ export function HowItWorksSection({ onGetStarted }: SectionProps) {
 
       <div ref={ref} className="relative z-10 flex flex-col h-full px-5 py-5">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -14 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        <div
+          ref={headerRef}
           className="text-center mb-5 shrink-0"
         >
           <p className="text-white/30 text-[9px] font-bold tracking-[0.2em] uppercase mb-2">
@@ -162,7 +195,7 @@ export function HowItWorksSection({ onGetStarted }: SectionProps) {
           <p className="text-slate-500 text-[10px] mt-2 max-w-xs mx-auto">
             Visualize your creative process through our advanced node-based workflow.
           </p>
-        </motion.div>
+        </div>
 
         {/* Horizontal flow */}
         <div className="flex-1 flex flex-col justify-center min-h-0">
@@ -185,10 +218,8 @@ export function HowItWorksSection({ onGetStarted }: SectionProps) {
           </div>
 
           {/* CTA card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          <div
+            ref={ctaRef}
             className="mt-5 rounded-xl border border-white/10 bg-surface-panel p-3 flex items-center justify-between gap-3"
           >
             <div>
@@ -208,7 +239,7 @@ export function HowItWorksSection({ onGetStarted }: SectionProps) {
                 <ArrowRight size={10} />
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>
