@@ -22,6 +22,41 @@ import { renderNodeCategoryIcon } from './icons/nodeCategoryIcon';
 
 const LOG_PANEL_HEIGHT = 280;
 
+/** Small keyboard shortcut badge used inside toolbar buttons */
+function KbdBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide border"
+      style={{
+        borderColor: 'rgba(255,255,255,0.14)',
+        color: 'rgba(255,255,255,0.6)',
+        background: 'rgba(255,255,255,0.04)',
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Tooltip content with an inline keyboard shortcut badge */
+function ShortcutTooltip({ label, shortcut }: { label: string; shortcut: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {label}
+      <span
+        className="px-1 py-0.5 rounded text-[10px] font-mono border"
+        style={{
+          borderColor: 'rgba(255,255,255,0.2)',
+          color: 'rgba(255,255,255,0.7)',
+          background: 'rgba(255,255,255,0.1)',
+        }}
+      >
+        {shortcut}
+      </span>
+    </span>
+  );
+}
+
 type Props = {
   mode: MouseMode;
   onModeChange: (mode: MouseMode) => void;
@@ -140,6 +175,33 @@ export function FlowToolbar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [menuMounted, menuOpen]);
 
+  // Shortcuts: V = select, H = pan, ` = toggle log, Ctrl/⌘+Enter = run
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isEditable =
+        tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable;
+      if (isEditable) return;
+
+      if (e.key === 'v' || e.key === 'V') {
+        e.preventDefault();
+        onModeChange('select');
+      } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        onModeChange('pan');
+      } else if (e.key === '`') {
+        e.preventDefault();
+        onToggleLog?.();
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (!pipelineRunning) onRunPipeline?.();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onModeChange, onRunPipeline, onToggleLog, pipelineRunning]);
+
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
@@ -255,7 +317,9 @@ export function FlowToolbar({
                     />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top">New node</TooltipContent>
+                <TooltipContent side="top">
+                  <ShortcutTooltip label="New node" shortcut="N" />
+                </TooltipContent>
               </Tooltip>
 
               {/* Dropdown */}
@@ -599,7 +663,7 @@ export function FlowToolbar({
                 <button
                   onClick={() => onModeChange('select')}
                   aria-label="Select mode"
-                  className="motion-lift motion-press focus-ring-orange grid place-items-center w-10 h-10 rounded-xl border"
+                  className="motion-lift motion-press focus-ring-orange grid place-items-center w-10 h-10 rounded-xl border relative"
                   style={{
                     borderColor:
                       mode === 'select' ? 'var(--editor-accent-65)' : 'rgba(255,255,255,0.16)',
@@ -613,9 +677,14 @@ export function FlowToolbar({
                   }}
                 >
                   <MousePointer2 size={18} />
+                  <span className="absolute -bottom-1 -right-1 text-[8px] font-bold leading-none px-1 py-px rounded bg-[rgba(0,0,0,0.55)] border border-white/10 text-white/50">
+                    V
+                  </span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="top">Select</TooltipContent>
+              <TooltipContent side="top">
+                <ShortcutTooltip label="Select" shortcut="V" />
+              </TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -623,7 +692,7 @@ export function FlowToolbar({
                 <button
                   onClick={() => onModeChange('pan')}
                   aria-label="Pan mode"
-                  className="motion-lift motion-press focus-ring-orange grid place-items-center w-10 h-10 rounded-xl border"
+                  className="motion-lift motion-press focus-ring-orange grid place-items-center w-10 h-10 rounded-xl border relative"
                   style={{
                     borderColor:
                       mode === 'pan' ? 'var(--editor-accent-65)' : 'rgba(255,255,255,0.16)',
@@ -637,54 +706,74 @@ export function FlowToolbar({
                   }}
                 >
                   <Hand size={18} />
+                  <span className="absolute -bottom-1 -right-1 text-[8px] font-bold leading-none px-1 py-px rounded bg-[rgba(0,0,0,0.55)] border border-white/10 text-white/50">
+                    H
+                  </span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="top">Pan</TooltipContent>
+              <TooltipContent side="top">
+                <ShortcutTooltip label="Pan" shortcut="H" />
+              </TooltipContent>
             </Tooltip>
 
             {/* Log toggle */}
             {onToggleLog && (
               <>
                 <div className="w-px h-7 bg-white/10 mx-1" />
-                <button
-                  onClick={onToggleLog}
-                  aria-label="Toggle log panel"
-                  className="motion-lift motion-press focus-ring-orange flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-xl border"
-                  style={{
-                    borderColor: logOpen ? 'rgba(139, 92, 246, 0.65)' : 'rgba(255,255,255,0.16)',
-                    background: logOpen ? 'rgba(139, 92, 246, 0.14)' : 'rgba(255,255,255,0.03)',
-                    color: logOpen ? 'rgba(139, 92, 246, 1)' : 'rgba(255,255,255,0.65)',
-                    boxShadow: logOpen
-                      ? '0 0 0 2px rgba(139, 92, 246, 0.12)'
-                      : '0 0 0 0 rgba(0,0,0,0)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span
-                    className="relative grid place-items-center w-7 h-7 rounded-lg border"
-                    style={{
-                      borderColor: logOpen ? 'rgba(139, 92, 246, 0.45)' : 'rgba(255,255,255,0.12)',
-                      background: logOpen ? 'rgba(139, 92, 246, 0.12)' : 'rgba(255,255,255,0.03)',
-                    }}
-                  >
-                    <ScrollText size={14} />
-                    {logCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onToggleLog}
+                      aria-label="Toggle log panel"
+                      className="motion-lift motion-press focus-ring-orange flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-xl border"
+                      style={{
+                        borderColor: logOpen
+                          ? 'rgba(139, 92, 246, 0.65)'
+                          : 'rgba(255,255,255,0.16)',
+                        background: logOpen ? 'rgba(139, 92, 246, 0.14)' : 'rgba(255,255,255,0.03)',
+                        color: logOpen ? 'rgba(139, 92, 246, 1)' : 'rgba(255,255,255,0.65)',
+                        boxShadow: logOpen
+                          ? '0 0 0 2px rgba(139, 92, 246, 0.12)'
+                          : '0 0 0 0 rgba(0,0,0,0)',
+                        cursor: 'pointer',
+                      }}
+                    >
                       <span
-                        className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                        className="relative grid place-items-center w-7 h-7 rounded-lg border"
                         style={{
-                          background:
-                            logErrorCount > 0 ? 'rgb(239, 68, 68)' : 'rgba(139, 92, 246, 0.9)',
-                          color: 'white',
+                          borderColor: logOpen
+                            ? 'rgba(139, 92, 246, 0.45)'
+                            : 'rgba(255,255,255,0.12)',
+                          background: logOpen
+                            ? 'rgba(139, 92, 246, 0.12)'
+                            : 'rgba(255,255,255,0.03)',
                         }}
                       >
-                        {logCount > 99 ? '99+' : logCount}
+                        <ScrollText size={14} />
+                        {logCount > 0 && (
+                          <span
+                            className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                            style={{
+                              background:
+                                logErrorCount > 0 ? 'rgb(239, 68, 68)' : 'rgba(139, 92, 246, 0.9)',
+                              color: 'white',
+                            }}
+                          >
+                            {logCount > 99 ? '99+' : logCount}
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                  <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
-                    Logs{logCount > 0 && !logOpen ? ` (${logCount > 99 ? '99+' : logCount})` : ''}
-                  </span>
-                </button>
+                      <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
+                        Logs
+                        {logCount > 0 && !logOpen ? ` (${logCount > 99 ? '99+' : logCount})` : ''}
+                      </span>
+                      <KbdBadge>` </KbdBadge>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <ShortcutTooltip label="Toggle logs" shortcut="`" />
+                  </TooltipContent>
+                </Tooltip>
               </>
             )}
 
@@ -696,44 +785,52 @@ export function FlowToolbar({
 
             {/* Run */}
             {onRunPipeline && (
-              <button
-                onClick={onRunPipeline}
-                disabled={pipelineRunning}
-                aria-label="Run pipeline"
-                className="motion-lift motion-press focus-ring-orange flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-xl border"
-                style={{
-                  borderColor: pipelineRunning
-                    ? 'rgba(255,255,255,0.14)'
-                    : 'var(--editor-accent-75)',
-                  background: pipelineRunning
-                    ? 'rgba(255,255,255,0.03)'
-                    : 'var(--editor-accent-16)',
-                  color: pipelineRunning ? 'rgba(255,255,255,0.55)' : 'var(--editor-accent)',
-                  cursor: pipelineRunning ? 'not-allowed' : 'pointer',
-                  boxShadow: pipelineRunning ? 'none' : '0 10px 26px rgba(0,0,0,0.25)',
-                }}
-              >
-                <span
-                  className="grid place-items-center w-7 h-7 rounded-lg border"
-                  style={{
-                    borderColor: pipelineRunning
-                      ? 'rgba(255,255,255,0.10)'
-                      : 'var(--editor-accent-45)',
-                    background: pipelineRunning
-                      ? 'rgba(255,255,255,0.03)'
-                      : 'var(--editor-accent-12)',
-                  }}
-                >
-                  {pipelineRunning ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Play size={14} />
-                  )}
-                </span>
-                <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
-                  {pipelineRunning ? 'Running…' : 'Run'}
-                </span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onRunPipeline}
+                    disabled={pipelineRunning}
+                    aria-label="Run pipeline"
+                    className="motion-lift motion-press focus-ring-orange flex items-center gap-2 pl-2.5 pr-3.5 py-1.5 rounded-xl border"
+                    style={{
+                      borderColor: pipelineRunning
+                        ? 'rgba(255,255,255,0.14)'
+                        : 'var(--editor-accent-75)',
+                      background: pipelineRunning
+                        ? 'rgba(255,255,255,0.03)'
+                        : 'var(--editor-accent-16)',
+                      color: pipelineRunning ? 'rgba(255,255,255,0.55)' : 'var(--editor-accent)',
+                      cursor: pipelineRunning ? 'not-allowed' : 'pointer',
+                      boxShadow: pipelineRunning ? 'none' : '0 10px 26px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    <span
+                      className="grid place-items-center w-7 h-7 rounded-lg border"
+                      style={{
+                        borderColor: pipelineRunning
+                          ? 'rgba(255,255,255,0.10)'
+                          : 'var(--editor-accent-45)',
+                        background: pipelineRunning
+                          ? 'rgba(255,255,255,0.03)'
+                          : 'var(--editor-accent-12)',
+                      }}
+                    >
+                      {pipelineRunning ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Play size={14} />
+                      )}
+                    </span>
+                    <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
+                      {pipelineRunning ? 'Running…' : 'Run'}
+                    </span>
+                    {!pipelineRunning && <KbdBadge>⌘↵</KbdBadge>}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <ShortcutTooltip label="Run pipeline" shortcut="⌘↵" />
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
