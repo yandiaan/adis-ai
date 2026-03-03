@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { X } from 'lucide-react';
 import type {
   ColorPaletteData,
   ColorPaletteMode,
@@ -11,9 +12,9 @@ type Props = {
 };
 
 const MODES: { value: ColorPaletteMode; label: string; desc: string }[] = [
-  { value: 'preset', label: '🎨 Preset', desc: 'Choose from curated palettes' },
-  { value: 'custom', label: '🖌️ Custom', desc: 'Pick your own colors' },
-  { value: 'extract', label: '💡 Extract', desc: 'Auto-extract from connected image' },
+  { value: 'preset', label: 'Preset', desc: 'Choose from curated palettes' },
+  { value: 'custom', label: 'Custom', desc: 'Pick your own colors' },
+  { value: 'extract', label: 'Extract', desc: 'Auto-extract from connected image' },
 ];
 
 const PRESETS: { value: ColorPalettePreset; label: string; colors: string[] }[] = [
@@ -63,8 +64,8 @@ export function ColorPalettePanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Mode</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Mode</label>
         <div className="flex flex-col gap-1.5">
           {MODES.map((mode) => (
             <button
@@ -84,8 +85,8 @@ export function ColorPalettePanel({ nodeId, data }: Props) {
       </div>
 
       {config.mode === 'preset' && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">Palette Presets</label>
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Palette Presets</label>
           <div className="flex flex-col gap-2">
             {PRESETS.map((preset) => (
               <button
@@ -114,8 +115,8 @@ export function ColorPalettePanel({ nodeId, data }: Props) {
       )}
 
       {config.mode === 'custom' && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
             Custom Colors ({config.palette.length})
           </label>
           <div className="flex flex-wrap gap-2 p-3 bg-white/5 rounded-xl border border-white/10">
@@ -136,9 +137,9 @@ export function ColorPalettePanel({ nodeId, data }: Props) {
                   onClick={() =>
                     updateConfig({ palette: config.palette.filter((_, idx) => idx !== i) })
                   }
-                  className="text-[9px] text-red-400/70 hover:text-red-400 transition-colors"
+                  className="text-[9px] text-red-400/70 hover:text-red-400 transition-colors flex items-center"
                 >
-                  ✕
+                  <X size={10} />
                 </button>
               </div>
             ))}
@@ -160,8 +161,8 @@ export function ColorPalettePanel({ nodeId, data }: Props) {
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <label className="block text-white/70 text-xs font-medium">Current Palette</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Current Palette</label>
         <div className="flex gap-2 p-3 bg-white/5 rounded-xl border border-white/10 flex-wrap">
           {config.palette.length > 0 ? (
             config.palette.map((color, i) => (

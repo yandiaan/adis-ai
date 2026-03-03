@@ -15,8 +15,8 @@ const POSITIONS: { value: WatermarkPosition; label: string }[] = [
 ];
 
 const STYLES: { value: WatermarkStyle; label: string; desc: string }[] = [
-  { value: 'text', label: '🔤 Text', desc: 'Custom text watermark' },
-  { value: 'brand-logo', label: '🏷️ Brand Logo', desc: 'Your brand identity' },
+  { value: 'text', label: 'Text', desc: 'Custom text watermark' },
+  { value: 'brand-logo', label: 'Brand Logo', desc: 'Your brand identity' },
 ];
 
 export function WatermarkPanel({ nodeId, data }: Props) {
@@ -29,8 +29,8 @@ export function WatermarkPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Style</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Style</label>
         <div className="flex gap-2">
           {STYLES.map((style) => (
             <button
@@ -50,8 +50,8 @@ export function WatermarkPanel({ nodeId, data }: Props) {
       </div>
 
       {config.style === 'text' && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">Watermark Text</label>
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Watermark Text</label>
           <input
             type="text"
             value={config.text}
@@ -62,8 +62,8 @@ export function WatermarkPanel({ nodeId, data }: Props) {
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Position</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Position</label>
         <div className="grid grid-cols-2 gap-1.5">
           {POSITIONS.map((pos) => (
             <button
@@ -81,10 +81,11 @@ export function WatermarkPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">
-          Opacity — <span className="text-white/50">{config.opacity}%</span>
-        </label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <div className="flex justify-between items-center">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Opacity</span>
+          <span className="text-[11px] text-white/55 tabular-nums">{config.opacity}%</span>
+        </div>
         <input
           type="range"
           min={10}

@@ -1,5 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
-import { FolderOpen, Loader2 } from 'lucide-react';
+import { Check, FolderOpen, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import type { ImageUploadData } from '../../types/node-types';
 
@@ -76,8 +76,8 @@ export function ImageUploadPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Image Upload</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Image Upload</label>
         {config.previewUrl ? (
           <div>
             <img
@@ -97,7 +97,7 @@ export function ImageUploadPanel({ nodeId, data }: Props) {
                   </span>
                 )}
                 {!isUploading && config.previewUrl.startsWith('/uploads/') && (
-                  <span className="ml-2 text-green-400">✓ Uploaded</span>
+                  <span className="ml-2 inline-flex items-center gap-1 text-green-400"><Check size={12} /> Uploaded</span>
                 )}
               </span>
               <button

@@ -19,6 +19,20 @@ export async function generateText(params: {
 }
 
 /**
+ * Describe an image using Qwen VL model.
+ * Uses multimodal input (image + text) to generate a description.
+ */
+export async function describeImage(params: {
+  model?: string;
+  image_url: string;
+  system_prompt?: string;
+  temperature?: number;
+  max_tokens?: number;
+}): Promise<string> {
+  return dashscope.describeImage(params);
+}
+
+/**
  * Generate image using Qwen-Image or Wan model.
  * Returns a task ID for polling.
  */

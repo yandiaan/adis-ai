@@ -176,7 +176,7 @@ export function CollageLayoutNode({ data, selected }: NodeProps<Node<CollageLayo
   return (
     <CompactNode
       nodeType="collageLayout"
-      icon="⊞"
+      icon=""
       title={data.label}
       selected={selected}
       portSchema={dynamicSchema}

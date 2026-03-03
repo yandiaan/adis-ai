@@ -702,4 +702,9 @@ export const RUNNABLE_NODE_TYPES: CustomNodeType[] = [
   'faceCrop',
   'inpainting',
   'imageUpscaler',
+  'textOverlay',
+  'frameBorder',
+  'stickerLayer',
+  'colorFilter',
+  'collageLayout',
 ];

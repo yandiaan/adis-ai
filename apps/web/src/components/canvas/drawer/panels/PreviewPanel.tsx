@@ -49,8 +49,8 @@ export function PreviewPanel({ nodeId, data }: Props) {
     <>
       {/* Live preview */}
       {mediaUrl && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">Preview</label>
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Preview</label>
           <div
             className="w-full rounded-xl overflow-hidden border border-white/10 flex items-center justify-center"
             style={{ backgroundColor: config.backgroundColor, maxHeight: 220 }}
@@ -75,14 +75,14 @@ export function PreviewPanel({ nodeId, data }: Props) {
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Platform Preset</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Platform Preset</label>
         <div className="grid grid-cols-3 gap-1.5">
           {PRESETS.map((p) => (
             <button
               key={p.value}
               onClick={() => selectPreset(p.value)}
-              className={`py-2.5 px-1 rounded-md border text-white cursor-pointer text-[11px] text-center ${config.preset === p.value ? 'border-red-400 bg-red-400/15' : 'border-white/10 bg-white/5'}`}
+              className={`motion-lift motion-press focus-ring-orange py-2.5 px-1 rounded-xl border text-white cursor-pointer text-[11px] text-center transition-colors ${config.preset === p.value ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]' : 'border-white/10 bg-white/5 hover:bg-white/7'}`}
             >
               {p.label}
             </button>
@@ -90,37 +90,38 @@ export function PreviewPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-2">Dimensions</label>
         <div className="flex gap-2">
           <div className="flex-1">
-            <label className="block text-white/70 text-xs font-medium mb-2">Width</label>
+            <label className="block text-white/40 text-[10px] mb-1">Width</label>
             <input
               type="number"
               value={config.width}
               onChange={(e) => updateConfig({ width: Number(e.target.value), preset: 'custom' })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none box-border"
+              className="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-white text-sm outline-none box-border focus:border-[var(--editor-accent-65)] transition-colors"
             />
           </div>
           <div className="flex-1">
-            <label className="block text-white/70 text-xs font-medium mb-2">Height</label>
+            <label className="block text-white/40 text-[10px] mb-1">Height</label>
             <input
               type="number"
               value={config.height}
               onChange={(e) => updateConfig({ height: Number(e.target.value), preset: 'custom' })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none box-border"
+              className="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-white text-sm outline-none box-border focus:border-[var(--editor-accent-65)] transition-colors"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Fit</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Fit</label>
         <div className="flex gap-2">
           {FIT_MODES.map((fit) => (
             <button
               key={fit}
               onClick={() => updateConfig({ fit })}
-              className={`flex-1 p-2 rounded-md border text-white cursor-pointer text-xs ${config.fit === fit ? 'border-red-400 bg-red-400/15' : 'border-white/10 bg-white/5'}`}
+              className={`motion-lift motion-press focus-ring-orange flex-1 p-2 rounded-xl border text-white cursor-pointer text-xs transition-colors ${config.fit === fit ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]' : 'border-white/10 bg-white/5 hover:bg-white/7'}`}
             >
               {fit}
             </button>
@@ -128,8 +129,8 @@ export function PreviewPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Background Color</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Background Color</label>
         <input
           type="color"
           value={config.backgroundColor}

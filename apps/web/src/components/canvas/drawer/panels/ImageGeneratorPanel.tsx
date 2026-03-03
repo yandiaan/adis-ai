@@ -25,8 +25,8 @@ export function ImageGeneratorPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Mode</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Mode</label>
         <div className="text-white/55 text-[13px] p-3 bg-white/5 rounded-xl border border-white/10">
           <div className="inline-flex items-center gap-2">
             {config.mode === 'text2img' ? (
@@ -49,8 +49,8 @@ export function ImageGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Dimensions</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Dimensions</label>
         <div className="flex flex-col gap-1.5">
           {DIMENSIONS.map((dim) => (
             <button
@@ -68,8 +68,8 @@ export function ImageGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Prompt Extend</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Prompt Extend</label>
         <div className="flex gap-2">
           {([true, false] as const).map((val) => (
             <button
@@ -87,14 +87,14 @@ export function ImageGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Seed (optional)</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Seed (optional)</label>
         <input
           type="number"
           value={config.seed ?? ''}
           onChange={(e) => updateConfig({ seed: e.target.value ? Number(e.target.value) : null })}
           placeholder="Random"
-          className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none box-border"
+          className="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-white text-sm outline-none box-border focus:border-[var(--editor-accent-65)] transition-colors"
         />
       </div>
     </>

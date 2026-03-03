@@ -17,7 +17,7 @@ export function WatermarkNode({ data, selected }: NodeProps<Node<WatermarkData>>
     : '© Brand';
 
   return (
-    <CompactNode nodeType="watermark" icon="🔐" title={data.label} selected={selected}>
+    <CompactNode nodeType="watermark" icon="" title={data.label} selected={selected}>
       {/* 3×3 position grid */}
       <div className="grid grid-cols-3 gap-0.5 w-full mb-2">
         {POSITIONS.flat().map((pos) => (

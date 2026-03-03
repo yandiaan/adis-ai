@@ -1,16 +1,18 @@
 import type { Node, NodeProps } from '@xyflow/react';
+import type { ReactNode } from 'react';
+import { Brush, Camera, Grid2X2, Smile, Sparkles, Square, Star, Zap } from 'lucide-react';
 import { CompactNode } from '../CompactNode';
 import type { StyleConfigData } from '../../types/node-types';
 
-const STYLE_ICONS: Record<string, string> = {
-  realistic: '📷',
-  cartoon: '🎠',
-  anime: '✨',
-  watercolor: '🎨',
-  'pixel-art': '🔲',
-  'islamic-art': '✴️',
-  'pop-art': '💥',
-  minimalist: '□',
+const STYLE_ICONS: Record<string, ReactNode> = {
+  realistic: <Camera size={20} />,
+  cartoon: <Smile size={20} />,
+  anime: <Sparkles size={20} />,
+  watercolor: <Brush size={20} />,
+  'pixel-art': <Grid2X2 size={20} />,
+  'islamic-art': <Star size={20} />,
+  'pop-art': <Zap size={20} />,
+  minimalist: <Square size={20} />,
 };
 const MOOD_COLORS: Record<string, string> = {
   warm: '#fb923c',
@@ -29,8 +31,8 @@ export function StyleConfigNode({ data, selected }: NodeProps<Node<StyleConfigDa
   return (
     <CompactNode nodeType="styleConfig" icon="" title={data.label} selected={selected}>
       <div className="flex items-center gap-2.5 mb-2.5">
-        <span className="text-[22px] leading-none shrink-0">
-          {STYLE_ICONS[config.artStyle] ?? '🎨'}
+        <span className="shrink-0 flex items-center text-white/70">
+          {STYLE_ICONS[config.artStyle] ?? <Brush size={20} />}
         </span>
         <div className="flex-1 min-w-0">
           <div className="text-[11px] font-medium text-white/70 capitalize leading-tight">

@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { Circle, CircleCheck } from 'lucide-react';
 import type { ImageUpscalerData, UpscaleScale } from '../../types/node-types';
 
 type Props = {
@@ -21,8 +22,8 @@ export function ImageUpscalerPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Scale Factor</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Scale Factor</label>
         <div className="flex gap-2">
           {SCALES.map((scale) => (
             <button
@@ -41,8 +42,8 @@ export function ImageUpscalerPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Face Enhancement</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Face Enhancement</label>
         <div className="flex gap-2">
           {([true, false] as const).map((val) => (
             <button
@@ -54,7 +55,11 @@ export function ImageUpscalerPanel({ nodeId, data }: Props) {
                   : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
-              {val ? '✅ On' : '⬜ Off'}
+              {val ? (
+                <span className="inline-flex items-center justify-center gap-1"><CircleCheck size={12} /> On</span>
+              ) : (
+                <span className="inline-flex items-center justify-center gap-1 opacity-60"><Circle size={12} /> Off</span>
+              )}
             </button>
           ))}
         </div>

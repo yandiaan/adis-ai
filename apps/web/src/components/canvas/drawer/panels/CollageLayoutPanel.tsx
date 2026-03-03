@@ -1,4 +1,6 @@
 import { useReactFlow } from '@xyflow/react';
+import type { ReactNode } from 'react';
+import { Columns2, Grid2X2, LayoutDashboard, LayoutGrid, Rows2 } from 'lucide-react';
 import type { CollageLayoutData, CollageLayoutStyle } from '../../types/node-types';
 
 type Props = {
@@ -6,12 +8,12 @@ type Props = {
   data: CollageLayoutData;
 };
 
-const LAYOUTS: { value: CollageLayoutStyle; label: string; icon: string; desc: string }[] = [
-  { value: '2-horizontal', label: 'Side-by-side', icon: '⬛⬛', desc: '2 images left / right' },
-  { value: '2-vertical', label: 'Stacked', icon: '🔲', desc: '2 images top / bottom' },
-  { value: '3-grid', label: '3 Grid', icon: '🔳', desc: '1 large + 2 small' },
-  { value: '4-grid', label: '4 Grid', icon: '⬛⬛\n⬛⬛', desc: '4 equal quadrants' },
-  { value: 'mosaic', label: 'Mosaic', icon: '🧩', desc: 'Varied-size mosaic' },
+const LAYOUTS: { value: CollageLayoutStyle; label: string; icon: ReactNode; desc: string }[] = [
+  { value: '2-horizontal', label: 'Side-by-side', icon: <Columns2 size={16} />, desc: '2 images left / right' },
+  { value: '2-vertical', label: 'Stacked', icon: <Rows2 size={16} />, desc: '2 images top / bottom' },
+  { value: '3-grid', label: '3 Grid', icon: <LayoutGrid size={16} />, desc: '1 large + 2 small' },
+  { value: '4-grid', label: '4 Grid', icon: <Grid2X2 size={16} />, desc: '4 equal quadrants' },
+  { value: 'mosaic', label: 'Mosaic', icon: <LayoutDashboard size={16} />, desc: 'Varied-size mosaic' },
 ];
 
 export function CollageLayoutPanel({ nodeId, data }: Props) {
@@ -24,8 +26,8 @@ export function CollageLayoutPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Layout</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Layout</label>
         <div className="flex flex-col gap-1.5">
           {LAYOUTS.map((layout) => (
             <button
@@ -37,7 +39,7 @@ export function CollageLayoutPanel({ nodeId, data }: Props) {
                   : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
-              <span className="text-lg flex-shrink-0 font-emoji">{layout.icon}</span>
+              <span className="flex-shrink-0 flex items-center text-white/70">{layout.icon}</span>
               <div>
                 <div className="font-medium">{layout.label}</div>
                 <div className="text-white/40 text-[11px]">{layout.desc}</div>
@@ -47,10 +49,11 @@ export function CollageLayoutPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">
-          Gap — <span className="text-white/50">{config.gap}px</span>
-        </label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <div className="flex justify-between items-center">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Gap</span>
+          <span className="text-[11px] text-white/55 tabular-nums">{config.gap}px</span>
+        </div>
         <input
           type="range"
           min={0}
@@ -62,10 +65,11 @@ export function CollageLayoutPanel({ nodeId, data }: Props) {
         />
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">
-          Border Radius — <span className="text-white/50">{config.borderRadius}px</span>
-        </label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <div className="flex justify-between items-center">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Border Radius</span>
+          <span className="text-[11px] text-white/55 tabular-nums">{config.borderRadius}px</span>
+        </div>
         <input
           type="range"
           min={0}
@@ -78,7 +82,7 @@ export function CollageLayoutPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 text-amber-300/80 text-xs">
-        <div className="font-medium mb-1">⊞ V2 Feature</div>
+        <div className="font-medium mb-1 flex items-center gap-1.5"><LayoutGrid size={12} /> V2 Feature</div>
         <div className="text-amber-300/60">
           Connect two Image nodes (Image A + Image B inputs) to create a collage.
         </div>

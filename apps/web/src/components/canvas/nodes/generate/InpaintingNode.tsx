@@ -19,7 +19,7 @@ export function InpaintingNode({ data, selected }: NodeProps<Node<InpaintingData
   return (
     <CompactNode
       nodeType="inpainting"
-      icon="🪄"
+      icon=""
       title={data.label}
       selected={selected}
     >

@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { Smartphone } from 'lucide-react';
 import type { FaceCropData, FaceCropFormat } from '../../types/node-types';
 
 type Props = {
@@ -7,8 +8,8 @@ type Props = {
 };
 
 const FORMATS: { value: FaceCropFormat; label: string; desc: string }[] = [
-  { value: 'square', label: '⬛ Square', desc: '1:1 ratio, good for avatars' },
-  { value: 'portrait', label: '🔷 Portrait', desc: '3:4 ratio, closer framing' },
+  { value: 'square', label: 'Square', desc: '1:1 ratio, good for avatars' },
+  { value: 'portrait', label: 'Portrait', desc: '3:4 ratio, closer framing' },
 ];
 
 export function FaceCropPanel({ nodeId, data }: Props) {
@@ -21,8 +22,8 @@ export function FaceCropPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Crop Format</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Crop Format</label>
         <div className="flex gap-2">
           {FORMATS.map((fmt) => (
             <button
@@ -41,10 +42,11 @@ export function FaceCropPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">
-          Margin — <span className="text-white/50">{config.margin}px</span>
-        </label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <div className="flex justify-between items-center">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Margin</span>
+          <span className="text-[11px] text-white/55 tabular-nums">{config.margin}px</span>
+        </div>
         <input
           type="range"
           min={0}
@@ -61,7 +63,7 @@ export function FaceCropPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 text-amber-300/80 text-xs">
-        <div className="font-medium mb-1">🤳 V2 Feature</div>
+        <div className="font-medium mb-1 flex items-center gap-1.5"><Smartphone size={12} /> V2 Feature</div>
         <div className="text-amber-300/60">
           Detects the largest face in the image and crops around it. Useful for avatar and profile
           pic pipelines.

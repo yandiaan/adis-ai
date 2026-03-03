@@ -12,10 +12,10 @@ const PACK_EMOJIS: Record<string, string[]> = {
   custom:    ['➕', '➕', '➕', '➕', '➕'],
 };
 const PACK_LABEL: Record<string, string> = {
-  ramadan: '🌙 Ramadan',
-  meme: '😂 Meme',
-  sparkles: '✨ Sparkles',
-  custom: '🔧 Custom',
+  ramadan: 'Ramadan',
+  meme: 'Meme',
+  sparkles: 'Sparkles',
+  custom: 'Custom',
 };
 
 export function StickerLayerNode({ data, selected }: NodeProps<Node<StickerLayerData>>) {
@@ -32,7 +32,7 @@ export function StickerLayerNode({ data, selected }: NodeProps<Node<StickerLayer
   return (
     <CompactNode
       nodeType="stickerLayer"
-      icon="⭐"
+      icon=""
       title={data.label}
       selected={selected}
     >

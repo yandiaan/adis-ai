@@ -9,7 +9,7 @@ const CREATIVITY_STEPS = ['precise', 'balanced', 'creative'] as const;
 const TONE_COLORS: Record<string, string> = {
   formal: '#60a5fa', casual: '#4ade80', funny: '#fb923c', heartfelt: '#f472b6',
 };
-const LANG_FLAG: Record<string, string> = { id: '🇮🇩', en: '🇬🇧', mixed: '🌐' };
+const LANG_CODE: Record<string, string> = { id: 'ID', en: 'EN', mixed: 'MIX' };
 
 export function PromptEnhancerNode({ data, selected }: NodeProps<Node<PromptEnhancerData>>) {
   const { config } = data;
@@ -51,7 +51,7 @@ export function PromptEnhancerNode({ data, selected }: NodeProps<Node<PromptEnha
         <span className="text-[9px] px-1.5 py-px rounded-full text-white/40" style={{ background: 'rgba(255,255,255,0.06)' }}>
           {config.contentType}
         </span>
-        <span className="text-[11px] ml-auto" title={config.language}>{LANG_FLAG[config.language] ?? config.language}</span>
+        <span className="text-[10px] font-bold text-white/55 tracking-wider ml-auto" title={config.language}>{LANG_CODE[config.language] ?? config.language.toUpperCase()}</span>
       </div>
     
       {/* ── Output preview ──────────────────────────────── */}

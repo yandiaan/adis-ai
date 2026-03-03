@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { X } from 'lucide-react';
 import type { StickerLayerData, StickerPack } from '../../types/node-types';
 
 type Props = {
@@ -7,10 +8,10 @@ type Props = {
 };
 
 const PACKS: { value: StickerPack; label: string; stickers: string[] }[] = [
-  { value: 'ramadan', label: '🌙 Ramadan', stickers: ['🌙', '⭐', '🕌', '🤲', '📿', '🌟'] },
-  { value: 'meme', label: '😂 Meme', stickers: ['😂', '💀', '🔥', '👀', '💯', '🫡'] },
-  { value: 'sparkles', label: '✨ Sparkles', stickers: ['✨', '💫', '⚡', '🌈', '💎', '🎉'] },
-  { value: 'custom', label: '🔧 Custom', stickers: [] },
+  { value: 'ramadan', label: 'Ramadan', stickers: ['🌙', '⭐', '🕌', '🫲', '📿', '🌟'] },
+  { value: 'meme', label: 'Meme', stickers: ['😂', '💀', '🔥', '👀', '💯', '🪡'] },
+  { value: 'sparkles', label: 'Sparkles', stickers: ['✨', '💫', '⚡', '🌈', '💎', '🎉'] },
+  { value: 'custom', label: 'Custom', stickers: [] },
 ];
 
 export function StickerLayerPanel({ nodeId, data }: Props) {
@@ -32,8 +33,8 @@ export function StickerLayerPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Sticker Pack</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Sticker Pack</label>
         <div className="grid grid-cols-2 gap-1.5">
           {PACKS.map((pack) => (
             <button
@@ -52,8 +53,8 @@ export function StickerLayerPanel({ nodeId, data }: Props) {
       </div>
 
       {activePack && activePack.stickers.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">Tap to Add Sticker</label>
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Tap to Add Sticker</label>
           <div className="flex flex-wrap gap-2 p-3 bg-white/5 rounded-xl border border-white/10">
             {activePack.stickers.map((emoji) => (
               <button
@@ -69,8 +70,8 @@ export function StickerLayerPanel({ nodeId, data }: Props) {
       )}
 
       {config.stickers.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
             Active Stickers ({config.stickers.length})
           </label>
           <div className="flex flex-wrap gap-2 p-3 bg-white/5 rounded-xl border border-white/10">
@@ -79,9 +80,9 @@ export function StickerLayerPanel({ nodeId, data }: Props) {
                 <span className="text-2xl">{sticker.emoji}</span>
                 <button
                   onClick={() => removeSticker(i)}
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
-                  ✕
+                  <X size={9} />
                 </button>
               </div>
             ))}

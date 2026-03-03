@@ -22,7 +22,7 @@ export function ImageToTextNode({ data, selected }: NodeProps<Node<ImageToTextDa
   return (
     <CompactNode
       nodeType="imageToText"
-      icon="👁️"
+      icon=""
       title={data.label}
       selected={selected}
     >

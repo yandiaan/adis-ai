@@ -6,12 +6,12 @@ import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData, VideoData } from '../../types/port-types';
 
 const PRESET_META: Record<string, { label: string; aspect: [number, number] }> = {
-  'ig-square':  { label: '📸 IG Square',  aspect: [1, 1] },
-  'ig-portrait':{ label: '📸 IG Portrait', aspect: [4, 5] },
-  'ig-story':   { label: '📸 IG Story',   aspect: [9, 16] },
-  'tiktok':     { label: '🎵 TikTok',     aspect: [9, 16] },
-  'youtube':    { label: '🎥 YouTube',    aspect: [16, 9] },
-  'custom':     { label: '🔧 Custom',     aspect: [16, 9] },
+  'ig-square':  { label: 'IG Square',  aspect: [1, 1] },
+  'ig-portrait':{ label: 'IG Portrait', aspect: [4, 5] },
+  'ig-story':   { label: 'IG Story',   aspect: [9, 16] },
+  'tiktok':     { label: 'TikTok',     aspect: [9, 16] },
+  'youtube':    { label: 'YouTube',    aspect: [16, 9] },
+  'custom':     { label: 'Custom',     aspect: [16, 9] },
 };
 
 export function PreviewNode({ data, selected }: NodeProps<Node<PreviewData>>) {

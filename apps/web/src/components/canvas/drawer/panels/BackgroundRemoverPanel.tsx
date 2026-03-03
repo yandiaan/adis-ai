@@ -1,4 +1,6 @@
 import { useReactFlow } from '@xyflow/react';
+import type { ReactNode } from 'react';
+import { Blend, Layers, Scissors, Square } from 'lucide-react';
 import type { BackgroundRemoverData, BgOutputType } from '../../types/node-types';
 
 type Props = {
@@ -6,15 +8,15 @@ type Props = {
   data: BackgroundRemoverData;
 };
 
-const OUTPUT_TYPES: { value: BgOutputType; label: string; desc: string; icon: string }[] = [
+const OUTPUT_TYPES: { value: BgOutputType; label: string; desc: string; icon: ReactNode }[] = [
   {
     value: 'transparent',
     label: 'Transparent',
     desc: 'PNG with alpha channel (ideal for stickers)',
-    icon: '🔲',
+    icon: <Layers size={14} />,
   },
-  { value: 'white', label: 'White BG', desc: 'Subject on clean white background', icon: '⬜' },
-  { value: 'blur', label: 'Blur BG', desc: 'Subject with blurred background (bokeh)', icon: '🌫️' },
+  { value: 'white', label: 'White BG', desc: 'Subject on clean white background', icon: <Square size={14} /> },
+  { value: 'blur', label: 'Blur BG', desc: 'Subject with blurred background (bokeh)', icon: <Blend size={14} /> },
 ];
 
 export function BackgroundRemoverPanel({ nodeId, data }: Props) {
@@ -27,8 +29,8 @@ export function BackgroundRemoverPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Output Type</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Output Type</label>
         <div className="flex flex-col gap-1.5">
           {OUTPUT_TYPES.map((opt) => (
             <button
@@ -51,7 +53,7 @@ export function BackgroundRemoverPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-300/80 text-xs">
-        <div className="font-medium mb-1">✂️ AI Matting</div>
+        <div className="font-medium mb-1 flex items-center gap-1.5"><Scissors size={12} /> AI Matting</div>
         <div className="text-emerald-300/60">
           Automatically detects and removes the background. Best for portraits, products, and clear
           subjects.

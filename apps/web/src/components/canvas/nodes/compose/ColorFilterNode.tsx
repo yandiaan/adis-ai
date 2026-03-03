@@ -29,7 +29,7 @@ export function ColorFilterNode({ data, selected }: NodeProps<Node<ColorFilterDa
   return (
     <CompactNode
       nodeType="colorFilter"
-      icon="🌈"
+      icon=""
       title={data.label}
       selected={selected}
     >

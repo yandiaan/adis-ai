@@ -5,12 +5,12 @@ import type { TranslateTextData } from '../../types/node-types';
 import type { TextData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 
-const LANG_FLAGS: Record<string, string> = {
-  auto: '🌐',
-  id: '🇮🇩',
-  en: '🇬🇧',
-  ar: '🇸🇦',
-  zh: '🇨🇳',
+const LANG_CODES: Record<string, string> = {
+  auto: 'AUTO',
+  id: 'ID',
+  en: 'EN',
+  ar: 'AR',
+  zh: 'ZH',
 };
 const LANG_NAMES: Record<string, string> = {
   auto: 'Auto',
@@ -33,21 +33,21 @@ export function TranslateTextNode({ data, selected }: NodeProps<Node<TranslateTe
   return (
     <CompactNode
       nodeType="translateText"
-      icon="🌐"
+      icon=""
       title={data.label}
       selected={selected}
     >
       {/* Big language arrow */}
       <div className="flex items-center justify-center gap-2 py-1">
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[18px]">{LANG_FLAGS[config.sourceLang]}</span>
+          <span className="text-[13px] font-bold text-white/75 tracking-wide">{LANG_CODES[config.sourceLang] ?? config.sourceLang.toUpperCase()}</span>
           <span className="text-[9px] text-white/35">{LANG_NAMES[config.sourceLang]}</span>
         </div>
         <svg width="28" height="12" viewBox="0 0 28 12">
           <path d="M2 6 H20 M18 2 L25 6 L18 10" stroke="rgba(167,139,250,0.5)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[18px]">{LANG_FLAGS[config.targetLang]}</span>
+          <span className="text-[13px] font-bold text-white/75 tracking-wide">{LANG_CODES[config.targetLang] ?? config.targetLang.toUpperCase()}</span>
           <span className="text-[9px] text-white/35">{LANG_NAMES[config.targetLang]}</span>
         </div>
       </div>

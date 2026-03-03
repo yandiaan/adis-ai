@@ -7,18 +7,18 @@ type Props = {
 };
 
 const SOURCE_LANGS: { value: TranslateLang; label: string }[] = [
-  { value: 'auto', label: '🔍 Auto Detect' },
-  { value: 'id', label: '🇮🇩 Indonesian' },
-  { value: 'en', label: '🇬🇧 English' },
-  { value: 'ar', label: '🇸🇦 Arabic' },
-  { value: 'zh', label: '🇨🇳 Chinese' },
+  { value: 'auto', label: 'Auto Detect' },
+  { value: 'id', label: 'Indonesian' },
+  { value: 'en', label: 'English' },
+  { value: 'ar', label: 'Arabic' },
+  { value: 'zh', label: 'Chinese' },
 ];
 
 const TARGET_LANGS: { value: Exclude<TranslateLang, 'auto'>; label: string }[] = [
-  { value: 'id', label: '🇮🇩 Indonesian' },
-  { value: 'en', label: '🇬🇧 English' },
-  { value: 'ar', label: '🇸🇦 Arabic' },
-  { value: 'zh', label: '🇨🇳 Chinese' },
+  { value: 'id', label: 'Indonesian' },
+  { value: 'en', label: 'English' },
+  { value: 'ar', label: 'Arabic' },
+  { value: 'zh', label: 'Chinese' },
 ];
 
 export function TranslateTextPanel({ nodeId, data }: Props) {
@@ -31,8 +31,8 @@ export function TranslateTextPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Source Language</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Source Language</label>
         <div className="flex flex-col gap-1.5">
           {SOURCE_LANGS.map((lang) => (
             <button
@@ -50,8 +50,8 @@ export function TranslateTextPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Target Language</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Target Language</label>
         <div className="flex flex-col gap-1.5">
           {TARGET_LANGS.map((lang) => (
             <button

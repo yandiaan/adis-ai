@@ -335,6 +335,17 @@ async function executeNodeOnServer(
     promptEnhancer: 'prompt-enhancer',
     imageGenerator: 'image-generator',
     videoGenerator: 'video-generator',
+    imageToText: 'image-to-text',
+    translateText: 'translate-text',
+    backgroundRemover: 'background-remover',
+    faceCrop: 'face-crop',
+    inpainting: 'inpainting',
+    imageUpscaler: 'image-upscaler',
+    textOverlay: 'text-overlay',
+    frameBorder: 'frame-border',
+    stickerLayer: 'sticker-layer',
+    colorFilter: 'color-filter',
+    collageLayout: 'collage-layout',
   };
 
   const endpoint = endpointMap[nodeType];

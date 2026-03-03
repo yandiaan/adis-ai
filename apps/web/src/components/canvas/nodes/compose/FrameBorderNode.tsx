@@ -1,17 +1,19 @@
 import { useNodeId } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
+import type { ReactNode } from 'react';
+import { Camera, FileText, Flower2, Frame, Square, Star, Zap } from 'lucide-react';
 import { CompactNode } from '../CompactNode';
 import type { FrameBorderData } from '../../types/node-types';
 import type { ImageData } from '../../types/port-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 
-const STYLE_ICONS: Record<string, string> = {
-  islamic: '✴️',
-  floral: '🌸',
-  polaroid: '📸',
-  neon: '💜',
-  'torn-paper': '📝',
-  none: '□',
+const STYLE_ICONS: Record<string, ReactNode> = {
+  islamic: <Star size={18} />,
+  floral: <Flower2 size={18} />,
+  polaroid: <Camera size={18} />,
+  neon: <Zap size={18} />,
+  'torn-paper': <FileText size={18} />,
+  none: <Square size={18} />,
 };
 
 export function FrameBorderNode({ data, selected }: NodeProps<Node<FrameBorderData>>) {
@@ -23,12 +25,12 @@ export function FrameBorderNode({ data, selected }: NodeProps<Node<FrameBorderDa
   const isDone = execState?.status === 'done';
   const outputImage = isDone ? (execState?.output?.type === 'image' ? (execState.output.data as ImageData) : null) : null;
 
-  const icon = STYLE_ICONS[config.style] ?? '🖼️';
+  const icon = STYLE_ICONS[config.style] ?? <Frame size={18} />;
 
   return (
     <CompactNode
       nodeType="frameBorder"
-      icon="🖼️"
+      icon=""
       title={data.label}
       selected={selected}
     >

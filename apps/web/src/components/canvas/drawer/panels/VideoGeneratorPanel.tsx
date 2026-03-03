@@ -19,8 +19,8 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Mode</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Mode</label>
         <div className="text-white/55 text-[13px] p-3 bg-white/5 rounded-xl border border-white/10">
           <div className="inline-flex items-center gap-2">
             {config.mode === 'text2video' ? (
@@ -43,11 +43,11 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
         <div>
-          <div className="flex justify-between items-center">
-            <label className="block text-white/70 text-xs font-medium mb-2">Duration</label>
-            <span className="text-white/60 text-[13px] font-medium">{config.duration}s</span>
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Duration</span>
+            <span className="text-[11px] text-white/55 tabular-nums">{config.duration}s</span>
           </div>
           <input
             type="range"
@@ -61,8 +61,8 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Resolution</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Resolution</label>
         <div className="flex gap-2">
           {RESOLUTIONS.map((res) => (
             <button
@@ -80,8 +80,8 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Shot Type</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Shot Type</label>
         <div className="flex gap-2">
           {(['single', 'multi'] as const).map((type) => (
             <button
@@ -99,8 +99,8 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Prompt Extend</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Prompt Extend</label>
         <div className="flex gap-2">
           {([true, false] as const).map((val) => (
             <button

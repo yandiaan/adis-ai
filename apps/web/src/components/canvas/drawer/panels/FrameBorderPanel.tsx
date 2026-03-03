@@ -1,4 +1,6 @@
 import { useReactFlow } from '@xyflow/react';
+import type { ReactNode } from 'react';
+import { Camera, FileText, Flower2, Moon, X, Zap } from 'lucide-react';
 import type { FrameBorderData, FrameStyle } from '../../types/node-types';
 
 type Props = {
@@ -6,13 +8,13 @@ type Props = {
   data: FrameBorderData;
 };
 
-const FRAME_STYLES: { value: FrameStyle; label: string; icon: string }[] = [
-  { value: 'none', label: 'None', icon: '⬜' },
-  { value: 'islamic', label: 'Islamic', icon: '🌙' },
-  { value: 'floral', label: 'Floral', icon: '🌸' },
-  { value: 'polaroid', label: 'Polaroid', icon: '📷' },
-  { value: 'neon', label: 'Neon', icon: '💜' },
-  { value: 'torn-paper', label: 'Torn Paper', icon: '📄' },
+const FRAME_STYLES: { value: FrameStyle; label: string; icon: ReactNode }[] = [
+  { value: 'none', label: 'None', icon: <X size={14} /> },
+  { value: 'islamic', label: 'Islamic', icon: <Moon size={14} /> },
+  { value: 'floral', label: 'Floral', icon: <Flower2 size={14} /> },
+  { value: 'polaroid', label: 'Polaroid', icon: <Camera size={14} /> },
+  { value: 'neon', label: 'Neon', icon: <Zap size={14} /> },
+  { value: 'torn-paper', label: 'Torn Paper', icon: <FileText size={14} /> },
 ];
 
 export function FrameBorderPanel({ nodeId, data }: Props) {
@@ -25,8 +27,8 @@ export function FrameBorderPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Frame Style</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Frame Style</label>
         <div className="grid grid-cols-3 gap-1.5">
           {FRAME_STYLES.map((style) => (
             <button
@@ -38,7 +40,7 @@ export function FrameBorderPanel({ nodeId, data }: Props) {
                   : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
-              <div className="text-base">{style.icon}</div>
+              <div className="flex justify-center items-center mb-1 text-white/70">{style.icon}</div>
               <div className="mt-1 text-[10px]">{style.label}</div>
             </button>
           ))}
@@ -47,10 +49,11 @@ export function FrameBorderPanel({ nodeId, data }: Props) {
 
       {config.style !== 'none' && (
         <>
-          <div className="flex flex-col gap-3">
-            <label className="block text-white/70 text-xs font-medium mb-2">
-              Thickness — <span className="text-white/50">{config.thickness}px</span>
-            </label>
+          <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Thickness</span>
+              <span className="text-[11px] text-white/55 tabular-nums">{config.thickness}px</span>
+            </div>
             <input
               type="range"
               min={4}
@@ -66,8 +69,8 @@ export function FrameBorderPanel({ nodeId, data }: Props) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <label className="block text-white/70 text-xs font-medium mb-2">Frame Color</label>
+          <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Frame Color</label>
             <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
               <input
                 type="color"

@@ -35,8 +35,8 @@ export function PromptEnhancerPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Creativity</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Creativity</label>
         <div className="flex gap-2">
           {CREATIVITY_OPTIONS.map((opt) => (
             <button
@@ -57,8 +57,8 @@ export function PromptEnhancerPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Content Type</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Content Type</label>
         <div className="flex flex-wrap gap-1.5">
           {CONTENT_TYPES.map((ct) => (
             <button
@@ -76,8 +76,8 @@ export function PromptEnhancerPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Tone</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Tone</label>
         <div className="flex flex-wrap gap-1.5">
           {TONES.map((tone) => (
             <button
@@ -95,8 +95,8 @@ export function PromptEnhancerPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Language</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Language</label>
         <div className="flex gap-2">
           {(['id', 'en', 'mixed'] as const).map((lang) => (
             <button

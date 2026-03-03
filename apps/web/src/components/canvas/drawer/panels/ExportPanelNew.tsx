@@ -58,8 +58,8 @@ export function ExportPanelNew({ nodeId, data }: Props) {
     <>
       {/* Media preview + export button */}
       {mediaUrl && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">Output</label>
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Output</label>
           <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-black/30 flex items-center justify-center" style={{ maxHeight: 200 }}>
             {imageUrl ? (
               <img src={imageUrl} alt="Export preview" className="w-full max-h-[200px] object-contain" />
@@ -69,15 +69,15 @@ export function ExportPanelNew({ nodeId, data }: Props) {
           </div>
           <button
             onClick={handleExport}
-            className="w-full py-2.5 rounded-xl border border-red-400 bg-red-400/15 text-red-300 text-sm font-medium hover:bg-red-400/25 transition-colors cursor-pointer"
+            className="motion-lift motion-press focus-ring-orange w-full py-2.5 rounded-xl border border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] text-white text-sm font-medium hover:bg-[var(--editor-accent-25)] transition-colors cursor-pointer"
           >
             {config.shareTarget === 'download' ? 'Download' : config.shareTarget === 'clipboard' ? 'Copy to Clipboard' : 'Share to WhatsApp'}
           </button>
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Format</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Format</label>
         <div className="flex gap-1.5">
           {FORMATS.map((fmt) => (
             <button
@@ -85,7 +85,7 @@ export function ExportPanelNew({ nodeId, data }: Props) {
               onClick={() => updateConfig({ format: fmt })}
               className={`motion-lift motion-press focus-ring-orange flex-1 px-1 py-2 rounded-xl border cursor-pointer text-white text-xs transition-colors ${
                 config.format === fmt
-                  ? 'border-red-400 bg-red-400/15 font-semibold'
+                ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] font-semibold'
                   : 'border-white/10 bg-white/5 hover:bg-white/7 font-normal'
               }`}
             >
@@ -95,11 +95,11 @@ export function ExportPanelNew({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
         <div>
-          <div className="flex justify-between items-center">
-            <label className="block text-white/70 text-xs font-medium mb-2">Quality</label>
-            <span className="text-white/60 text-[13px] font-medium">{config.quality}%</span>
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Quality</span>
+            <span className="text-[11px] text-white/55 tabular-nums">{config.quality}%</span>
           </div>
           <input
             type="range"
@@ -113,8 +113,8 @@ export function ExportPanelNew({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Share Target</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Share Target</label>
         <div className="flex gap-2">
           {SHARE_TARGETS.map((target) => (
             <button
@@ -122,7 +122,7 @@ export function ExportPanelNew({ nodeId, data }: Props) {
               onClick={() => updateConfig({ shareTarget: target.value })}
               className={`motion-lift motion-press focus-ring-orange flex-1 px-1 py-2.5 rounded-xl border cursor-pointer text-white text-xs text-center transition-colors ${
                 config.shareTarget === target.value
-                  ? 'border-red-400 bg-red-400/15 font-semibold'
+                ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] font-semibold'
                   : 'border-white/10 bg-white/5 hover:bg-white/7 font-normal'
               }`}
             >

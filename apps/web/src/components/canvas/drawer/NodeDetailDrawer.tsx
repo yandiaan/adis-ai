@@ -101,18 +101,17 @@ export function NodeDetailDrawer({ selectedNode, onClose, closing = false }: Pro
 
   return (
     <div
-      className={`fixed top-0 right-0 bottom-0 z-[1000] flex flex-col font-[Inter,system-ui,sans-serif] border-l border-white/10 shadow-[-10px_0_48px_rgba(0,0,0,0.55)] backdrop-blur-xl ${
+      className={`fixed top-0 right-0 bottom-0 z-[1000] flex flex-col bg-background border-l border-white/10 shadow-2xl ${
         closing ? 'pointer-events-none animate-panel-out-right' : 'animate-panel-in-right'
       }`}
       style={{
         width: 'clamp(320px, 34vw, 420px)',
         maxWidth: '92vw',
-        background: 'var(--editor-surface-1)',
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-5 py-4"
+        className="flex items-center justify-between px-4 py-3"
         style={{ borderBottom: `1px solid ${category?.borderColor || 'rgba(255,255,255,0.12)'}` }}
       >
         <div className="flex items-center gap-3">
@@ -150,10 +149,10 @@ export function NodeDetailDrawer({ selectedNode, onClose, closing = false }: Pro
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">{renderPanel()}</div>
+      <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2.5">{renderPanel()}</div>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-white/10 flex gap-3">
+      <div className="px-4 py-3 border-t border-white/10 flex gap-3">
         <button
           onClick={handleDelete}
           className="motion-lift motion-press focus-ring-orange flex-1 py-3 px-4 bg-red-400/10 border border-red-400/30 rounded-xl text-red-200 text-[13px] font-medium cursor-pointer hover:bg-red-400/15 flex items-center justify-center gap-2"

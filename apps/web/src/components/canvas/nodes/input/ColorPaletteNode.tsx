@@ -14,7 +14,7 @@ export function ColorPaletteNode({ data, selected }: NodeProps<Node<ColorPalette
   return (
     <CompactNode
       nodeType="colorPalette"
-      icon="🎨"
+      icon=""
       title={data.label}
       selected={selected}
     >

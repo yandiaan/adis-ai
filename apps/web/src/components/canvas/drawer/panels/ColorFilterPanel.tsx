@@ -1,4 +1,6 @@
 import { useReactFlow } from '@xyflow/react';
+import type { ReactNode } from 'react';
+import { Camera, CircleSlash, Moon, Snowflake, Sparkles, Sun, Zap } from 'lucide-react';
 import type { ColorFilterData, ColorFilterPreset } from '../../types/node-types';
 
 type Props = {
@@ -6,14 +8,14 @@ type Props = {
   data: ColorFilterData;
 };
 
-const PRESETS: { value: ColorFilterPreset; label: string; icon: string; desc: string }[] = [
-  { value: 'none', label: 'None', icon: '⬜', desc: 'No filter applied' },
-  { value: 'warm', label: 'Warm', icon: '🌅', desc: 'Golden-hour warm tones' },
-  { value: 'vintage', label: 'Vintage', icon: '📸', desc: 'Aged, faded look' },
-  { value: 'eid-gold', label: 'Eid Gold', icon: '✨', desc: 'Festive golden palette' },
-  { value: 'sahur', label: 'Sahur', icon: '🌙', desc: 'Cool pre-dawn blue tones' },
-  { value: 'cool', label: 'Cool', icon: '❄️', desc: 'Fresh cold-tone grading' },
-  { value: 'vibrant', label: 'Vibrant', icon: '🌈', desc: 'Boosted saturation & contrast' },
+const PRESETS: { value: ColorFilterPreset; label: string; icon: ReactNode; desc: string }[] = [
+  { value: 'none', label: 'None', icon: <CircleSlash size={14} />, desc: 'No filter applied' },
+  { value: 'warm', label: 'Warm', icon: <Sun size={14} />, desc: 'Golden-hour warm tones' },
+  { value: 'vintage', label: 'Vintage', icon: <Camera size={14} />, desc: 'Aged, faded look' },
+  { value: 'eid-gold', label: 'Eid Gold', icon: <Sparkles size={14} />, desc: 'Festive golden palette' },
+  { value: 'sahur', label: 'Sahur', icon: <Moon size={14} />, desc: 'Cool pre-dawn blue tones' },
+  { value: 'cool', label: 'Cool', icon: <Snowflake size={14} />, desc: 'Fresh cold-tone grading' },
+  { value: 'vibrant', label: 'Vibrant', icon: <Zap size={14} />, desc: 'Boosted saturation & contrast' },
 ];
 
 export function ColorFilterPanel({ nodeId, data }: Props) {
@@ -26,8 +28,8 @@ export function ColorFilterPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Filter Preset</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Filter Preset</label>
         <div className="grid grid-cols-2 gap-1.5">
           {PRESETS.map((preset) => (
             <button
@@ -39,7 +41,7 @@ export function ColorFilterPanel({ nodeId, data }: Props) {
                   : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
-              <span className="text-base">{preset.icon}</span>
+              <span className="flex-shrink-0 flex items-center text-white/70">{preset.icon}</span>
               <div>
                 <div className="font-medium">{preset.label}</div>
                 <div className="text-[10px] text-white/40">{preset.desc}</div>
@@ -50,10 +52,11 @@ export function ColorFilterPanel({ nodeId, data }: Props) {
       </div>
 
       {config.preset !== 'none' && (
-        <div className="flex flex-col gap-3">
-          <label className="block text-white/70 text-xs font-medium mb-2">
-            Intensity — <span className="text-white/50">{config.intensity}%</span>
-          </label>
+        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Intensity</span>
+            <span className="text-[11px] text-white/55 tabular-nums">{config.intensity}%</span>
+          </div>
           <input
             type="range"
             min={0}

@@ -2,6 +2,7 @@ import { Router, type Router as RouterType } from 'express';
 import { z } from 'zod';
 import {
   generateText,
+  describeImage,
   generateImage,
   editImage,
   generateVideo,
@@ -289,6 +290,718 @@ router.post('/video-generator/run', async (req, res, next) => {
       output: {
         type: 'video',
         data: { url: videoUrl, duration: config.duration, width: w, height: h },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Image-to-Text (Vision) ---
+const imageToTextSchema = z.object({
+  config: z.object({
+    detailLevel: z.enum(['brief', 'detailed', 'artistic']),
+    language: z.enum(['id', 'en']),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/image-to-text/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = imageToTextSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    const detailPrompts: Record<string, string> = {
+      brief: 'Describe this image in one short sentence.',
+      detailed: 'Describe this image in detail, including objects, colors, composition, and mood.',
+      artistic: 'Describe this image as a creative art prompt suitable for AI image generation.',
+    };
+    const langSuffix =
+      config.language === 'id' ? ' Respond in Indonesian.' : ' Respond in English.';
+
+    const text = await describeImage({
+      image_url: imageUrl,
+      system_prompt: detailPrompts[config.detailLevel] + langSuffix,
+      max_tokens: config.detailLevel === 'brief' ? 100 : 500,
+      temperature: config.detailLevel === 'artistic' ? 0.7 : 0.3,
+    });
+
+    res.json({
+      output: {
+        type: 'text',
+        data: { text },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Translate Text ---
+const translateTextSchema = z.object({
+  config: z.object({
+    sourceLang: z.enum(['auto', 'id', 'en', 'ar', 'zh']),
+    targetLang: z.enum(['id', 'en', 'ar', 'zh']),
+  }),
+  inputs: z.object({
+    text: z
+      .object({
+        type: z.literal('text'),
+        data: z.object({ text: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+const LANG_NAMES: Record<string, string> = {
+  auto: 'auto-detected language',
+  id: 'Indonesian',
+  en: 'English',
+  ar: 'Arabic',
+  zh: 'Chinese',
+};
+
+router.post('/translate-text/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = translateTextSchema.parse(req.body);
+
+    const inputText = (inputs.text?.data as { text: string })?.text || '';
+    if (!inputText) {
+      res.status(400).json({ error: 'Text input required' });
+      return;
+    }
+
+    const srcLabel = LANG_NAMES[config.sourceLang] || config.sourceLang;
+    const tgtLabel = LANG_NAMES[config.targetLang] || config.targetLang;
+
+    const translated = await generateText({
+      model: 'qwen-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `Translate from ${srcLabel} to ${tgtLabel}. Output ONLY the translated text, nothing else.`,
+        },
+        { role: 'user', content: inputText },
+      ],
+      temperature: 0.1,
+      max_tokens: 2000,
+    });
+
+    res.json({
+      output: {
+        type: 'text',
+        data: { text: translated },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Background Remover ---
+const backgroundRemoverSchema = z.object({
+  config: z.object({
+    outputType: z.enum(['transparent', 'white', 'blur']),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/background-remover/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = backgroundRemoverSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    const outputInstructions: Record<string, string> = {
+      transparent: 'Remove the background completely, making it transparent.',
+      white: 'Remove the background and replace it with a solid white background.',
+      blur: 'Keep the subject sharp and blur the background with a strong gaussian blur effect.',
+    };
+
+    const urls = await editImage({
+      images: [imageUrl],
+      text: outputInstructions[config.outputType],
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Face Crop ---
+const faceCropSchema = z.object({
+  config: z.object({
+    margin: z.number(),
+    format: z.enum(['square', 'portrait']),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/face-crop/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = faceCropSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    const aspect = config.format === 'square' ? 'square (1:1)' : 'portrait (3:4)';
+    const urls = await editImage({
+      images: [imageUrl],
+      text: `Detect and crop the main face in this image. Output a ${aspect} crop centered on the face with ${config.margin}px margin around it. Keep the face sharp and well-framed.`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Inpainting ---
+const inpaintingSchema = z.object({
+  config: z.object({
+    mode: z.enum(['auto', 'manual']),
+    strength: z.number().min(0).max(100),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+    prompt: z
+      .object({
+        type: z.literal('prompt'),
+        data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
+      })
+      .or(
+        z.object({
+          type: z.literal('text'),
+          data: z.object({ text: z.string() }),
+        }),
+      )
+      .optional(),
+  }),
+});
+
+router.post('/inpainting/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = inpaintingSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    // Extract prompt text from either prompt or text input type
+    const promptInput = inputs.prompt?.data;
+    const promptText =
+      promptInput && 'prompt' in promptInput ? promptInput.prompt : promptInput && 'text' in promptInput ? promptInput.text : '';
+    if (!promptText) {
+      res.status(400).json({ error: 'Prompt input required' });
+      return;
+    }
+
+    const strengthNote =
+      config.strength > 80
+        ? 'Apply strong modifications.'
+        : config.strength > 50
+          ? 'Apply moderate modifications.'
+          : 'Apply subtle modifications, keeping most of the original intact.';
+
+    const urls = await editImage({
+      images: [imageUrl],
+      text: `${promptText}. ${strengthNote}`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Image Upscaler ---
+const imageUpscalerSchema = z.object({
+  config: z.object({
+    scale: z.union([z.literal(2), z.literal(4)]),
+    enhanceFaces: z.boolean(),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/image-upscaler/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = imageUpscalerSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    const faceNote = config.enhanceFaces ? ' Enhance and sharpen any faces in the image.' : '';
+    const urls = await editImage({
+      images: [imageUrl],
+      text: `Upscale this image by ${config.scale}x, enhancing details and sharpness while preserving the original content.${faceNote}`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Text Overlay ---
+const textOverlaySchema = z.object({
+  config: z.object({
+    text: z.string(),
+    position: z.enum(['top', 'center', 'bottom', 'custom']),
+    font: z.enum(['inter', 'impact', 'arabic-display', 'comic-neue']),
+    fontSize: z.number(),
+    fontColor: z.string(),
+    stroke: z.boolean(),
+    effect: z.enum(['none', 'shadow', 'glow', 'gradient']),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+    text: z
+      .object({
+        type: z.literal('text'),
+        data: z.object({ text: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/text-overlay/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = textOverlaySchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    const overlayText = inputs.text?.data?.text || config.text;
+    if (!overlayText) {
+      res.status(400).json({ error: 'Text is required' });
+      return;
+    }
+
+    const strokeNote = config.stroke ? ' with a dark stroke/outline' : '';
+    const effectNote =
+      config.effect !== 'none' ? `, with a ${config.effect} text effect` : '';
+
+    const urls = await editImage({
+      images: [imageUrl],
+      text: `Add the text "${overlayText}" at the ${config.position} of the image in ${config.font} font at size ${config.fontSize}px in color ${config.fontColor}${strokeNote}${effectNote}. Keep the rest of the image unchanged.`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Frame Border ---
+const frameBorderSchema = z.object({
+  config: z.object({
+    style: z.enum(['islamic', 'floral', 'polaroid', 'neon', 'torn-paper', 'none']),
+    thickness: z.number(),
+    color: z.string(),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/frame-border/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = frameBorderSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    if (config.style === 'none') {
+      res.json({
+        output: {
+          type: 'image',
+          data: { url: imageUrl, width: 0, height: 0 },
+          timestamp: Date.now(),
+        },
+        duration_ms: Date.now() - startTime,
+      });
+      return;
+    }
+
+    const styleDescriptions: Record<string, string> = {
+      islamic: 'ornate Islamic geometric patterns',
+      floral: 'decorative floral patterns',
+      polaroid: 'a polaroid photo style white border with extra space at the bottom',
+      neon: 'a glowing neon light border',
+      'torn-paper': 'a torn paper edge effect border',
+    };
+    const styleDesc = styleDescriptions[config.style] || config.style;
+
+    const urls = await editImage({
+      images: [imageUrl],
+      text: `Add a ${styleDesc} frame/border around this image. Border thickness: ${config.thickness}px, color: ${config.color}. Keep the main subject fully visible inside.`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Sticker Layer ---
+const stickerLayerSchema = z.object({
+  config: z.object({
+    pack: z.enum(['ramadan', 'meme', 'sparkles', 'custom']),
+    stickers: z.array(
+      z.object({
+        emoji: z.string(),
+        x: z.number(),
+        y: z.number(),
+        size: z.number(),
+      }),
+    ),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/sticker-layer/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = stickerLayerSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    const stickerList =
+      config.stickers.length > 0
+        ? config.stickers
+            .map(
+              (s) =>
+                `${s.emoji} at position (${Math.round(s.x)}%, ${Math.round(s.y)}%) with size ${s.size}px`,
+            )
+            .join(', ')
+        : `decorative ${config.pack} themed emoji stickers spread naturally around the image`;
+
+    const urls = await editImage({
+      images: [imageUrl],
+      text: `Add stickers/emoji overlays to this image: ${stickerList}. Make the stickers look natural and well-integrated with the image.`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Color Filter ---
+const colorFilterSchema = z.object({
+  config: z.object({
+    preset: z.enum(['none', 'warm', 'vintage', 'eid-gold', 'sahur', 'cool', 'vibrant']),
+    intensity: z.number().min(0).max(100),
+  }),
+  inputs: z.object({
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+const COLOR_FILTER_DESCRIPTIONS: Record<string, string> = {
+  warm: 'a warm orange-golden color grade',
+  vintage: 'a vintage faded film look with slightly desaturated warm tones',
+  'eid-gold': 'a golden Eid celebration color grade with rich gold and warm tones',
+  sahur: 'a pre-dawn blue-purple atmospheric color grade',
+  cool: 'a cool blue-teal color grade',
+  vibrant: 'a vibrant highly-saturated color grade',
+};
+
+router.post('/color-filter/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = colorFilterSchema.parse(req.body);
+
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+    if (!imageUrl) {
+      res.status(400).json({ error: 'Image input required' });
+      return;
+    }
+
+    if (config.preset === 'none') {
+      res.json({
+        output: {
+          type: 'image',
+          data: { url: imageUrl, width: 0, height: 0 },
+          timestamp: Date.now(),
+        },
+        duration_ms: Date.now() - startTime,
+      });
+      return;
+    }
+
+    const filterDesc = COLOR_FILTER_DESCRIPTIONS[config.preset] || config.preset;
+    const strengthNote =
+      config.intensity < 30
+        ? 'Apply it very subtly.'
+        : config.intensity < 70
+          ? 'Apply it at medium strength.'
+          : 'Apply it strongly.';
+
+    const urls = await editImage({
+      images: [imageUrl],
+      text: `Apply ${filterDesc} color filter/grade to this image. ${strengthNote} Keep the composition and subjects unchanged.`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Collage Layout ---
+const collageLayoutSchema = z.object({
+  config: z.object({
+    layout: z.enum(['2-horizontal', '2-vertical', '3-grid', '4-grid', 'mosaic']),
+    gap: z.number(),
+    borderRadius: z.number(),
+  }),
+  inputs: z.object({
+    image1: z
+      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
+      .optional(),
+    image2: z
+      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
+      .optional(),
+    image3: z
+      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
+      .optional(),
+    image4: z
+      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
+      .optional(),
+  }),
+});
+
+const COLLAGE_DESCRIPTIONS: Record<string, string> = {
+  '2-horizontal': 'side by side horizontally (2 columns)',
+  '2-vertical': 'stacked vertically (2 rows)',
+  '3-grid': '3 images in a row',
+  '4-grid': '2x2 grid',
+  mosaic: 'mosaic layout with one large image on the left and two smaller ones stacked on the right',
+};
+
+router.post('/collage-layout/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = collageLayoutSchema.parse(req.body);
+
+    // Collect provided images (editImage supports up to 3)
+    const imageUrls = [
+      inputs.image1?.data?.url,
+      inputs.image2?.data?.url,
+      inputs.image3?.data?.url,
+      inputs.image4?.data?.url,
+    ]
+      .filter((u): u is string => !!u)
+      .slice(0, 3); // API max is 3 input images
+
+    if (imageUrls.length < 2) {
+      res.status(400).json({ error: 'At least 2 images required for collage' });
+      return;
+    }
+
+    const layoutDesc = COLLAGE_DESCRIPTIONS[config.layout] || config.layout;
+
+    const urls = await editImage({
+      images: imageUrls,
+      text: `Combine these ${imageUrls.length} images into a collage arranged ${layoutDesc}. Gap between images: ${config.gap}px. Rounded corners: ${config.borderRadius}px. Output a single combined collage image.`,
+    });
+
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No image generated');
+
+    res.json({
+      output: {
+        type: 'image',
+        data: { url: resultUrl, width: 0, height: 0 },
         timestamp: Date.now(),
       },
       duration_ms: Date.now() - startTime,

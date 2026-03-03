@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { Lightbulb } from 'lucide-react';
 import type { ImageToTextData, DetailLevel } from '../../types/node-types';
 
 type Props = {
@@ -13,8 +14,8 @@ const DETAIL_LEVELS: { value: DetailLevel; label: string; desc: string }[] = [
 ];
 
 const LANGUAGES: { value: 'id' | 'en'; label: string }[] = [
-  { value: 'id', label: '🇮🇩 Indonesian' },
-  { value: 'en', label: '🇬🇧 English' },
+  { value: 'id', label: 'Indonesian' },
+  { value: 'en', label: 'English' },
 ];
 
 export function ImageToTextPanel({ nodeId, data }: Props) {
@@ -27,8 +28,8 @@ export function ImageToTextPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Detail Level</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Detail Level</label>
         <div className="flex flex-col gap-1.5">
           {DETAIL_LEVELS.map((lvl) => (
             <button
@@ -47,8 +48,8 @@ export function ImageToTextPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Output Language</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Output Language</label>
         <div className="flex gap-2">
           {LANGUAGES.map((lang) => (
             <button
@@ -67,7 +68,7 @@ export function ImageToTextPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-300/80 text-xs">
-        <div className="font-medium mb-1">💡 Powered by Qwen VL</div>
+        <div className="font-medium mb-1 flex items-center gap-1.5"><Lightbulb size={12} /> Powered by Qwen VL</div>
         <div className="text-blue-300/60">
           Connect an ImageUpload or ImageGenerator node as input. Output text can feed into Prompt
           Enhancer.

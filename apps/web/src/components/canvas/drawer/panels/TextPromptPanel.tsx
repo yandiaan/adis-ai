@@ -19,13 +19,13 @@ export function TextPromptPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Prompt Text</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Prompt Text</label>
         <textarea
           value={config.text}
           onChange={(e) => updateConfig({ text: e.target.value })}
           placeholder={config.placeholder}
-          className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none transition-colors duration-200 resize-y min-h-[120px] font-inherit box-border focus:border-white/30"
+          className="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-white text-sm outline-none transition-colors duration-200 resize-y min-h-[120px] font-inherit box-border focus:border-[var(--editor-accent-65)]"
           style={isOverLimit ? { borderColor: '#f87171' } : undefined}
         />
         <div className="flex justify-end mt-2">

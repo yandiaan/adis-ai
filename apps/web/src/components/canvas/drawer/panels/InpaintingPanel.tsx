@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { Pen } from 'lucide-react';
 import type { InpaintingData, InpaintingMode } from '../../types/node-types';
 
 type Props = {
@@ -7,8 +8,8 @@ type Props = {
 };
 
 const MODES: { value: InpaintingMode; label: string; desc: string }[] = [
-  { value: 'auto', label: '✨ Auto', desc: 'AI selects the region to edit automatically' },
-  { value: 'manual', label: '🖊️ Manual', desc: 'Draw a mask on the image to specify region' },
+  { value: 'auto', label: 'Auto', desc: 'AI selects the region to edit automatically' },
+  { value: 'manual', label: 'Manual', desc: 'Draw a mask on the image to specify region' },
 ];
 
 export function InpaintingPanel({ nodeId, data }: Props) {
@@ -21,8 +22,8 @@ export function InpaintingPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Inpainting Mode</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Inpainting Mode</label>
         <div className="flex flex-col gap-1.5">
           {MODES.map((mode) => (
             <button
@@ -41,10 +42,11 @@ export function InpaintingPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">
-          Strength — <span className="text-white/50">{config.strength}%</span>
-        </label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <div className="flex justify-between items-center">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Strength</span>
+          <span className="text-[11px] text-white/55 tabular-nums">{config.strength}%</span>
+        </div>
         <input
           type="range"
           min={10}
@@ -61,7 +63,7 @@ export function InpaintingPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-300/80 text-xs">
-        <div className="font-medium mb-1">🖊️ How it works</div>
+        <div className="font-medium mb-1 flex items-center gap-1.5"><Pen size={12} /> How it works</div>
         <div className="text-blue-300/60">
           Connect an Image and a Prompt node. The AI will edit the masked region to match the
           prompt.

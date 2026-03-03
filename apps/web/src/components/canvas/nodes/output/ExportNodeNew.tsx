@@ -1,6 +1,7 @@
 import type { Node, NodeProps } from '@xyflow/react';
 import { useNodeId } from '@xyflow/react';
-import { Download } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { ArrowDown, Clipboard, Download, MessageCircle } from 'lucide-react';
 import { CompactNode } from '../CompactNode';
 import type { ExportData } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
@@ -9,8 +10,10 @@ import type { ImageData, VideoData } from '../../types/port-types';
 const FORMAT_COLOR: Record<string, string> = {
   png: '#60a5fa', jpg: '#34d399', webp: '#a78bfa', mp4: '#f472b6', gif: '#fbbf24',
 };
-const SHARE_ICONS: Record<string, string> = {
-  download: '↓', whatsapp: '💬', clipboard: '📋',
+const SHARE_ICONS: Record<string, ReactNode> = {
+  download: <ArrowDown size={9} />,
+  whatsapp: <MessageCircle size={9} />,
+  clipboard: <Clipboard size={9} />,
 };
 
 export function ExportNode({ data, selected }: NodeProps<Node<ExportData>>) {
@@ -56,8 +59,9 @@ export function ExportNode({ data, selected }: NodeProps<Node<ExportData>>) {
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-[9px] font-semibold px-1.5 py-px rounded bg-[#f87171]/20 text-[#f87171]">
-          {SHARE_ICONS[config.shareTarget] ?? '↓'} {config.shareTarget}
+        <span className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-px rounded bg-[#f87171]/20 text-[#f87171]">
+          {SHARE_ICONS[config.shareTarget] ?? <ArrowDown size={9} />}
+          <span>{config.shareTarget}</span>
         </span>
         {mediaUrl && (
           <a

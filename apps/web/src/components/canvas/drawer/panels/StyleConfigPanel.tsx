@@ -58,8 +58,8 @@ export function StyleConfigPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Art Style</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Art Style</label>
         <div className="grid grid-cols-4 gap-1.5">
           {ART_STYLES.map((s) => (
             <button
@@ -80,8 +80,8 @@ export function StyleConfigPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Mood</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Mood</label>
         <div className="flex flex-wrap gap-1.5">
           {MOODS.map((mood) => (
             <button
@@ -99,8 +99,8 @@ export function StyleConfigPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Cultural Theme</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Cultural Theme</label>
         <div className="flex flex-wrap gap-1.5">
           {CULTURAL_THEMES.map((ct) => (
             <button
@@ -121,8 +121,8 @@ export function StyleConfigPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Color Palette</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Color Palette</label>
         <div className="flex flex-wrap gap-1.5 items-center">
           {config.colorPalette.map((color, i) => (
             <input

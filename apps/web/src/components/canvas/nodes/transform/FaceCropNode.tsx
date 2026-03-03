@@ -1,5 +1,6 @@
 import { useNodeId } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
+import { ScanFace } from 'lucide-react';
 import { CompactNode } from '../CompactNode';
 import type { FaceCropData } from '../../types/node-types';
 import type { ImageData } from '../../types/port-types';
@@ -21,7 +22,7 @@ export function FaceCropNode({ data, selected }: NodeProps<Node<FaceCropData>>) 
   const isSquare = config.format === 'square';
 
   return (
-    <CompactNode nodeType="faceCrop" icon="👤" title={data.label} selected={selected}>
+    <CompactNode nodeType="faceCrop" icon="" title={data.label} selected={selected}>
       <div className="flex items-center gap-3">
         {/* Format diagram */}
         <div className="flex items-center justify-center w-12 flex-shrink-0">
@@ -29,7 +30,7 @@ export function FaceCropNode({ data, selected }: NodeProps<Node<FaceCropData>>) 
             className="border-2 border-[#60a5fa] rounded bg-[#60a5fa]/10 flex items-center justify-center"
             style={{ width: isSquare ? 34 : 26, height: isSquare ? 34 : 40 }}
           >
-            <span className="text-[13px]">👤</span>
+            <ScanFace size={13} className="text-[#60a5fa]" />
           </div>
         </div>
         {/* Info */}

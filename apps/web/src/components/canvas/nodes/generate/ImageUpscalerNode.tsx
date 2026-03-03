@@ -18,7 +18,7 @@ export function ImageUpscalerNode({ data, selected }: NodeProps<Node<ImageUpscal
   return (
     <CompactNode
       nodeType="imageUpscaler"
-      icon="🔬"
+      icon=""
       title={data.label}
       selected={selected}
     >

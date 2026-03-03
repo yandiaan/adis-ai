@@ -1,6 +1,7 @@
-import { useReactFlow } from '@xyflow/react';
+import { useReactFlow, useEdges } from '@xyflow/react';
 
 import type { TextOverlayData, TextPosition, FontFamily, TextEffect } from '../../types/node-types';
+import { useExecutionContext } from '../../execution/ExecutionContext';
 
 type Props = {
   nodeId: string;
@@ -18,7 +19,26 @@ const EFFECTS: TextEffect[] = ['none', 'shadow', 'glow', 'gradient'];
 
 export function TextOverlayPanel({ nodeId, data }: Props) {
   const { updateNodeData } = useReactFlow();
+  const edges = useEdges();
+  const { getNodeState } = useExecutionContext();
   const config = data.config;
+
+  // Find the edge connected to the text input port
+  const textEdge = edges.find(
+    (e) => e.target === nodeId && e.targetHandle === 'text',
+  );
+  const textPortConnected = !!textEdge;
+
+  // Resolve the actual text from the upstream node's output
+  const upstreamState = textEdge ? getNodeState(textEdge.source) : null;
+  const upstreamText =
+    upstreamState?.status === 'done' && upstreamState.output
+      ? upstreamState.output.type === 'text'
+        ? (upstreamState.output.data as { text: string }).text
+        : upstreamState.output.type === 'prompt'
+          ? (upstreamState.output.data as { prompt: string }).prompt
+          : null
+      : null;
 
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
@@ -26,29 +46,47 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">
-          Text (or from input port)
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Text
         </label>
-        <textarea
-          value={config.text}
-          onChange={(e) => updateConfig({ text: e.target.value })}
-          placeholder="Leave empty to use connected text input"
-          className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none resize-y min-h-[80px] font-inherit box-border"
-        />
+        {textPortConnected ? (
+          <div className="w-full p-3 bg-black/20 border border-[#4ade80]/20 rounded-xl min-h-[80px]">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#4ade80]/15 text-[#4ade80] font-semibold">
+                CONNECTED
+              </span>
+              {!upstreamText && (
+                <span className="text-[10px] text-white/25 italic">Run the pipeline to preview</span>
+              )}
+            </div>
+            {upstreamText && (
+              <p className="text-[11px] text-white/70 leading-relaxed line-clamp-6 whitespace-pre-wrap">
+                {upstreamText}
+              </p>
+            )}
+          </div>
+        ) : (
+          <textarea
+            value={config.text}
+            onChange={(e) => updateConfig({ text: e.target.value })}
+            placeholder="Type text here, or connect a Text node to the input port"
+            className="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-white text-sm outline-none resize-y min-h-[80px] font-inherit box-border focus:border-[var(--editor-accent-65)] transition-colors"
+          />
+        )}
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Position</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Position</label>
         <div className="flex gap-1.5">
           {POSITIONS.map((pos) => (
             <button
               key={pos}
               onClick={() => updateConfig({ position: pos })}
-              className={`flex-1 p-2 rounded-md border cursor-pointer text-white text-[11px] ${
+              className={`motion-lift motion-press focus-ring-orange flex-1 p-2 rounded-xl border cursor-pointer text-white text-[11px] transition-colors ${
                 config.position === pos
-                  ? 'border-amber-500 bg-amber-500/15'
-                  : 'border-white/10 bg-white/5'
+                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                  : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
               {pos}
@@ -57,17 +95,17 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Font</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Font</label>
         <div className="flex flex-wrap gap-1.5">
           {FONTS.map((f) => (
             <button
               key={f.value}
               onClick={() => updateConfig({ font: f.value })}
-              className={`px-3 py-1.5 rounded-full border cursor-pointer text-white text-xs ${
+              className={`motion-lift motion-press focus-ring-orange px-3 py-1.5 rounded-full border cursor-pointer text-white text-xs transition-colors ${
                 config.font === f.value
-                  ? 'border-amber-500 bg-amber-500/15'
-                  : 'border-white/10 bg-white/5'
+                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                  : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
               {f.label}
@@ -76,11 +114,11 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
         <div>
-          <div className="flex justify-between items-center">
-            <label className="block text-white/70 text-xs font-medium mb-2">Font Size</label>
-            <span className="text-white/60 text-[13px] font-medium">{config.fontSize}px</span>
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Font Size</span>
+            <span className="text-[11px] text-white/55 tabular-nums">{config.fontSize}px</span>
           </div>
           <input
             type="range"
@@ -94,10 +132,11 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <span className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Color &amp; Stroke</span>
         <div className="flex gap-3 items-center">
           <div>
-            <label className="block text-white/70 text-xs font-medium mb-2">Color</label>
+            <label className="block text-[10px] text-white/40 font-medium mb-1.5">Color</label>
             <input
               type="color"
               value={config.fontColor}
@@ -106,11 +145,11 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
             />
           </div>
           <div>
-            <label className="block text-white/70 text-xs font-medium mb-2">Stroke</label>
+            <label className="block text-[10px] text-white/40 font-medium mb-1.5">Stroke</label>
             <button
               onClick={() => updateConfig({ stroke: !config.stroke })}
-              className={`px-3.5 py-1.5 rounded-md border cursor-pointer text-white text-xs ${
-                config.stroke ? 'border-amber-500 bg-amber-500/15' : 'border-white/10 bg-white/5'
+              className={`motion-lift motion-press focus-ring-orange px-3.5 py-1.5 rounded-xl border cursor-pointer text-white text-xs transition-colors ${
+                config.stroke ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]' : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
               {config.stroke ? 'ON' : 'OFF'}
@@ -119,17 +158,17 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="block text-white/70 text-xs font-medium mb-2">Effect</label>
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Effect</label>
         <div className="flex gap-1.5">
           {EFFECTS.map((eff) => (
             <button
               key={eff}
               onClick={() => updateConfig({ effect: eff })}
-              className={`flex-1 p-2 rounded-md border cursor-pointer text-white text-[11px] ${
+              className={`motion-lift motion-press focus-ring-orange flex-1 p-2 rounded-xl border cursor-pointer text-white text-[11px] transition-colors ${
                 config.effect === eff
-                  ? 'border-amber-500 bg-amber-500/15'
-                  : 'border-white/10 bg-white/5'
+                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                  : 'border-white/10 bg-white/5 hover:bg-white/7'
               }`}
             >
               {eff}

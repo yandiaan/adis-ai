@@ -29,7 +29,11 @@ async function convertImageToBase64(imageUrl: string): Promise<string> {
   console.log('[convertImageToBase64] Original URL:', imageUrl);
 
   // If it's already a public URL or data URL, return as-is
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('data:')) {
+  if (
+    imageUrl.startsWith('http://') ||
+    imageUrl.startsWith('https://') ||
+    imageUrl.startsWith('data:')
+  ) {
     console.log('[convertImageToBase64] Using public URL as-is');
     return imageUrl;
   }
@@ -63,7 +67,9 @@ async function convertImageToBase64(imageUrl: string): Promise<string> {
 
   // Unknown format, throw error
   console.error('[convertImageToBase64] Unknown image URL format:', imageUrl);
-  throw new Error(`Invalid image URL format. Must be http/https URL, data URL, or /uploads/ path. Got: ${imageUrl}`);
+  throw new Error(
+    `Invalid image URL format. Must be http/https URL, data URL, or /uploads/ path. Got: ${imageUrl}`,
+  );
 }
 
 function createClient(): OpenAI {
@@ -208,6 +214,43 @@ export async function generateText(params: TextGenerationParams): Promise<string
   return completion.choices[0]?.message?.content || '';
 }
 
+// ─── Vision / Image-to-Text (OpenAI-compatible multimodal) ───────────────────
+
+export interface DescribeImageParams {
+  model?: string;
+  image_url: string;
+  system_prompt?: string;
+  temperature?: number;
+  max_tokens?: number;
+}
+
+/**
+ * Describe an image using Qwen VL model via OpenAI-compatible API.
+ * Sends the image as a multimodal message content array.
+ */
+export async function describeImage(params: DescribeImageParams): Promise<string> {
+  const client = createClient();
+  const imageUrl = await convertImageToBase64(params.image_url);
+
+  const completion = await client.chat.completions.create({
+    model: params.model || 'qwen2.5-vl-3b-instruct',
+    messages: [
+      ...(params.system_prompt ? [{ role: 'system' as const, content: params.system_prompt }] : []),
+      {
+        role: 'user' as const,
+        content: [
+          { type: 'image_url' as const, image_url: { url: imageUrl } },
+          { type: 'text' as const, text: 'Describe this image.' },
+        ],
+      },
+    ],
+    temperature: params.temperature ?? 0.3,
+    max_tokens: params.max_tokens ?? 500,
+  });
+
+  return completion.choices[0]?.message?.content || '';
+}
+
 // ─── Image Generation (async task) ───────────────────────────────────────────
 
 /**
@@ -217,7 +260,7 @@ export async function generateText(params: TextGenerationParams): Promise<string
  */
 export async function generateImage(params: ImageGenerationParams): Promise<string> {
   const body = {
-    model: params.model || 'z-image-turbo',
+    model: params.model || 'wan2.2-t2i-flash',
     input: {
       prompt: params.prompt,
     },

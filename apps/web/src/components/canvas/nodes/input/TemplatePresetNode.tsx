@@ -1,4 +1,6 @@
 import type { Node, NodeProps } from '@xyflow/react';
+import type { ReactNode } from 'react';
+import { LayoutTemplate, Laugh, Moon, PawPrint, Square, User } from 'lucide-react';
 import { CompactNode } from '../CompactNode';
 import type { TemplatePresetData } from '../../types/node-types';
 
@@ -10,18 +12,18 @@ const TEMPLATE_LABELS: Record<string, string> = {
   blank: 'Blank',
 };
 
-const TEMPLATE_ICONS: Record<string, string> = {
-  'ramadan-wishes': '🌙',
-  'holiday-meme': '😂',
-  'ai-pet': '🐾',
-  'custom-avatar': '🧑',
-  blank: '⬜',
+const TEMPLATE_ICONS: Record<string, ReactNode> = {
+  'ramadan-wishes': <Moon size={20} />,
+  'holiday-meme': <Laugh size={20} />,
+  'ai-pet': <PawPrint size={20} />,
+  'custom-avatar': <User size={20} />,
+  blank: <Square size={20} />,
 };
 
 export function TemplatePresetNode({ data, selected }: NodeProps<Node<TemplatePresetData>>) {
   const { config } = data;
   const templateLabel = TEMPLATE_LABELS[config.template] ?? config.template;
-  const templateIcon = TEMPLATE_ICONS[config.template] ?? '📋';
+  const templateIcon = TEMPLATE_ICONS[config.template] ?? <LayoutTemplate size={20} />;
 
   return (
     <CompactNode
@@ -31,7 +33,7 @@ export function TemplatePresetNode({ data, selected }: NodeProps<Node<TemplatePr
       selected={selected}
     >
       <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[20px] flex-shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70 flex-shrink-0">
           {templateIcon}
         </div>
         <div className="flex-1 min-w-0">

@@ -27,7 +27,7 @@ export function BackgroundRemoverNode({ data, selected }: NodeProps<Node<Backgro
   const output = OUTPUT_CONFIG[config.outputType];
 
   return (
-    <CompactNode nodeType="backgroundRemover" icon="✂️" title={data.label} selected={selected}>
+    <CompactNode nodeType="backgroundRemover" icon="" title={data.label} selected={selected}>
       <div className="flex items-center gap-2.5">
         {/* Visual output preview */}
         <div
