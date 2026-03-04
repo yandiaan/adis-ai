@@ -31,6 +31,7 @@ import { ColorFilterPanel } from './panels/ColorFilterPanel';
 import { CollageLayoutPanel } from './panels/CollageLayoutPanel';
 import { PreviewPanel } from './panels/PreviewPanel';
 import { ExportPanelNew } from './panels/ExportPanelNew';
+import { ManualEditorPanel } from './panels/ManualEditorPanel';
 
 type Props = {
   selectedNode: Node<CustomNodeData> | null;
@@ -106,6 +107,8 @@ export function NodeDetailDrawer({ selectedNode, onClose, closing = false }: Pro
         return <ColorFilterPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
       case 'collageLayout':
         return <CollageLayoutPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
+      case 'manualEditor':
+        return <ManualEditorPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
       default:
         return <div className="text-white/50">Unknown node type</div>;
     }

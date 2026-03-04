@@ -4,6 +4,7 @@ import { Camera, FileText, Flower2, Moon, X, Zap } from 'lucide-react';
 import type { FrameBorderData, FrameStyle } from '../../types/node-types';
 import { ModelPicker } from './ModelPicker';
 import { MODEL_OPTIONS } from '../../config/modelOptions';
+import { ColorInput } from '../../ui/ColorInput';
 
 type Props = {
   nodeId: string;
@@ -74,10 +75,9 @@ export function FrameBorderPanel({ nodeId, data }: Props) {
           <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
             <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Frame Color</label>
             <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
-              <input
-                type="color"
+              <ColorInput
                 value={config.color}
-                onChange={(e) => updateConfig({ color: e.target.value })}
+                onChange={(v) => updateConfig({ color: v })}
                 className="w-10 h-10 rounded-lg cursor-pointer border border-white/20"
                 style={{ padding: 2 }}
               />

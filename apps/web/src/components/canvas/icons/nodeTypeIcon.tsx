@@ -13,6 +13,7 @@ import {
   LayoutGrid,
   LayoutTemplate,
   Layers,
+  PenTool,
   Replace,
   ScanFace,
   ScanText,
@@ -92,6 +93,8 @@ export function renderNodeTypeIcon(nodeType: CustomNodeType, options: IconOption
       return <Eye size={size} className={className} />;
     case 'export':
       return <Download size={size} className={className} />;
+    case 'manualEditor':
+      return <PenTool size={size} className={className} />;
 
     default:
       return <Layers size={size} className={className} />;

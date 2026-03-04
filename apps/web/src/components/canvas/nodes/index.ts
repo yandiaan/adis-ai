@@ -29,6 +29,7 @@ import { ColorFilterNode } from './compose/ColorFilterNode';
 import { CollageLayoutNode } from './compose/CollageLayoutNode';
 import { PreviewNode } from './output/PreviewNode';
 import { ExportNode } from './output/ExportNodeNew';
+import { ManualEditorNode } from './output/ManualEditorNode';
 
 import type { CustomNodeType }from '../types/node-types';
 
@@ -59,6 +60,7 @@ export { ColorFilterNode } from './compose/ColorFilterNode';
 export { CollageLayoutNode } from './compose/CollageLayoutNode';
 export { PreviewNode } from './output/PreviewNode';
 export { ExportNode } from './output/ExportNodeNew';
+export { ManualEditorNode } from './output/ManualEditorNode';
 export { CompactNode } from './CompactNode';
 
 // Node types registry for ReactFlow
@@ -90,6 +92,7 @@ export const nodeTypes: Record<CustomNodeType, ComponentType<NodeProps<any>>> = 
   collageLayout: CollageLayoutNode,
   preview: PreviewNode,
   export: ExportNode,
+  manualEditor: ManualEditorNode,
 };
 
 // Type guard for custom node types

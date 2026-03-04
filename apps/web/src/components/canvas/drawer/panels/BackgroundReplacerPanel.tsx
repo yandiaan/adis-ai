@@ -1,5 +1,6 @@
 import { useReactFlow } from '@xyflow/react';
 import type { BackgroundReplacerData, BgReplacementType } from '../../types/node-types';
+import { ColorInput } from '../../ui/ColorInput';
 import { ModelPicker } from './ModelPicker';
 import { MODEL_OPTIONS } from '../../config/modelOptions';
 
@@ -54,10 +55,9 @@ export function BackgroundReplacerPanel({ nodeId, data }: Props) {
             Background Color
           </label>
           <div className="flex items-center gap-3">
-            <input
-              type="color"
+            <ColorInput
               value={config.color}
-              onChange={(e) => updateConfig({ color: e.target.value })}
+              onChange={(v) => updateConfig({ color: v })}
               className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer bg-transparent"
             />
             <span className="text-sm text-white/60 font-mono">{config.color}</span>

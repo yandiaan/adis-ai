@@ -268,6 +268,13 @@ export const NODE_TYPE_CONFIGS: NodeTypeConfig[] = [
     icon: '💾',
     description: 'Export and share your creation',
   },
+  {
+    type: 'manualEditor',
+    category: 'output',
+    label: 'Manual Editor',
+    icon: '🖌️',
+    description: 'Manually edit images with drawing and text tools',
+  },
 ];
 
 // Group node typesby category

@@ -2,6 +2,7 @@ import { useReactFlow, useEdges } from '@xyflow/react';
 
 import type { TextOverlayData, TextPosition, FontFamily, TextEffect } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
+import { ColorInput } from '../../ui/ColorInput';
 import { ModelPicker } from './ModelPicker';
 import { MODEL_OPTIONS } from '../../config/modelOptions';
 
@@ -143,10 +144,9 @@ export function TextOverlayPanel({ nodeId, data }: Props) {
         <div className="flex gap-3 items-center">
           <div>
             <label className="block text-[10px] text-white/40 font-medium mb-1.5">Color</label>
-            <input
-              type="color"
+            <ColorInput
               value={config.fontColor}
-              onChange={(e) => updateConfig({ fontColor: e.target.value })}
+              onChange={(v) => updateConfig({ fontColor: v })}
               className="w-10 h-8 border-none cursor-pointer rounded-md"
             />
           </div>

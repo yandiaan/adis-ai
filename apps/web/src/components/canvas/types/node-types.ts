@@ -39,7 +39,8 @@ export type CustomNodeType =
   | 'colorFilter'
   | 'collageLayout'
   | 'preview'
-  | 'export';
+  | 'export'
+  | 'manualEditor';
 
 // Base node data interface
 export interface BaseNodeData extends Record<string, unknown> {
@@ -430,6 +431,45 @@ export interface ExportData extends BaseNodeData {
   config: ExportConfig;
 }
 
+// --- MANUAL EDITOR NODE ---
+
+export type ManualEditorTool = 'draw' | 'text' | 'select';
+
+export interface DrawingPath {
+  points: { x: number; y: number }[];
+  color: string;
+  strokeWidth: number;
+}
+
+export interface TextLayer {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  font: string;
+  fontSize: number;
+  color: string;
+  stroke: boolean;
+  strokeColor: string;
+}
+
+export interface ManualEditorConfig {
+  drawings: DrawingPath[];
+  textLayers: TextLayer[];
+  activeTool: ManualEditorTool;
+  brushColor: string;
+  brushSize: number;
+  textColor: string;
+  textFont: string;
+  textSize: number;
+  textStroke: boolean;
+  textStrokeColor: string;
+}
+
+export interface ManualEditorData extends BaseNodeData {
+  config: ManualEditorConfig;
+}
+
 // Union type of all node data
 export type CustomNodeData =
   | TextPromptData
@@ -457,7 +497,8 @@ export type CustomNodeData =
   | ColorFilterData
   | CollageLayoutData
   | PreviewData
-  | ExportData;
+  | ExportData
+  | ManualEditorData;
 
 // Typed node definitions
 export type TextPromptNode = Node<TextPromptData, 'textPrompt'>;
@@ -486,6 +527,7 @@ export type ColorFilterNode = Node<ColorFilterData, 'colorFilter'>;
 export type CollageLayoutNode = Node<CollageLayoutData, 'collageLayout'>;
 export type PreviewNode = Node<PreviewData, 'preview'>;
 export type ExportNode = Node<ExportData, 'export'>;
+export type ManualEditorNode = Node<ManualEditorData, 'manualEditor'>;
 
 // Union of all custom nodes
 export type CustomNode =
@@ -514,7 +556,8 @@ export type CustomNode =
   | ColorFilterNode
   | CollageLayoutNode
   | PreviewNode
-  | ExportNode;
+  | ExportNode
+  | ManualEditorNode;
 
 // Port schemas for each node type
 export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
@@ -661,6 +704,10 @@ export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
       { id: 'image4', type: 'image', label: 'Image D', required: false },
     ],
     outputs: [{ id: 'image', type: 'image', label: 'Collage', required: true }],
+  },
+  manualEditor: {
+    inputs: [{ id: 'media', type: 'media', label: 'Media', required: true }],
+    outputs: [{ id: 'image', type: 'image', label: 'Edited', required: true }],
   },
 };
 
@@ -840,6 +887,19 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     borderRadius: 12,
     model: getDefaultModel('imageEditing'),
   } satisfies CollageLayoutConfig,
+
+  manualEditor: {
+    drawings: [],
+    textLayers: [],
+    activeTool: 'draw',
+    brushColor: '#ff0000',
+    brushSize: 4,
+    textColor: '#ffffff',
+    textFont: 'inter',
+    textSize: 32,
+    textStroke: true,
+    textStrokeColor: '#000000',
+  } satisfies ManualEditorConfig,
 };
 
 // Runnable node types(have a "Run" button)

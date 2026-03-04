@@ -1,3 +1,4 @@
+import { useRef, useCallback } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import {
   Ban,
@@ -16,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react';
 import type { StyleConfigData, ArtStyle, MoodType, CulturalTheme } from '../../types/node-types';
+import { ColorInput } from '../../ui/ColorInput';
 
 type Props = {
   nodeId: string;
@@ -52,9 +54,14 @@ export function StyleConfigPanel({ nodeId, data }: Props) {
   const { updateNodeData } = useReactFlow();
   const config = data.config;
 
-  const updateConfig = (updates: Partial<typeof config>) => {
-    updateNodeData(nodeId, { config: { ...config, ...updates } });
-  };
+  const configRef = useRef(config);
+  configRef.current = config;
+  const updateNodeDataRef = useRef(updateNodeData);
+  updateNodeDataRef.current = updateNodeData;
+
+  const updateConfig = useCallback((updates: Partial<typeof config>) => {
+    updateNodeDataRef.current(nodeId, { config: { ...configRef.current, ...updates } });
+  }, [nodeId]);
 
   return (
     <>
@@ -125,13 +132,12 @@ export function StyleConfigPanel({ nodeId, data }: Props) {
         <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Color Palette</label>
         <div className="flex flex-wrap gap-1.5 items-center">
           {config.colorPalette.map((color, i) => (
-            <input
+            <ColorInput
               key={i}
-              type="color"
               value={color}
-              onChange={(e) => {
-                const newPalette = [...config.colorPalette];
-                newPalette[i] = e.target.value;
+              onChange={(v) => {
+                const newPalette = [...configRef.current.colorPalette];
+                newPalette[i] = v;
                 updateConfig({ colorPalette: newPalette });
               }}
               className="w-8 h-8 border-none cursor-pointer rounded-md"

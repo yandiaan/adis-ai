@@ -310,11 +310,26 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
   return data.output.task_id;
 }
 
+// ─── Helper: convert external URL to base64 data URL ───────────────────────
+// Runs server-side (no CORS), so browser never needs to re-fetch Alibaba OSS URLs.
+async function urlToDataUrl(url: string): Promise<string> {
+  try {
+    const res = await fetch(url);
+    const buffer = await res.arrayBuffer();
+    const mime = res.headers.get('content-type') || 'image/png';
+    const base64 = Buffer.from(buffer).toString('base64');
+    return `data:${mime};base64,${base64}`;
+  } catch {
+    // Fallback: return original URL if conversion fails
+    return url;
+  }
+}
+
 // ─── Image Editing (synchronous) ─────────────────────────────────────────────
 
 /**
  * Edit images using Qwen-Image-Edit model.
- * Supports 1-3 input images. Returns output image URLs directly (synchronous).
+ * Supports 1-3 input images. Returns base64 data URLs (avoids browser CORS issues).
  */
 export async function editImage(params: ImageEditParams): Promise<string[]> {
   const content: Array<{ image?: string; text?: string }> = [];
@@ -362,7 +377,8 @@ export async function editImage(params: ImageEditParams): Promise<string[]> {
   const choice = data.output.choices[0];
   if (!choice) throw new Error('No output from image edit API');
 
-  return choice.message.content.filter((item) => item.image).map((item) => item.image!);
+  const rawUrls = choice.message.content.filter((item) => item.image).map((item) => item.image!);
+  return Promise.all(rawUrls.map(urlToDataUrl));
 }
 
 // ─── Text-to-Video (async task) ──────────────────────────────────────────────
@@ -479,13 +495,13 @@ export async function pollTask(
     const status = data.output.task_status;
 
     if (status === 'SUCCEEDED') {
-      // Video tasks return video_url
+      // Video tasks return video_url — keep as URL (too large for base64)
       if (data.output.video_url) {
         return [data.output.video_url];
       }
-      // Image tasks return results array
+      // Image tasks: convert to base64 data URLs so browser can use in Canvas without CORS
       if (data.output.results) {
-        return data.output.results.map((r) => r.url);
+        return Promise.all(data.output.results.map((r) => urlToDataUrl(r.url)));
       }
       return [];
     }

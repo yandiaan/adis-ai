@@ -1,4 +1,4 @@
-import { useReactFlow, useEdges } from '@xyflow/react';
+import { useReactFlow, useEdges, useNodesData } from '@xyflow/react';
 import { Clipboard, Download, Link, MessageCircle } from 'lucide-react';
 import type { ExportData, ExportFormat, ShareTarget } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
@@ -27,9 +27,15 @@ export function ExportPanelNew({ nodeId, data }: Props) {
   const upstreamState = incomingEdge ? getNodeState(incomingEdge.source) : null;
   const output = upstreamState?.output ?? null;
 
+  // useNodesData is reactive — re-renders this component when node data changes
+  const upstreamNodesData = useNodesData(incomingEdge?.source ? [incomingEdge.source] : []);
+  const upstreamExportUrl = (upstreamNodesData?.[0]?.data as Record<string, unknown>)?.exportDataUrl as string | null | undefined;
+
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
   const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;
-  const mediaUrl = imageUrl ?? videoUrl;
+  // upstreamExportUrl (manual editor composite) has highest priority — it is the edited result
+  // imageUrl from execution context may be the original AI image if pipeline ran before edits
+  const mediaUrl = upstreamExportUrl ?? imageUrl ?? videoUrl ?? null;
 
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
@@ -39,11 +45,24 @@ export function ExportPanelNew({ nodeId, data }: Props) {
     if (!mediaUrl) return;
 
     if (config.shareTarget === 'download') {
-      const a = document.createElement('a');
-      a.href = mediaUrl;
-      a.download = `export.${config.format}`;
-      a.target = '_blank';
-      a.click();
+      // Handle both data URLs and remote URLs
+      if (mediaUrl.startsWith('data:')) {
+        // data URL → convert to blob for proper download
+        const res = await fetch(mediaUrl);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `export.${config.format}`;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        const a = document.createElement('a');
+        a.href = mediaUrl;
+        a.download = `export.${config.format}`;
+        a.target = '_blank';
+        a.click();
+      }
     } else if (config.shareTarget === 'clipboard') {
       try {
         const res = await fetch(mediaUrl);
@@ -66,10 +85,10 @@ export function ExportPanelNew({ nodeId, data }: Props) {
         <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
           <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Output</label>
           <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-black/30 flex items-center justify-center" style={{ maxHeight: 200 }}>
-            {imageUrl ? (
-              <img src={imageUrl} alt="Export preview" className="w-full max-h-[200px] object-contain" />
+            {videoUrl && !imageUrl && !upstreamExportUrl ? (
+              <video src={videoUrl} className="w-full max-h-[200px]" controls playsInline />
             ) : (
-              <video src={videoUrl!} className="w-full max-h-[200px]" controls playsInline />
+              <img src={mediaUrl!} alt="Export preview" className="w-full max-h-[200px] object-contain" />
             )}
           </div>
           <button

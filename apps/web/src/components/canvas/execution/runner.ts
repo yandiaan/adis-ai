@@ -68,6 +68,16 @@ function nodeDataToOutput(
         data: { text: `template:${config.template}:${config.locale}` },
         timestamp,
       };
+    case 'manualEditor': {
+      // ManualEditor stores composited image as exportDataUrl on node data (not inside config)
+      const exportUrl = (nodeData as Record<string, unknown>).exportDataUrl as string | null;
+      if (!exportUrl) return null;
+      return {
+        type: 'image',
+        data: { url: exportUrl, width: 0, height: 0 },
+        timestamp,
+      };
+    }
     default:
       return null;
   }
