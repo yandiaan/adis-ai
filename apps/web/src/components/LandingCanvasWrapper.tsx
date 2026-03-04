@@ -8,7 +8,13 @@ import type { PipelineTemplate } from './canvas/templates';
 type AppView = 'landing' | 'template-picker' | 'canvas';
 
 export default function LandingCanvasWrapper() {
-  const [view, setView] = useState<AppView>('landing');
+  const [view, setView] = useState<AppView>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('template')) return 'canvas';
+    }
+    return 'landing';
+  });
   const [canvasKey, setCanvasKey] = useState(0);
 
   const handleGetStarted = useCallback(() => {

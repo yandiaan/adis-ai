@@ -125,7 +125,7 @@ export function ConnectPortMenu({ state, onSelect, onClose }: ConnectPortMenuPro
 
   if (entries.length === 0) return null;
 
-  const categoryOrder: CategoryId[] = ['input', 'transform', 'generate', 'compose', 'output'];
+  const categoryOrder: CategoryId[] = ['input', 'textStyle', 'imageEdit', 'videoEdit', 'generate', 'compose', 'output'];
 
   const menu = (
     <div

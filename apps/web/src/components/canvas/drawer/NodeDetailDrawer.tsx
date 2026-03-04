@@ -19,6 +19,9 @@ import { BackgroundReplacerPanel } from './panels/BackgroundReplacerPanel';
 import { StyleTransferPanel } from './panels/StyleTransferPanel';
 import { ImageGeneratorPanel } from './panels/ImageGeneratorPanel';
 import { VideoGeneratorPanel } from './panels/VideoGeneratorPanel';
+import { VideoUploadPanel } from './panels/VideoUploadPanel';
+import { VideoRepaintingPanel } from './panels/VideoRepaintingPanel';
+import { VideoExtensionPanel } from './panels/VideoExtensionPanel';
 import { InpaintingPanel } from './panels/InpaintingPanel';
 import { ImageUpscalerPanel } from './panels/ImageUpscalerPanel';
 import { TextOverlayPanel } from './panels/TextOverlayPanel';
@@ -65,6 +68,12 @@ export function NodeDetailDrawer({ selectedNode, onClose, closing = false }: Pro
         return <ImageGeneratorPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
       case 'videoGenerator':
         return <VideoGeneratorPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
+      case 'videoUpload':
+        return <VideoUploadPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
+      case 'videoRepainting':
+        return <VideoRepaintingPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
+      case 'videoExtension':
+        return <VideoExtensionPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
       case 'textOverlay':
         return <TextOverlayPanel nodeId={selectedNode.id} data={selectedNode.data as any} />;
       case 'preview':

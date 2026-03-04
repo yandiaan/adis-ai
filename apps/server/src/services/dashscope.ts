@@ -142,6 +142,24 @@ export interface ImageToVideoParams {
   audio_url?: string;
 }
 
+export interface VideoRepaintingParams {
+  prompt: string;
+  video_url: string;
+  control_condition: 'posebodyface' | 'posebody' | 'depth' | 'scribble';
+  strength?: number;
+  ref_images_url?: string[];
+  prompt_extend?: boolean;
+}
+
+export interface VideoExtensionParams {
+  prompt: string;
+  first_clip_url?: string;
+  last_clip_url?: string;
+  first_frame_url?: string;
+  last_frame_url?: string;
+  prompt_extend?: boolean;
+}
+
 interface TaskResponse {
   request_id: string;
   output: {
@@ -481,4 +499,94 @@ export async function pollTask(
   }
 
   throw new Error(`Task ${taskId} timed out after ${maxAttempts} attempts`);
+}
+
+// ─── Video Repainting (wan2.1-vace-plus) ─────────────────────────────────────
+
+/**
+ * Submit video repainting task using wan2.1-vace-plus.
+ * Extracts pose/depth/scribble from the input video and repaints it with a new prompt.
+ * Returns a task ID for polling.
+ */
+export async function repaintVideo(params: VideoRepaintingParams): Promise<string> {
+  const body = {
+    model: 'wan2.1-vace-plus',
+    input: {
+      function: 'video_repainting',
+      prompt: params.prompt,
+      video_url: params.video_url,
+      ...(params.ref_images_url?.length && { ref_images_url: params.ref_images_url }),
+    },
+    parameters: {
+      control_condition: params.control_condition,
+      prompt_extend: params.prompt_extend ?? false,
+      watermark: false,
+      ...(params.strength != null && { strength: params.strength }),
+    },
+  };
+
+  const response = await fetch(
+    `${DASHSCOPE_API_BASE}/services/aigc/video-generation/video-synthesis`,
+    {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+        'X-DashScope-Async': 'enable',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Video Repainting API error (${response.status}): ${error}`);
+  }
+
+  const data = (await response.json()) as TaskResponse;
+  return data.output.task_id;
+}
+
+// ─── Video Extension (wan2.1-vace-plus) ──────────────────────────────────────
+
+/**
+ * Submit video extension task using wan2.1-vace-plus.
+ * Predicts and generates 5s of content from an input clip or frame.
+ * Returns a task ID for polling.
+ */
+export async function extendVideo(params: VideoExtensionParams): Promise<string> {
+  const body = {
+    model: 'wan2.1-vace-plus',
+    input: {
+      function: 'video_extension',
+      prompt: params.prompt,
+      ...(params.first_clip_url && { first_clip_url: params.first_clip_url }),
+      ...(params.last_clip_url && { last_clip_url: params.last_clip_url }),
+      ...(params.first_frame_url && { first_frame_url: params.first_frame_url }),
+      ...(params.last_frame_url && { last_frame_url: params.last_frame_url }),
+    },
+    parameters: {
+      prompt_extend: params.prompt_extend ?? false,
+      watermark: false,
+    },
+  };
+
+  const response = await fetch(
+    `${DASHSCOPE_API_BASE}/services/aigc/video-generation/video-synthesis`,
+    {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+        'X-DashScope-Async': 'enable',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Video Extension API error (${response.status}): ${error}`);
+  }
+
+  const data = (await response.json()) as TaskResponse;
+  return data.output.task_id;
 }

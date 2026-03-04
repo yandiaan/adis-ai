@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Inbox, Layers, Plus, Send, Sparkles, Wand2 } from 'lucide-react';
+import { Film, ImageIcon, Inbox, Layers, Plus, Send, Sparkles, Type, Wand2 } from 'lucide-react';
 import type { NodeCategory } from '../types/node-types';
 
 type IconOptions = {
@@ -16,8 +16,12 @@ export function renderNodeCategoryIcon(
   switch (categoryId) {
     case 'input':
       return <Inbox size={size} className={className} />;
-    case 'transform':
-      return <Wand2 size={size} className={className} />;
+    case 'textStyle':
+      return <Type size={size} className={className} />;
+    case 'imageEdit':
+      return <ImageIcon size={size} className={className} />;
+    case 'videoEdit':
+      return <Film size={size} className={className} />;
     case 'generate':
       return <Sparkles size={size} className={className} />;
     case 'compose':

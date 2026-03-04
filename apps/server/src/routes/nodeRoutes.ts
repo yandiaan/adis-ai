@@ -7,6 +7,8 @@ import {
   editImage,
   generateVideo,
   generateVideoFromImage,
+  repaintVideo,
+  extendVideo,
   pollTask,
 } from '@/services/ai-service';
 
@@ -15,10 +17,10 @@ const router: RouterType = Router();
 // --- Prompt Enhancer ---
 const promptEnhancerSchema = z.object({
   config: z.object({
-    creativity: z.enum(['precise', 'balanced', 'creative']),
-    contentType: z.enum(['wishes', 'meme', 'character', 'avatar', 'general']),
-    tone: z.enum(['formal', 'casual', 'funny', 'heartfelt']),
-    language: z.enum(['id', 'en', 'mixed']),
+    creativity: z.string(),
+    contentType: z.string(),
+    tone: z.string(),
+    language: z.string(),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -45,8 +47,8 @@ router.post('/prompt-enhancer/run', async (req, res, next) => {
     const inputText = (inputs.text?.data as { text: string })?.text || '';
     const styleData = inputs.style?.data;
 
-    const temperatureMap = { precise: 0.3, balanced: 0.7, creative: 1.0 };
-    const temperature = temperatureMap[config.creativity];
+    const temperatureMap: Record<string, number> = { precise: 0.3, balanced: 0.7, creative: 1.0 };
+    const temperature = temperatureMap[config.creativity] ?? 0.7;
 
     const systemPrompt = buildPromptEnhancerSystem(config, styleData);
 
@@ -103,13 +105,8 @@ Content type: ${config.contentType}. Tone: ${config.tone}.`;
 // --- Image Generator ---
 const imageGeneratorSchema = z.object({
   config: z.object({
-    mode: z.enum(['text2img', 'img2img']),
-    dimensions: z.enum([
-      'square-1024',
-      'portrait-768x1024',
-      'landscape-1024x768',
-      'story-576x1024',
-    ]),
+    mode: z.string(),
+    dimensions: z.string(),
     seed: z.number().nullable(),
     prompt_extend: z.boolean().optional(),
     model: z.string().optional(),
@@ -212,10 +209,10 @@ router.post('/image-generator/run', async (req, res, next) => {
 // --- Video Generator ---
 const videoGeneratorSchema = z.object({
   config: z.object({
-    mode: z.enum(['text2video', 'img2video']),
-    duration: z.number().int().min(2).max(15),
-    resolution: z.enum(['480P', '720P', '1080P']),
-    shot_type: z.enum(['single', 'multi']).optional(),
+    mode: z.string(),
+    duration: z.number().int().min(2).max(15).catch(5),
+    resolution: z.string(),
+    shot_type: z.string().optional(),
     prompt_extend: z.boolean().optional(),
     model: z.string().optional(),
     imageVideoModel: z.string().optional(),
@@ -273,7 +270,7 @@ router.post('/video-generator/run', async (req, res, next) => {
         img_url: (inputs.image.data as { url: string }).url,
         resolution: config.resolution,
         duration: config.duration,
-        shot_type: config.shot_type,
+        shot_type: config.shot_type as 'single' | 'multi' | undefined,
         prompt_extend: config.prompt_extend,
         audio_url: audioUrl,
       });
@@ -284,7 +281,7 @@ router.post('/video-generator/run', async (req, res, next) => {
         prompt: promptData.prompt,
         size: resolutionToSizeMap[config.resolution] || '1280*720',
         duration: config.duration,
-        shot_type: config.shot_type,
+        shot_type: config.shot_type as 'single' | 'multi' | undefined,
         prompt_extend: config.prompt_extend,
         audio_url: audioUrl,
       });
@@ -313,8 +310,8 @@ router.post('/video-generator/run', async (req, res, next) => {
 // --- Image-to-Text (Vision) ---
 const imageToTextSchema = z.object({
   config: z.object({
-    detailLevel: z.enum(['brief', 'detailed', 'artistic']),
-    language: z.enum(['id', 'en']),
+    detailLevel: z.string(),
+    language: z.string(),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -371,8 +368,8 @@ router.post('/image-to-text/run', async (req, res, next) => {
 // --- Translate Text ---
 const translateTextSchema = z.object({
   config: z.object({
-    sourceLang: z.enum(['auto', 'id', 'en', 'ar', 'zh']),
-    targetLang: z.enum(['id', 'en', 'ar', 'zh']),
+    sourceLang: z.string(),
+    targetLang: z.string(),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -437,7 +434,7 @@ router.post('/translate-text/run', async (req, res, next) => {
 // --- Background Remover ---
 const backgroundRemoverSchema = z.object({
   config: z.object({
-    outputType: z.enum(['transparent', 'white', 'blur']),
+    outputType: z.string(),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -494,7 +491,7 @@ router.post('/background-remover/run', async (req, res, next) => {
 const faceCropSchema = z.object({
   config: z.object({
     margin: z.number(),
-    format: z.enum(['square', 'portrait']),
+    format: z.string(),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -545,7 +542,7 @@ router.post('/face-crop/run', async (req, res, next) => {
 // --- Inpainting ---
 const inpaintingSchema = z.object({
   config: z.object({
-    mode: z.enum(['auto', 'manual']),
+    mode: z.string(),
     strength: z.number().min(0).max(100),
     model: z.string().optional(),
   }),
@@ -585,7 +582,11 @@ router.post('/inpainting/run', async (req, res, next) => {
     // Extract prompt text from either prompt or text input type
     const promptInput = inputs.prompt?.data;
     const promptText =
-      promptInput && 'prompt' in promptInput ? promptInput.prompt : promptInput && 'text' in promptInput ? promptInput.text : '';
+      promptInput && 'prompt' in promptInput
+        ? promptInput.prompt
+        : promptInput && 'text' in promptInput
+          ? promptInput.text
+          : '';
     if (!promptText) {
       res.status(400).json({ error: 'Prompt input required' });
       return;
@@ -677,12 +678,12 @@ router.post('/image-upscaler/run', async (req, res, next) => {
 const textOverlaySchema = z.object({
   config: z.object({
     text: z.string(),
-    position: z.enum(['top', 'center', 'bottom', 'custom']),
-    font: z.enum(['inter', 'impact', 'arabic-display', 'comic-neue']),
-    fontSize: z.number(),
-    fontColor: z.string(),
-    stroke: z.boolean(),
-    effect: z.enum(['none', 'shadow', 'glow', 'gradient']),
+    position: z.string(),
+    font: z.string(),
+    fontSize: z.number().catch(48),
+    fontColor: z.string().catch('#ffffff'),
+    stroke: z.boolean().catch(true),
+    effect: z.string(),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -719,8 +720,7 @@ router.post('/text-overlay/run', async (req, res, next) => {
     }
 
     const strokeNote = config.stroke ? ' with a dark stroke/outline' : '';
-    const effectNote =
-      config.effect !== 'none' ? `, with a ${config.effect} text effect` : '';
+    const effectNote = config.effect !== 'none' ? `, with a ${config.effect} text effect` : '';
 
     const urls = await editImage({
       model: config.model,
@@ -748,9 +748,9 @@ router.post('/text-overlay/run', async (req, res, next) => {
 // --- Frame Border ---
 const frameBorderSchema = z.object({
   config: z.object({
-    style: z.enum(['islamic', 'floral', 'polaroid', 'neon', 'torn-paper', 'none']),
-    thickness: z.number(),
-    color: z.string(),
+    style: z.string(),
+    thickness: z.number().catch(20),
+    color: z.string().catch('#C9A84C'),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -821,7 +821,7 @@ router.post('/frame-border/run', async (req, res, next) => {
 // --- Sticker Layer ---
 const stickerLayerSchema = z.object({
   config: z.object({
-    pack: z.enum(['ramadan', 'meme', 'sparkles', 'custom']),
+    pack: z.string(),
     stickers: z.array(
       z.object({
         emoji: z.string(),
@@ -889,8 +889,8 @@ router.post('/sticker-layer/run', async (req, res, next) => {
 // --- Color Filter ---
 const colorFilterSchema = z.object({
   config: z.object({
-    preset: z.enum(['none', 'warm', 'vintage', 'eid-gold', 'sahur', 'cool', 'vibrant']),
-    intensity: z.number().min(0).max(100),
+    preset: z.string(),
+    intensity: z.number().min(0).max(100).catch(60),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -969,24 +969,16 @@ router.post('/color-filter/run', async (req, res, next) => {
 // --- Collage Layout ---
 const collageLayoutSchema = z.object({
   config: z.object({
-    layout: z.enum(['2-horizontal', '2-vertical', '3-grid', '4-grid', 'mosaic']),
-    gap: z.number(),
-    borderRadius: z.number(),
+    layout: z.string(),
+    gap: z.number().catch(8),
+    borderRadius: z.number().catch(12),
     model: z.string().optional(),
   }),
   inputs: z.object({
-    image1: z
-      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
-      .optional(),
-    image2: z
-      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
-      .optional(),
-    image3: z
-      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
-      .optional(),
-    image4: z
-      .object({ type: z.literal('image'), data: z.object({ url: z.string() }) })
-      .optional(),
+    image1: z.object({ type: z.literal('image'), data: z.object({ url: z.string() }) }).optional(),
+    image2: z.object({ type: z.literal('image'), data: z.object({ url: z.string() }) }).optional(),
+    image3: z.object({ type: z.literal('image'), data: z.object({ url: z.string() }) }).optional(),
+    image4: z.object({ type: z.literal('image'), data: z.object({ url: z.string() }) }).optional(),
   }),
 });
 
@@ -995,7 +987,8 @@ const COLLAGE_DESCRIPTIONS: Record<string, string> = {
   '2-vertical': 'stacked vertically (2 rows)',
   '3-grid': '3 images in a row',
   '4-grid': '2x2 grid',
-  mosaic: 'mosaic layout with one large image on the left and two smaller ones stacked on the right',
+  mosaic:
+    'mosaic layout with one large image on the left and two smaller ones stacked on the right',
 };
 
 router.post('/collage-layout/run', async (req, res, next) => {
@@ -1047,7 +1040,7 @@ router.post('/collage-layout/run', async (req, res, next) => {
 const objectRemoverSchema = z.object({
   config: z.object({
     target: z.string(),
-    mode: z.enum(['auto', 'describe']).default('auto'),
+    mode: z.string().default('auto'),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -1096,7 +1089,7 @@ router.post('/object-remover/run', async (req, res, next) => {
 // --- Background Replacer ---
 const backgroundReplacerSchema = z.object({
   config: z.object({
-    replacementType: z.enum(['blur', 'solid-color', 'ai-generated']),
+    replacementType: z.string(),
     color: z.string().optional(),
     backgroundPrompt: z.string().optional(),
     model: z.string().optional(),
@@ -1162,7 +1155,7 @@ router.post('/background-replacer/run', async (req, res, next) => {
 const styleTransferSchema = z.object({
   config: z.object({
     stylePrompt: z.string().default(''),
-    strength: z.enum(['subtle', 'moderate', 'strong']).default('moderate'),
+    strength: z.string().default('moderate'),
     model: z.string().optional(),
   }),
   inputs: z.object({
@@ -1213,6 +1206,157 @@ router.post('/style-transfer/run', async (req, res, next) => {
       output: {
         type: 'image',
         data: { url: resultUrl, width: 0, height: 0 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Video Repainting ---
+const videoRepaintingSchema = z.object({
+  config: z.object({
+    control_condition: z.string(),
+    strength: z.number().min(0).max(1).optional(),
+    prompt_extend: z.boolean().optional(),
+  }),
+  inputs: z.object({
+    prompt: z
+      .object({
+        type: z.literal('prompt'),
+        data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
+      })
+      .optional(),
+    video: z
+      .object({
+        type: z.literal('video'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/video-repainting/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = videoRepaintingSchema.parse(req.body);
+
+    const promptData = inputs.prompt?.data;
+    if (!promptData?.prompt) {
+      res.status(400).json({ error: 'Prompt input required' });
+      return;
+    }
+    const videoUrl = (inputs.video?.data as { url: string })?.url;
+    if (!videoUrl) {
+      res.status(400).json({ error: 'Video input required' });
+      return;
+    }
+
+    const refImageUrl = (inputs.image?.data as { url: string })?.url;
+
+    const taskId = await repaintVideo({
+      prompt: promptData.prompt,
+      video_url: videoUrl,
+      control_condition: config.control_condition as 'posebodyface' | 'posebody' | 'depth' | 'scribble',
+      strength: config.strength,
+      ref_images_url: refImageUrl ? [refImageUrl] : undefined,
+      prompt_extend: config.prompt_extend,
+    });
+
+    const urls = await pollTask(taskId, 120, 5000);
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No video generated');
+
+    res.json({
+      output: {
+        type: 'video',
+        data: { url: resultUrl, duration: 5, width: 1280, height: 720 },
+        timestamp: Date.now(),
+      },
+      duration_ms: Date.now() - startTime,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+});
+
+// --- Video Extension ---
+const videoExtensionSchema = z.object({
+  config: z.object({
+    direction: z.string(),
+    prompt_extend: z.boolean().optional(),
+  }),
+  inputs: z.object({
+    prompt: z
+      .object({
+        type: z.literal('prompt'),
+        data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
+      })
+      .optional(),
+    video: z
+      .object({
+        type: z.literal('video'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+    image: z
+      .object({
+        type: z.literal('image'),
+        data: z.object({ url: z.string() }),
+      })
+      .optional(),
+  }),
+});
+
+router.post('/video-extension/run', async (req, res, next) => {
+  try {
+    const startTime = Date.now();
+    const { config, inputs } = videoExtensionSchema.parse(req.body);
+
+    const promptData = inputs.prompt?.data;
+    if (!promptData?.prompt) {
+      res.status(400).json({ error: 'Prompt input required' });
+      return;
+    }
+
+    const videoUrl = (inputs.video?.data as { url: string })?.url;
+    const imageUrl = (inputs.image?.data as { url: string })?.url;
+
+    if (!videoUrl && !imageUrl) {
+      res.status(400).json({ error: 'Video or image input required' });
+      return;
+    }
+
+    const taskId = await extendVideo({
+      prompt: promptData.prompt,
+      ...(config.direction === 'forward'
+        ? videoUrl
+          ? { first_clip_url: videoUrl }
+          : { first_frame_url: imageUrl! }
+        : videoUrl
+          ? { last_clip_url: videoUrl }
+          : { last_frame_url: imageUrl! }),
+      prompt_extend: config.prompt_extend,
+    });
+
+    const urls = await pollTask(taskId, 120, 5000);
+    const resultUrl = urls[0];
+    if (!resultUrl) throw new Error('No video generated');
+
+    res.json({
+      output: {
+        type: 'video',
+        data: { url: resultUrl, duration: 5, width: 1280, height: 720 },
         timestamp: Date.now(),
       },
       duration_ms: Date.now() - startTime,

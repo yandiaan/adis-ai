@@ -3,12 +3,20 @@ import type { NodePortSchema } from './port-types';
 import { getDefaultModel } from '../config/modelOptions';
 
 // Node categories
-export type NodeCategory = 'input' | 'transform' | 'generate' | 'compose' | 'output';
+export type NodeCategory =
+  | 'input'
+  | 'textStyle'
+  | 'imageEdit'
+  | 'videoEdit'
+  | 'generate'
+  | 'compose'
+  | 'output';
 
 // All custom node type identifiers
 export type CustomNodeType =
   | 'textPrompt'
   | 'imageUpload'
+  | 'videoUpload'
   | 'templatePreset'
   | 'promptEnhancer'
   | 'styleConfig'
@@ -19,6 +27,8 @@ export type CustomNodeType =
   | 'objectRemover'
   | 'backgroundReplacer'
   | 'styleTransfer'
+  | 'videoRepainting'
+  | 'videoExtension'
   | 'imageGenerator'
   | 'videoGenerator'
   | 'inpainting'
@@ -57,6 +67,17 @@ export interface ImageUploadConfig {
 
 export interface ImageUploadData extends BaseNodeData {
   config: ImageUploadConfig;
+}
+
+export interface VideoUploadConfig {
+  previewUrl: string | null;
+  fileName: string | null;
+  fileSizeMB: number | null;
+  maxSizeMB: number;
+}
+
+export interface VideoUploadData extends BaseNodeData {
+  config: VideoUploadConfig;
 }
 
 export type TemplateId = 'ramadan-wishes' | 'holiday-meme' | 'ai-pet' | 'custom-avatar' | 'blank';
@@ -190,6 +211,29 @@ export interface StyleTransferConfig {
 }
 export interface StyleTransferData extends BaseNodeData {
   config: StyleTransferConfig;
+}
+
+export type VideoRepaintingCondition = 'posebodyface' | 'posebody' | 'depth' | 'scribble';
+
+export interface VideoRepaintingConfig {
+  control_condition: VideoRepaintingCondition;
+  strength: number;
+  prompt_extend: boolean;
+}
+
+export interface VideoRepaintingData extends BaseNodeData {
+  config: VideoRepaintingConfig;
+}
+
+export type VideoExtensionDirection = 'forward' | 'backward';
+
+export interface VideoExtensionConfig {
+  direction: VideoExtensionDirection;
+  prompt_extend: boolean;
+}
+
+export interface VideoExtensionData extends BaseNodeData {
+  config: VideoExtensionConfig;
 }
 
 // --- GENERATE NODES ---
@@ -390,6 +434,7 @@ export interface ExportData extends BaseNodeData {
 export type CustomNodeData =
   | TextPromptData
   | ImageUploadData
+  | VideoUploadData
   | TemplatePresetData
   | PromptEnhancerData
   | StyleConfigData
@@ -400,6 +445,8 @@ export type CustomNodeData =
   | ObjectRemoverData
   | BackgroundReplacerData
   | StyleTransferData
+  | VideoRepaintingData
+  | VideoExtensionData
   | ImageGeneratorData
   | VideoGeneratorData
   | InpaintingData
@@ -415,6 +462,7 @@ export type CustomNodeData =
 // Typed node definitions
 export type TextPromptNode = Node<TextPromptData, 'textPrompt'>;
 export type ImageUploadNode = Node<ImageUploadData, 'imageUpload'>;
+export type VideoUploadNode = Node<VideoUploadData, 'videoUpload'>;
 export type TemplatePresetNode = Node<TemplatePresetData, 'templatePreset'>;
 export type PromptEnhancerNode = Node<PromptEnhancerData, 'promptEnhancer'>;
 export type StyleConfigNode = Node<StyleConfigData, 'styleConfig'>;
@@ -425,6 +473,8 @@ export type FaceCropNode = Node<FaceCropData, 'faceCrop'>;
 export type ObjectRemoverNode = Node<ObjectRemoverData, 'objectRemover'>;
 export type BackgroundReplacerNode = Node<BackgroundReplacerData, 'backgroundReplacer'>;
 export type StyleTransferNode = Node<StyleTransferData, 'styleTransfer'>;
+export type VideoRepaintingNode = Node<VideoRepaintingData, 'videoRepainting'>;
+export type VideoExtensionNode = Node<VideoExtensionData, 'videoExtension'>;
 export type ImageGeneratorNode = Node<ImageGeneratorData, 'imageGenerator'>;
 export type VideoGeneratorNode = Node<VideoGeneratorData, 'videoGenerator'>;
 export type InpaintingNode = Node<InpaintingData, 'inpainting'>;
@@ -441,6 +491,7 @@ export type ExportNode = Node<ExportData, 'export'>;
 export type CustomNode =
   | TextPromptNode
   | ImageUploadNode
+  | VideoUploadNode
   | TemplatePresetNode
   | PromptEnhancerNode
   | StyleConfigNode
@@ -451,6 +502,8 @@ export type CustomNode =
   | ObjectRemoverNode
   | BackgroundReplacerNode
   | StyleTransferNode
+  | VideoRepaintingNode
+  | VideoExtensionNode
   | ImageGeneratorNode
   | VideoGeneratorNode
   | InpaintingNode
@@ -472,6 +525,10 @@ export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
   imageUpload: {
     inputs: [],
     outputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
+  },
+  videoUpload: {
+    inputs: [],
+    outputs: [{ id: 'video', type: 'video', label: 'Video', required: true }],
   },
   templatePreset: {
     inputs: [],
@@ -557,6 +614,22 @@ export const NODE_PORT_SCHEMAS: Record<CustomNodeType, NodePortSchema> = {
     ],
     outputs: [{ id: 'image', type: 'image', label: 'Image', required: true }],
   },
+  videoRepainting: {
+    inputs: [
+      { id: 'prompt', type: 'text', label: 'Prompt', required: true },
+      { id: 'video', type: 'video', label: 'Video', required: true },
+      { id: 'image', type: 'image', label: 'Ref Subject', required: false },
+    ],
+    outputs: [{ id: 'video', type: 'video', label: 'Video', required: true }],
+  },
+  videoExtension: {
+    inputs: [
+      { id: 'prompt', type: 'text', label: 'Prompt', required: true },
+      { id: 'video', type: 'video', label: 'Video Clip', required: false },
+      { id: 'image', type: 'image', label: 'Frame', required: false },
+    ],
+    outputs: [{ id: 'video', type: 'video', label: 'Video', required: true }],
+  },
   inpainting: {
     inputs: [
       { id: 'image', type: 'image', label: 'Image', required: true },
@@ -605,6 +678,13 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     fileSizeMB: null,
     maxSizeMB: 10,
   } satisfies ImageUploadConfig,
+
+  videoUpload: {
+    previewUrl: null,
+    fileName: null,
+    fileSizeMB: null,
+    maxSizeMB: 50,
+  } satisfies VideoUploadConfig,
 
   templatePreset: {
     template: 'blank',
@@ -712,6 +792,17 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     model: getDefaultModel('imageEditing'),
   } satisfies StyleTransferConfig,
 
+  videoRepainting: {
+    control_condition: 'depth',
+    strength: 0.8,
+    prompt_extend: false,
+  } satisfies VideoRepaintingConfig,
+
+  videoExtension: {
+    direction: 'forward',
+    prompt_extend: false,
+  } satisfies VideoExtensionConfig,
+
   inpainting: {
     mode: 'auto',
     strength: 75,
@@ -756,6 +847,8 @@ export const RUNNABLE_NODE_TYPES: CustomNodeType[] = [
   'promptEnhancer',
   'imageGenerator',
   'videoGenerator',
+  'videoRepainting',
+  'videoExtension',
   'imageToText',
   'translateText',
   'backgroundRemover',

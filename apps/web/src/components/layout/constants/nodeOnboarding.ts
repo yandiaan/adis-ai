@@ -25,14 +25,14 @@ export const NODE_ONBOARDING: OnboardingNode[] = [
   {
     nodeType: 'promptEnhancer',
     title: 'Prompt Enhancer',
-    category: 'transform',
+    category: 'textStyle',
     description:
       'Automatically refine and enhance your prompts to improve quality, clarity, and specificity for better AI-generated results.',
   },
   {
     nodeType: 'styleConfig',
     title: 'Style Config',
-    category: 'transform',
+    category: 'textStyle',
     description:
       'Configure visual styles, artistic parameters, and design preferences to control the aesthetic outcome of generated content.',
   },

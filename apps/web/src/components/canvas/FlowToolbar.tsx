@@ -79,7 +79,9 @@ type Props = {
 
 const categoryOrder: (keyof typeof NODE_CATEGORIES)[] = [
   'input',
-  'transform',
+  'textStyle',
+  'imageEdit',
+  'videoEdit',
   'generate',
   'compose',
   'output',

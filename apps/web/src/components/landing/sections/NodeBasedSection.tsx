@@ -33,7 +33,7 @@ const previewNodes = [
     title: 'Prompt Enhancer',
     subtitle: 'Transform & refine',
     Icon: Sparkles,
-    category: 'transform',
+    category: 'textStyle',
     color: '#a78bfa',
     bgColor: 'rgba(167, 139, 250, 0.1)',
     borderColor: 'rgba(167, 139, 250, 0.5)',

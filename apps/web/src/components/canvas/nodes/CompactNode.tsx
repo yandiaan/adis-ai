@@ -19,6 +19,7 @@ export interface CompactNodeProps {
   selected?: boolean;
   minWidth?: number;
   width?: number;
+  maxWidth?: number;
   portSchema?: NodePortSchema;
 }
 
@@ -47,6 +48,7 @@ export function CompactNode({
   selected = false,
   minWidth = 200,
   width,
+  maxWidth,
   portSchema,
 }: CompactNodeProps) {
   const category = getCategoryForNodeType(nodeType);
@@ -80,6 +82,7 @@ export function CompactNode({
       style={{
         minWidth: width ?? minWidth,
         width: width,
+        maxWidth: maxWidth,
         background: '#15151e',
         border: `1px solid ${borderColor}`,
         boxShadow: outerGlow,

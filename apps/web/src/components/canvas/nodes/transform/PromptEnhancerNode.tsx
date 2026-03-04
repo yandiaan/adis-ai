@@ -34,7 +34,7 @@ export function PromptEnhancerNode({ id, data, selected }: NodeProps<Node<Prompt
   const toneColor = TONE_COLORS[config.tone] ?? '#a78bfa';
 
   return (
-    <CompactNode nodeType="promptEnhancer" icon="" title={data.label} selected={selected}>
+    <CompactNode nodeType="promptEnhancer" icon="" title={data.label} selected={selected} maxWidth={300}>
       {/* Creativity bar */}
       <div className="mb-2.5">
         <div className="flex justify-between text-[9px] text-white/25 mb-1.5">
@@ -85,7 +85,7 @@ export function PromptEnhancerNode({ id, data, selected }: NodeProps<Node<Prompt
             style={{ background: '#0e0e16', border: '1px solid rgba(255,255,255,0.06)' }}
           >
             {outputText ? (
-              <p className="text-[10px] text-white/70 leading-relaxed line-clamp-4">{outputText}</p>
+              <p className="text-[10px] text-white/70 leading-relaxed line-clamp-4 break-words">{outputText}</p>
             ) : (
               <div className="flex items-center justify-center py-2">
                 <div className="relative w-5 h-5">

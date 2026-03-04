@@ -161,12 +161,56 @@ export function VideoGeneratorNode({ id, data, selected }: NodeProps<Node<VideoG
         <div className="w-px h-3 bg-white/10" />
         <div className="flex items-center gap-1">
           <span className="text-[9px] text-white/25">Res</span>
-          <span className="text-[9px] text-white/50 font-medium">{RES_LABELS[config.resolution] ?? config.resolution}</span>
+          <select
+            className="text-[9px] text-white/50 font-medium bg-transparent border-none outline-none cursor-pointer"
+            value={config.resolution}
+            onChange={(e) => updateConfig({ resolution: e.target.value as typeof config.resolution })}
+          >
+            <option value="480P" style={{ background: '#1a1a2e' }}>480p</option>
+            <option value="720P" style={{ background: '#1a1a2e' }}>720p</option>
+            <option value="1080P" style={{ background: '#1a1a2e' }}>1080p</option>
+          </select>
         </div>
         <div className="w-px h-3 bg-white/10" />
         <div className="flex items-center gap-1">
           <span className="text-[9px] text-white/25">Dur</span>
-          <span className="text-[9px] text-white/50 font-medium">{config.duration}s</span>
+          <input
+            type="number"
+            min={2}
+            max={15}
+            value={config.duration}
+            onChange={(e) => updateConfig({ duration: Math.max(2, Math.min(15, parseInt(e.target.value) || 5)) })}
+            className="w-6 text-[9px] text-white/50 font-medium bg-transparent border-none outline-none text-center cursor-pointer"
+          />
+          <span className="text-[9px] text-white/25">s</span>
+        </div>
+      </div>
+
+      {/* Shot type + prompt extend */}
+      <div className="flex items-center gap-3 mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] text-white/25">Shot</span>
+          <Segment
+            options={[
+              { value: 'single', label: 'Single' },
+              { value: 'multi', label: 'Multi' },
+            ]}
+            value={config.shot_type ?? 'single'}
+            onChange={(v) => updateConfig({ shot_type: v as 'single' | 'multi' })}
+          />
+        </div>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-[9px] text-white/25">Enhance</span>
+          <button
+            className="w-7 h-3.5 rounded-full transition-all duration-150 relative cursor-pointer"
+            style={{ background: (config.prompt_extend ?? true) ? '#f472b6' : 'rgba(255,255,255,0.1)' }}
+            onClick={() => updateConfig({ prompt_extend: !(config.prompt_extend ?? true) })}
+          >
+            <div
+              className="absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all duration-150"
+              style={{ left: (config.prompt_extend ?? true) ? '13px' : '2px' }}
+            />
+          </button>
         </div>
       </div>
     </CompactNode>

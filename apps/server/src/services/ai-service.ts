@@ -103,6 +103,38 @@ export async function generateVideoFromImage(params: {
 }
 
 /**
+ * Repaint a video using wan2.1-vace-plus.
+ * Extracts pose/depth/sketch from source video and generates a stylistically new video.
+ * Returns a task ID for polling.
+ */
+export async function repaintVideo(params: {
+  prompt: string;
+  video_url: string;
+  control_condition: 'posebodyface' | 'posebody' | 'depth' | 'scribble';
+  strength?: number;
+  ref_images_url?: string[];
+  prompt_extend?: boolean;
+}): Promise<string> {
+  return dashscope.repaintVideo(params);
+}
+
+/**
+ * Extend a video using wan2.1-vace-plus.
+ * Generates 5s of content from an input clip or frame.
+ * Returns a task ID for polling.
+ */
+export async function extendVideo(params: {
+  prompt: string;
+  first_clip_url?: string;
+  last_clip_url?: string;
+  first_frame_url?: string;
+  last_frame_url?: string;
+  prompt_extend?: boolean;
+}): Promise<string> {
+  return dashscope.extendVideo(params);
+}
+
+/**
  * Poll a DashScope async task until completion.
  * Returns result URLs on success, throws on failure.
  */

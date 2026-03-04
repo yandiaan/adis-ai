@@ -7,6 +7,8 @@ import { collectNodeInputs } from './inputCollector';
 import type { PipelineRunResult, NodeRunResponse } from './types';
 import type { NodeOutput } from '../types/port-types';
 import type { LogEntry } from './logStore';
+import { getFingerprint } from '../../../utils/fingerprint';
+import { getSessionStartMs } from '../../../utils/sessionContext';
 
 const API_BASE = 'http://localhost:3000/api/node';
 
@@ -37,6 +39,15 @@ function nodeDataToOutput(
       return {
         type: 'image',
         data: { url, width: 0, height: 0 },
+        timestamp,
+      };
+    }
+    case 'videoUpload': {
+      const url = config.previewUrl as string | null;
+      if (!url) return null;
+      return {
+        type: 'video',
+        data: { url, duration: 0, width: 0, height: 0 },
         timestamp,
       };
     }
@@ -335,6 +346,8 @@ async function executeNodeOnServer(
     promptEnhancer: 'prompt-enhancer',
     imageGenerator: 'image-generator',
     videoGenerator: 'video-generator',
+    videoRepainting: 'video-repainting',
+    videoExtension: 'video-extension',
     imageToText: 'image-to-text',
     translateText: 'translate-text',
     backgroundRemover: 'background-remover',
@@ -354,9 +367,14 @@ async function executeNodeOnServer(
   const endpoint = endpointMap[nodeType];
   if (!endpoint) throw new Error(`No API endpoint for ${nodeType}`);
 
+  const [fpHash] = await Promise.all([getFingerprint()]);
   const response = await fetch(`${API_BASE}/${endpoint}/run`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-FP-Hash': fpHash,
+      'X-Session-Start': String(getSessionStartMs()),
+    },
     body: JSON.stringify({ config: nodeData.config, inputs }),
   });
 

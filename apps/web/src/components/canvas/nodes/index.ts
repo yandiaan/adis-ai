@@ -5,6 +5,7 @@ import type { NodeProps } from '@xyflow/react';
 // Import all node components
 import { TextPromptNode } from './input/TextPromptNode';
 import { ImageUploadNode } from './input/ImageUploadNode';
+import { VideoUploadNode } from './input/VideoUploadNode';
 import { TemplatePresetNode } from './input/TemplatePresetNode';
 import { PromptEnhancerNode } from './transform/PromptEnhancerNode';
 import { StyleConfigNode } from './transform/StyleConfigNode';
@@ -15,6 +16,8 @@ import { FaceCropNode } from './transform/FaceCropNode';
 import { ObjectRemoverNode } from './transform/ObjectRemoverNode';
 import { BackgroundReplacerNode } from './transform/BackgroundReplacerNode';
 import { StyleTransferNode } from './transform/StyleTransferNode';
+import { VideoRepaintingNode } from './transform/VideoRepaintingNode';
+import { VideoExtensionNode } from './transform/VideoExtensionNode';
 import { ImageGeneratorNode } from './generate/ImageGeneratorNode';
 import { VideoGeneratorNode } from './generate/VideoGeneratorNode';
 import { InpaintingNode } from './generate/InpaintingNode';
@@ -32,6 +35,7 @@ import type { CustomNodeType }from '../types/node-types';
 // Re-export components
 export { TextPromptNode } from './input/TextPromptNode';
 export { ImageUploadNode } from './input/ImageUploadNode';
+export { VideoUploadNode } from './input/VideoUploadNode';
 export { TemplatePresetNode } from './input/TemplatePresetNode';
 export { PromptEnhancerNode } from './transform/PromptEnhancerNode';
 export { StyleConfigNode } from './transform/StyleConfigNode';
@@ -42,6 +46,8 @@ export { FaceCropNode } from './transform/FaceCropNode';
 export { ObjectRemoverNode } from './transform/ObjectRemoverNode';
 export { BackgroundReplacerNode } from './transform/BackgroundReplacerNode';
 export { StyleTransferNode } from './transform/StyleTransferNode';
+export { VideoRepaintingNode } from './transform/VideoRepaintingNode';
+export { VideoExtensionNode } from './transform/VideoExtensionNode';
 export { ImageGeneratorNode } from './generate/ImageGeneratorNode';
 export { VideoGeneratorNode } from './generate/VideoGeneratorNode';
 export { InpaintingNode } from './generate/InpaintingNode';
@@ -60,6 +66,7 @@ export { CompactNode } from './CompactNode';
 export const nodeTypes: Record<CustomNodeType, ComponentType<NodeProps<any>>> = {
   textPrompt: TextPromptNode,
   imageUpload: ImageUploadNode,
+  videoUpload: VideoUploadNode,
   templatePreset: TemplatePresetNode,
   promptEnhancer: PromptEnhancerNode,
   styleConfig: StyleConfigNode,
@@ -70,6 +77,8 @@ export const nodeTypes: Record<CustomNodeType, ComponentType<NodeProps<any>>> = 
   objectRemover: ObjectRemoverNode,
   backgroundReplacer: BackgroundReplacerNode,
   styleTransfer: StyleTransferNode,
+  videoRepainting: VideoRepaintingNode,
+  videoExtension: VideoExtensionNode,
   imageGenerator: ImageGeneratorNode,
   videoGenerator: VideoGeneratorNode,
   inpainting: InpaintingNode,
