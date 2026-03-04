@@ -11,6 +11,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import type { PipelineTemplate } from './templates';
+import { getFingerprint } from '../../utils/fingerprint';
+import { getSessionStartMs } from '../../utils/sessionContext';
 
 type ChatboxState = 'idle' | 'loading' | 'preview' | 'error';
 
@@ -66,9 +68,14 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
     if (!prompt.trim() || isEnhancing || state === 'loading') return;
     setIsEnhancing(true);
     try {
+      const fpHash = await getFingerprint();
       const res = await fetch('http://localhost:3000/api/ai/enhance-prompt', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-FP-Hash': fpHash,
+          'X-Session-Start': String(getSessionStartMs()),
+        },
         body: JSON.stringify({ prompt: prompt.trim() }),
       });
       if (res.ok) {
@@ -96,9 +103,14 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 120000);
     try {
+      const fpHash = await getFingerprint();
       const res = await fetch('http://localhost:3000/api/ai/generate-template', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-FP-Hash': fpHash,
+          'X-Session-Start': String(getSessionStartMs()),
+        },
         body: JSON.stringify({ prompt: prompt.trim(), model: selectedModel }),
         signal: controller.signal,
       });
@@ -231,7 +243,9 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
         </button>
         {/* Char counter + shortcut hint */}
         <div className="absolute bottom-3 right-3 flex items-center gap-2">
-          <span className={`text-xs select-none ${charCount > charLimit * 0.9 ? 'text-yellow-400/60' : 'text-white/20'}`}>
+          <span
+            className={`text-xs select-none ${charCount > charLimit * 0.9 ? 'text-yellow-400/60' : 'text-white/20'}`}
+          >
             {charCount}/{charLimit}
           </span>
           <span className="text-white/20 text-xs select-none">⌘↵</span>
@@ -315,7 +329,13 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
           )}
           {/* Pulsing bar */}
           <div className="mt-2 h-0.5 rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full bg-primary/40 animate-pulse rounded-full" style={{ width: `${Math.min(100, (completedSteps.length + 1) * 25)}%`, transition: 'width 0.5s ease' }} />
+            <div
+              className="h-full bg-primary/40 animate-pulse rounded-full"
+              style={{
+                width: `${Math.min(100, (completedSteps.length + 1) * 25)}%`,
+                transition: 'width 0.5s ease',
+              }}
+            />
           </div>
         </div>
       )}
@@ -339,12 +359,17 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
             <span className="text-white/20">·</span>
             <span className="text-white/40 text-xs">{preview.edges.length} edges</span>
             <span className="text-white/20">·</span>
-            <span className="text-white/40 text-xs font-mono bg-white/5 px-1.5 py-0.5 rounded">{preview.category}</span>
+            <span className="text-white/40 text-xs font-mono bg-white/5 px-1.5 py-0.5 rounded">
+              {preview.category}
+            </span>
           </div>
           {/* Node type chips */}
           <div className="flex flex-wrap gap-1.5">
             {preview.nodes.map((n) => (
-              <span key={n.id} className="text-xs bg-white/5 border border-white/10 text-white/40 px-2 py-0.5 rounded-full font-mono">
+              <span
+                key={n.id}
+                className="text-xs bg-white/5 border border-white/10 text-white/40 px-2 py-0.5 rounded-full font-mono"
+              >
                 {n.type}
               </span>
             ))}

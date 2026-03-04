@@ -9,6 +9,10 @@ import uploadRoutes from '@/routes/uploadRoutes';
 import pipelineRoutes from '@/routes/pipelineRoutes';
 import aiTemplateRoutes from '@/routes/aiTemplateRoutes';
 import { errorHandler } from '@/middleware/errorHandler';
+import { requestTimingGate } from '@/middleware/requestTimingGate';
+import { ipRateLimiter } from '@/middleware/ipRateLimiter';
+import { compositeIdentityMiddleware } from '@/middleware/compositeIdentity';
+import { budgetCircuitBreaker } from '@/middleware/budgetCircuitBreaker';
 
 const app: Application = express();
 
@@ -38,10 +42,12 @@ app.use('/uploads', (req, res, next) => {
 
 // Routes
 app.use('/api', router);
-app.use('/api/node', nodeRoutes);
+// AI routes — protected by layered middleware: timingGate → ipLimit → compositeIdentity → budgetBreaker
+const aiProtection = [requestTimingGate, ipRateLimiter, compositeIdentityMiddleware, budgetCircuitBreaker] as const;
+app.use('/api/node', ...aiProtection, nodeRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/pipeline', pipelineRoutes);
-app.use('/api/ai', aiTemplateRoutes);
+app.use('/api/pipeline', ...aiProtection, pipelineRoutes);
+app.use('/api/ai', ...aiProtection, aiTemplateRoutes);
 
 // Health check
 app.get('/health', (_req, res) => {

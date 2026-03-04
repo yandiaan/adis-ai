@@ -303,7 +303,7 @@ BILINGUAL PIPELINE:
 ═══════════════════════════════════════════════════════
 DESIGN PRINCIPLES
 ═══════════════════════════════════════════════════════
-1. Use 6–12 nodes. Input → prepare → generate → compose → output.
+1. Use 4–12 nodes. Input → prepare → generate → compose → output.
 2. Always add promptEnhancer before imageGenerator or videoGenerator.
 3. Layer compose nodes (colorFilter → frameBorder → stickerLayer → textOverlay) for polished IMAGE results only — NEVER after video nodes.
 4. Add styleConfig when mood matters (festive, dark, vintage, neon, etc.).
@@ -417,7 +417,9 @@ router.post('/generate-template', async (req, res) => {
 
   let ended = false;
   let closed = false;
-  res.on('close', () => { closed = true; });
+  res.on('close', () => {
+    closed = true;
+  });
 
   /** Safely write one SSE event; no-op if stream already ended. */
   const send = (data: object): void => {
@@ -434,16 +436,29 @@ router.post('/generate-template', async (req, res) => {
   const end = (): void => {
     if (ended) return;
     ended = true;
-    try { res.end(); } catch (e) { console.error('[aiTemplateRoutes] end error:', e); }
+    try {
+      res.end();
+    } catch (e) {
+      console.error('[aiTemplateRoutes] end error:', e);
+    }
   };
 
   const sendStatus = (message: string) => send({ type: 'status', message });
-  const sendResult = (template: object) => { send({ type: 'result', template }); end(); };
-  const sendError  = (message: string) => { send({ type: 'error',  message });  end(); };
+  const sendResult = (template: object) => {
+    send({ type: 'result', template });
+    end();
+  };
+  const sendError = (message: string) => {
+    send({ type: 'error', message });
+    end();
+  };
 
   try {
     const parsed = requestSchema.safeParse(req.body);
-    if (!parsed.success) { sendError('Bad Request: invalid input'); return; }
+    if (!parsed.success) {
+      sendError('Bad Request: invalid input');
+      return;
+    }
 
     const { prompt, model = 'qwen-max' } = parsed.data;
     const MAX_ATTEMPTS = 3;
@@ -464,7 +479,7 @@ router.post('/generate-template', async (req, res) => {
       let rawText: string;
       try {
         const aiTimeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('AI_TIMEOUT')), 90000)
+          setTimeout(() => reject(new Error('AI_TIMEOUT')), 90000),
         );
         rawText = await Promise.race([
           generateText({
@@ -481,9 +496,10 @@ router.post('/generate-template', async (req, res) => {
       } catch (aiErr) {
         const isTimeout = aiErr instanceof Error && aiErr.message === 'AI_TIMEOUT';
         console.error('[aiTemplateRoutes] AI call failed:', aiErr);
-        sendError(isTimeout
-          ? 'AI request timed out. Try switching to qwen-turbo for faster generation.'
-          : 'AI service unavailable. Please try again.'
+        sendError(
+          isTimeout
+            ? 'AI request timed out. Try switching to qwen-turbo for faster generation.'
+            : 'AI service unavailable. Please try again.',
         );
         return;
       }
@@ -493,7 +509,10 @@ router.post('/generate-template', async (req, res) => {
       // ── Extract JSON ─────────────────────────────────
       const jsonMatch = rawText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        if (attempt < MAX_ATTEMPTS) { currentPrompt = `${prompt}\n\n⚠ Previous attempt did not return JSON. Return ONLY a raw JSON object.`; continue; }
+        if (attempt < MAX_ATTEMPTS) {
+          currentPrompt = `${prompt}\n\n⚠ Previous attempt did not return JSON. Return ONLY a raw JSON object.`;
+          continue;
+        }
         sendError('AI did not return valid JSON after multiple attempts.');
         return;
       }
@@ -502,7 +521,10 @@ router.post('/generate-template', async (req, res) => {
       try {
         parsed2 = JSON.parse(jsonMatch[0]);
       } catch {
-        if (attempt < MAX_ATTEMPTS) { currentPrompt = `${prompt}\n\n⚠ Previous attempt returned malformed JSON. Fix syntax errors.`; continue; }
+        if (attempt < MAX_ATTEMPTS) {
+          currentPrompt = `${prompt}\n\n⚠ Previous attempt returned malformed JSON. Fix syntax errors.`;
+          continue;
+        }
         sendError('AI response could not be parsed as JSON.');
         return;
       }
@@ -524,7 +546,9 @@ router.post('/generate-template', async (req, res) => {
       const { valid, errors: valErrors } = validateTemplate(validated.data);
 
       if (!valid) {
-        console.warn(`[aiTemplateRoutes] Validation failed (attempt ${attempt}): ${valErrors.length} error(s)`);
+        console.warn(
+          `[aiTemplateRoutes] Validation failed (attempt ${attempt}): ${valErrors.length} error(s)`,
+        );
         if (attempt < MAX_ATTEMPTS) {
           sendStatus(`Found ${valErrors.length} issue(s) — fixing…`);
           currentPrompt = buildRetryPrompt(prompt, valErrors, attempt);
@@ -550,8 +574,27 @@ router.post('/generate-template', async (req, res) => {
         return node;
       });
 
-      const VIDEO_OUT  = new Set(['videoGenerator', 'videoExtension', 'videoRepainting', 'videoUpload']);
-      const IMAGE_ONLY = new Set(['colorFilter', 'stickerLayer', 'frameBorder', 'textOverlay', 'collageLayout', 'backgroundRemover', 'faceCrop', 'objectRemover', 'backgroundReplacer', 'styleTransfer', 'inpainting', 'imageUpscaler', 'imageToText']);
+      const VIDEO_OUT = new Set([
+        'videoGenerator',
+        'videoExtension',
+        'videoRepainting',
+        'videoUpload',
+      ]);
+      const IMAGE_ONLY = new Set([
+        'colorFilter',
+        'stickerLayer',
+        'frameBorder',
+        'textOverlay',
+        'collageLayout',
+        'backgroundRemover',
+        'faceCrop',
+        'objectRemover',
+        'backgroundReplacer',
+        'styleTransfer',
+        'inpainting',
+        'imageUpscaler',
+        'imageToText',
+      ]);
       const nodeTypeMap = new Map(injectedNodes.map((n) => [n.id, n.type]));
       const sanitizedEdges = template.edges.filter((edge) => {
         const st = nodeTypeMap.get(edge.source);
@@ -567,7 +610,9 @@ router.post('/generate-template', async (req, res) => {
       return;
     }
 
-    sendError('Could not generate a valid pipeline after multiple attempts. Try a simpler description.');
+    sendError(
+      'Could not generate a valid pipeline after multiple attempts. Try a simpler description.',
+    );
   } catch (err) {
     console.error('[aiTemplateRoutes] Unexpected error:', err);
     if (!ended && !closed) sendError('Internal server error. Please try again.');
