@@ -18,11 +18,14 @@ export function BlueprintNav({ onIndexChange }: { onIndexChange?: (index: number
     gsap.set(progressRefs.current, { scaleX: 0, transformOrigin: 'left' });
 
     const tl = gsap.timeline({ repeat: -1 });
-    const durationPerItem = 5;
+    const defaultDuration = 5;
+    const contributorsDuration = 15;
 
     navItems.forEach((_, index) => {
       const currentIndex = (startIndex + index) % navItems.length;
       const nextIndex = (currentIndex + 1) % navItems.length;
+      const isContributors = currentIndex === 4; // Contributors is at index 4
+      const itemDuration = isContributors ? contributorsDuration : defaultDuration;
 
       tl.add(() => {
         setActiveIndex(currentIndex);
@@ -32,7 +35,7 @@ export function BlueprintNav({ onIndexChange }: { onIndexChange?: (index: number
 
       tl.to(progressRefs.current[nextIndex], {
         scaleX: 1,
-        duration: durationPerItem,
+        duration: itemDuration,
         ease: 'none',
       });
 
