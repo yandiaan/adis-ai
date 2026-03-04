@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { join } from 'path';
-import router from '@/routes';
+import router from '@/routes/index';
 import nodeRoutes from '@/routes/nodeRoutes';
 import uploadRoutes from '@/routes/uploadRoutes';
 import pipelineRoutes from '@/routes/pipelineRoutes';
