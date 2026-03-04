@@ -1,0 +1,62 @@
+services:
+  # Server API Service
+  api-server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    container_name: penginfo-api-server
+    restart: unless-stopped
+    ports:
+      - '${SERVER_PORT:-3000}:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - server-data:/app/apps/server/data
+      - server-uploads:/app/apps/server/uploads
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web Frontend Service
+  web-frontend:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: penginfo-web-frontend
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-4321}:4321'
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=4321
+    depends_on:
+      api-server:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4321/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  server-data:
+    driver: local
+  server-uploads:
+    driver: local
