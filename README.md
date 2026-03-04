@@ -1,4 +1,4 @@
-# ADIS AI - Web Application
+# ADIS AI - Content Generator
 
 A modular, node-based content generation engine designed to transform creative ideas into high-quality visual content including stickers, memes, and personalized greetings. Built with Astro, React, and React Flow for an intuitive visual workflow experience.
 
