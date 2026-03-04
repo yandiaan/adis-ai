@@ -2,6 +2,8 @@
 
 A modular, node-based content generation engine designed to transform creative ideas into high-quality visual content including stickers, memes, and personalized greetings. Built with Astro, React, and React Flow for an intuitive visual workflow experience.
 
+This application leverages **Alibaba Cloud Qwen** - an advanced language model by Alibaba Cloud - as the core AI engine for text generation, prompt enhancement, and intelligent content reasoning. Combined with Alibaba's image and video generation capabilities, ADIS AI delivers a comprehensive solution for creating culturally-relevant Indonesian content.
+
 ![ADIS AI Canvas Interface](public/screenshot-1.png)
 
 ## Overview
@@ -158,6 +160,39 @@ API_BASE=http://localhost:3000
 ### Model Options
 
 AI model configurations are defined in `src/components/canvas/config/modelOptions.ts` and can be customized based on available Alibaba Cloud Model Studio services.
+
+## Alibaba Qwen Integration
+
+### Overview
+
+ADIS AI leverages Alibaba Cloud's Qwen language model family to power intelligent content generation workflows. Qwen provides state-of-the-art natural language understanding and generation capabilities optimized for multilingual contexts, including Indonesian language support.
+
+### Qwen Capabilities
+
+| Capability | Usage in ADIS AI |
+|------------|------------------|
+| **Text Generation** | Create original content, prompts, and narratives |
+| **Prompt Enhancement** | Intelligently enhance user prompts for better generation quality |
+| **Language Understanding** | Analyze and process user inputs with cultural context awareness |
+| **Reasoning & Logic** | Support complex workflow logic and conditional content generation |
+| **Multilingual Support** | Native support for Indonesian and English language processing |
+
+### Integration Points
+
+1. **Prompt Enhancement Node** - Uses Qwen to analyze and enhance user prompts with creativity and tone modulation
+2. **Template Presets** - Qwen generates contextually relevant content for cultural templates (Ramadan, Holidays, etc.)
+3. **Text Transformation** - Text translation, rewriting, and style transformation capabilities
+4. **Style Analysis** - Intelligent analysis of style requirements and color palette suggestions
+
+### Qwen Model Versions
+
+The application supports multiple Qwen model variants for different use cases:
+
+- **Qwen-Long** - For processing extended context and complex reasoning
+- **Qwen-Turbo** - Optimized for speed and real-time applications
+- **Qwen-Max** - Maximum quality and instruction-following capabilities
+
+Configuration of the active model can be adjusted in the application settings to match performance and accuracy requirements.
 
 ## Contributing
 
