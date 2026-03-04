@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Panel } from '@xyflow/react';
-import { NODE_CATEGORIES, NODE_TYPES_BY_CATEGORY } from './config/nodeCategories';
+import {
+  NODE_CATEGORIES,
+  NODE_TYPES_BY_CATEGORY,
+  type NodeTypeConfig,
+} from './config/nodeCategories';
 import type { CustomNodeType } from './types/node-types';
 import type { MouseMode } from './types';
 import {
   ChevronDown,
   ChevronRight,
+  Clock,
   Hand,
   Loader2,
   MousePointer2,
@@ -14,11 +20,15 @@ import {
   ScrollText,
   Search,
   X,
+  ArrowRight,
+  ArrowLeft,
+  Cpu,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import type { NodeCategory } from './types/node-types';
 import { renderNodeTypeIcon } from './icons/nodeTypeIcon';
 import { renderNodeCategoryIcon } from './icons/nodeCategoryIcon';
+import { NODE_PORT_SCHEMAS, RUNNABLE_NODE_TYPES } from './types/node-types';
 
 const LOG_PANEL_HEIGHT = 280;
 
@@ -105,6 +115,281 @@ function nodeMatchesQuery(node: { label: string; description: string }, query: s
   return haystack.includes(query);
 }
 
+// Helper to get port type color
+function getPortTypeColor(type: string): string {
+  switch (type) {
+    case 'text':
+      return '#4ade80';
+    case 'image':
+      return '#60a5fa';
+    case 'video':
+      return '#a78bfa';
+    case 'style':
+      return '#f59e0b';
+    case 'media':
+      return '#f87171';
+    default:
+      return 'rgba(255,255,255,0.5)';
+  }
+}
+
+// Helper to format port type label
+function formatPortType(type: string): string {
+  switch (type) {
+    case 'text':
+      return 'Text';
+    case 'image':
+      return 'Image';
+    case 'video':
+      return 'Video';
+    case 'style':
+      return 'Style';
+    case 'media':
+      return 'Media';
+    default:
+      return type.charAt(0).toUpperCase() + type.slice(1);
+  }
+}
+
+// Helper to get estimated processing time based on node type
+function getProcessingTime(nodeType: CustomNodeType): string {
+  switch (nodeType) {
+    case 'imageGenerator':
+    case 'videoGenerator':
+      return '~5-15s';
+    case 'inpainting':
+    case 'styleTransfer':
+    case 'backgroundReplacer':
+      return '~3-8s';
+    case 'imageUpscaler':
+    case 'backgroundRemover':
+    case 'objectRemover':
+      return '~2-5s';
+    case 'promptEnhancer':
+    case 'translateText':
+    case 'imageToText':
+      return '~1-3s';
+    default:
+      return '~1s';
+  }
+}
+
+// Helper to get compute units based on node type
+function getComputeUnits(nodeType: CustomNodeType): string {
+  switch (nodeType) {
+    case 'videoGenerator':
+      return '~8 CU';
+    case 'imageGenerator':
+    case 'inpainting':
+      return '~4 CU';
+    case 'styleTransfer':
+    case 'backgroundReplacer':
+    case 'imageUpscaler':
+      return '~3 CU';
+    case 'backgroundRemover':
+    case 'objectRemover':
+    case 'faceCrop':
+      return '~2 CU';
+    default:
+      return '~1 CU';
+  }
+}
+
+// Node Detail Popover Component
+interface NodeDetailPopoverProps {
+  node: NodeTypeConfig | null;
+  category: NodeCategory | null;
+  visible: boolean;
+  position: { x: number; y: number };
+}
+
+function NodeDetailPopover({ node, category, visible, position }: NodeDetailPopoverProps) {
+  if (!node || !category || !visible) return null;
+
+  const categoryConfig = NODE_CATEGORIES[category];
+  const portSchema = NODE_PORT_SCHEMAS[node.type];
+  const isRunnable = RUNNABLE_NODE_TYPES.includes(node.type);
+  const processingTime = getProcessingTime(node.type);
+  const computeUnits = getComputeUnits(node.type);
+
+  const inputCount = portSchema?.inputs?.length || 0;
+  const outputCount = portSchema?.outputs?.length || 0;
+
+  // Get output type for badge
+  const outputType = portSchema?.outputs?.[0]?.type || null;
+  const outputColor = outputType ? getPortTypeColor(outputType) : null;
+
+  return (
+    <div
+      className="fixed z-[300] w-[320px] ml-2 rounded-2xl border border-white/15 overflow-hidden pointer-events-none"
+      style={{
+        left: position.x,
+        bottom: position.y, // Use bottom positioning so popover grows upward
+        background: 'rgba(20, 20, 24, 0.95)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 24px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateX(0) scale(1)' : 'translateX(-8px) scale(0.98)',
+        transition: 'opacity 0.15s ease, transform 0.15s ease',
+      }}
+    >
+      {/* Header */}
+      <div className="px-4 pt-4 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+              style={{
+                backgroundColor: categoryConfig.bgColor,
+                borderColor: categoryConfig.borderColor,
+              }}
+            >
+              <div style={{ color: categoryConfig.color }}>
+                {renderNodeTypeIcon(node.type, { size: 20, className: 'text-current' })}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-[15px] font-semibold text-white/90 truncate">{node.label}</div>
+              <div
+                className="text-[11px] font-medium uppercase tracking-wider truncate"
+                style={{ color: categoryConfig.color }}
+              >
+                {categoryConfig.label}
+              </div>
+            </div>
+          </div>
+          {outputType && (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-white/10 bg-white/5 shrink-0">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: outputColor || '#fff' }}
+              />
+              <span className="text-[10px] font-medium text-white/60">
+                {formatPortType(outputType)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="px-4 pb-3">
+        <p className="text-[13px] text-white/70 leading-relaxed">{node.description}</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="px-4 pb-4">
+        <div className="grid grid-cols-2 gap-2">
+          {/* Processing Time */}
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/8">
+            <Clock size={14} className="text-white/40" />
+            <div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider">Time</div>
+              <div className="text-[12px] font-medium text-white/80">{processingTime}</div>
+            </div>
+          </div>
+
+          {/* Compute Units */}
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/8">
+            <Cpu size={14} className="text-white/40" />
+            <div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider">Compute</div>
+              <div className="text-[12px] font-medium text-white/80">{computeUnits}</div>
+            </div>
+          </div>
+
+          {/* Inputs */}
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/8">
+            <ArrowLeft size={14} className="text-white/40" />
+            <div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider">Inputs</div>
+              <div className="text-[12px] font-medium text-white/80">
+                {inputCount === 0 ? 'None' : `${inputCount} port${inputCount > 1 ? 's' : ''}`}
+              </div>
+            </div>
+          </div>
+
+          {/* Outputs */}
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/8">
+            <ArrowRight size={14} className="text-white/40" />
+            <div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider">Outputs</div>
+              <div className="text-[12px] font-medium text-white/80">
+                {outputCount === 0 ? 'None' : `${outputCount} port${outputCount > 1 ? 's' : ''}`}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Port Details */}
+      {(inputCount > 0 || outputCount > 0) && (
+        <div
+          className="px-4 py-3 border-t border-white/8"
+          style={{ background: 'rgba(255,255,255,0.02)' }}
+        >
+          {/* Input Ports */}
+          {inputCount > 0 && (
+            <div className="mb-2">
+              <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
+                Input Ports
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {portSchema.inputs.map((input) => (
+                  <div
+                    key={input.id}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-white/8 bg-white/[0.04]"
+                  >
+                    <div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: getPortTypeColor(input.type) }}
+                    />
+                    <span className="text-[11px] text-white/70">{input.label}</span>
+                    {!input.required && <span className="text-[9px] text-white/40">opt</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Output Ports */}
+          {outputCount > 0 && (
+            <div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
+                Output Ports
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {portSchema.outputs.map((output) => (
+                  <div
+                    key={output.id}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-white/8 bg-white/[0.04]"
+                  >
+                    <div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: getPortTypeColor(output.type) }}
+                    />
+                    <span className="text-[11px] text-white/70">{output.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Runnable Badge */}
+      {isRunnable && (
+        <div className="px-4 py-2 border-t border-white/8 bg-white/[0.02]">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] text-white/50">Can be run independently</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FlowToolbar({
   mode,
   onModeChange,
@@ -127,6 +412,14 @@ export function FlowToolbar({
   const submenuWrapRef = useRef<HTMLDivElement | null>(null);
   const submenuPopoverRef = useRef<HTMLDivElement | null>(null);
   const mainListScrollRef = useRef<HTMLDivElement | null>(null);
+  const searchResultsRef = useRef<HTMLDivElement | null>(null);
+
+  // Node detail popover state
+  const [hoveredNode, setHoveredNode] = useState<NodeTypeConfig | null>(null);
+  const [hoveredNodeCategory, setHoveredNodeCategory] = useState<NodeCategory | null>(null);
+  const [nodeDetailPosition, setNodeDetailPosition] = useState({ x: 0, y: 0 });
+  const [showNodeDetail, setShowNodeDetail] = useState(false);
+  const nodeDetailTimerRef = useRef<number | null>(null);
 
   const openMenu = () => {
     if (closeTimerRef.current) {
@@ -205,11 +498,81 @@ export function FlowToolbar({
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+      if (nodeDetailTimerRef.current) window.clearTimeout(nodeDetailTimerRef.current);
     };
   }, []);
 
+  // Handle node item hover for detail popover
+  const handleNodeItemHover = (node: NodeTypeConfig | null, element?: HTMLElement) => {
+    if (nodeDetailTimerRef.current) {
+      window.clearTimeout(nodeDetailTimerRef.current);
+      nodeDetailTimerRef.current = null;
+    }
+
+    if (!node || !element) {
+      setShowNodeDetail(false);
+      nodeDetailTimerRef.current = window.setTimeout(() => {
+        setHoveredNode(null);
+        setHoveredNodeCategory(null);
+      }, 150);
+      return;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const popoverWidth = 320;
+    const offset = 12;
+    const screenMargin = 20;
+
+    // Position to the right of the element
+    let x = rect.right + offset;
+
+    // Find the container to align BOTTOM with it (submenu or search results)
+    const submenuEl = submenuPopoverRef.current;
+    const searchEl = searchResultsRef.current;
+
+    // Default: use bottom positioning from element bottom
+    let bottomY = window.innerHeight - rect.bottom;
+
+    if (submenuEl) {
+      // When submenu is visible (category view), align with submenu bottom
+      const submenuRect = submenuEl.getBoundingClientRect();
+      bottomY = window.innerHeight - submenuRect.bottom;
+    } else if (searchEl) {
+      // When searching, align with search results container bottom
+      const searchRect = searchEl.getBoundingClientRect();
+      bottomY = window.innerHeight - searchRect.bottom;
+    }
+
+    // Horizontal: Adjust if going off screen to the right
+    if (x + popoverWidth > window.innerWidth - screenMargin) {
+      x = rect.left - popoverWidth - offset;
+    }
+
+    // Ensure x doesn't go off screen to the left
+    if (x < screenMargin) {
+      x = screenMargin;
+    }
+
+    // Ensure bottom doesn't go below the screen (minimum margin from bottom)
+    if (bottomY < screenMargin) {
+      bottomY = screenMargin;
+    }
+
+    setHoveredNode(node);
+    setHoveredNodeCategory(node.category);
+    setNodeDetailPosition({ x, y: bottomY }); // y now represents bottom offset
+    setShowNodeDetail(true);
+  };
+
   const query = normalizeQuery(searchQuery);
   const isSearching = query.length > 0;
+
+  // Close detail popover when search query changes
+  useEffect(() => {
+    setShowNodeDetail(false);
+    setHoveredNode(null);
+    setHoveredNodeCategory(null);
+  }, [searchQuery]);
 
   const dropdownWidthClass = 'w-[420px]';
 
@@ -386,7 +749,8 @@ export function FlowToolbar({
                   <div className="px-2 pb-2">
                     {isSearching ? (
                       <div
-                        className="addnode-scroll max-h-[460px] overflow-auto"
+                        ref={searchResultsRef}
+                        className="addnode-scroll max-h-[320px] overflow-auto"
                         style={{
                           borderTop: '1px solid rgba(255,255,255,0.08)',
                           paddingTop: 10,
@@ -424,6 +788,20 @@ export function FlowToolbar({
                                           onAddNode(node.type);
                                           closeMenu();
                                         }}
+                                        onMouseEnter={(e) =>
+                                          handleNodeItemHover(
+                                            node as NodeTypeConfig,
+                                            e.currentTarget,
+                                          )
+                                        }
+                                        onMouseLeave={() => handleNodeItemHover(null)}
+                                        onFocus={(e) =>
+                                          handleNodeItemHover(
+                                            node as NodeTypeConfig,
+                                            e.currentTarget,
+                                          )
+                                        }
+                                        onBlur={() => handleNodeItemHover(null)}
                                         className="motion-press focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer"
                                       >
                                         <span className="flex items-center gap-2.5 min-w-0">
@@ -492,7 +870,7 @@ export function FlowToolbar({
                         >
                           <div
                             ref={mainListScrollRef}
-                            className="addnode-scroll max-h-[460px] overflow-auto px-2 py-2"
+                            className="addnode-scroll max-h-[360px] overflow-auto px-2 py-2"
                           >
                             {nodesByCategory.map(({ categoryId, category, nodes }) => {
                               const isActive = categoryId === activeCategory;
@@ -561,13 +939,14 @@ export function FlowToolbar({
 
                         {/* Detached submenu popover */}
                         <div
-                          className="absolute left-full ml-2 w-[300px] rounded-2xl border border-white/10 overflow-hidden"
+                          className="absolute left-full ml-0 w-[300px] rounded-2xl border border-white/10 overflow-hidden"
                           ref={submenuPopoverRef}
                           style={{
                             background: 'var(--editor-surface-1)',
                             boxShadow:
                               '0 18px 60px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.05)',
                             top: submenuTop ?? 8,
+                            maxHeight: '315px',
                             opacity: hoveredCategoryId ? 1 : 0,
                             transform: hoveredCategoryId ? 'translateX(0px)' : 'translateX(-6px)',
                             transitionProperty: 'opacity, transform',
@@ -603,7 +982,7 @@ export function FlowToolbar({
                           </div>
 
                           <div
-                            className="addnode-scroll max-h-[460px] overflow-auto px-2 pb-2"
+                            className="addnode-scroll max-h-[250px] overflow-auto px-2 pb-2"
                             style={{
                               borderTop: '1px solid rgba(255,255,255,0.08)',
                               background: 'var(--editor-surface-0)',
@@ -619,6 +998,14 @@ export function FlowToolbar({
                                         onAddNode(node.type);
                                         closeMenu();
                                       }}
+                                      onMouseEnter={(e) =>
+                                        handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
+                                      }
+                                      onMouseLeave={() => handleNodeItemHover(null)}
+                                      onFocus={(e) =>
+                                        handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
+                                      }
+                                      onBlur={() => handleNodeItemHover(null)}
                                       className="motion-press focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer"
                                     >
                                       <span className="flex items-center gap-2.5 min-w-0">
@@ -846,6 +1233,17 @@ export function FlowToolbar({
             pointerEvents: menuOpen ? 'auto' : 'none',
           }}
         />
+      )}
+
+      {/* Node Detail Popover - Rendered via Portal */}
+      {createPortal(
+        <NodeDetailPopover
+          node={hoveredNode}
+          category={hoveredNodeCategory}
+          visible={showNodeDetail}
+          position={nodeDetailPosition}
+        />,
+        document.body,
       )}
     </Panel>
   );

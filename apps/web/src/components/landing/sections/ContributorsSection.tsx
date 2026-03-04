@@ -1,125 +1,245 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { Code2, Terminal, Palette } from 'lucide-react';
+import { Code2, Terminal, Palette, Github, Instagram } from 'lucide-react';
 
 const contributors = [
+  {
+    name: 'Sanday Azis Prayogi',
+    role: 'Infrastructure & CI/CD',
+    domain: 'DevOps',
+    bio: 'Built and maintained the deployment pipelines, infrastructure automation, and system reliability.',
+    avatar: '/sanday.png',
+    color: '#4ade80',
+    Icon: Terminal,
+    stat: 'DevOps Engineer',
+    instagram: 'https://www.instagram.com/sndyazis__?igsh=OGs0ZzV6d2I4aWd1',
+    github: 'https://github.com/sandayazisp',
+  },
   {
     name: 'Dian Setiawan',
     role: 'Core Engine & AI',
     domain: 'Backend',
     bio: 'Architected the AI execution pipeline, model integrations and backend infrastructure.',
-    avatar:
-      'https://api.dicebear.com/9.x/avataaars/svg?seed=INyomanArijayaPutra&backgroundColor=b6e3f4',
+    avatar: '/dian.png',
     color: '#60a5fa',
     Icon: Code2,
-    stat: 'Pipeline Architect',
-    rep: 998,
+    stat: 'Backend Engineer',
+    instagram: 'https://www.instagram.com/yandian.s?igsh=MXYyN3d5cDVhZ3J5MQ==',
+    github: 'https://github.com/yandiaan',
   },
   {
     name: 'Arijaya Putra',
     role: 'Canvas & Node Editor',
     domain: 'Frontend',
-    bio: 'Built the visual node editor, canvas runtime and the full drag-and-drop flow experience.',
-    avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Yandians&backgroundColor=6366f1',
+    bio: 'Built the visual node editor, animation, canvas runtime and the full drag-and-drop flow experience.',
+    avatar: '/arijaya.png',
     color: '#a78bfa',
-    Icon: Terminal,
-    stat: 'Node System Lead',
-    rep: 856,
-  },
-  {
-    name: 'Sanday Azis PrayogiRedefine Digital Expression.',
-    role: 'Design & Templates',
-    domain: 'Design',
-    bio: 'Crafted the visual design system, template presets and all product interaction patterns.',
-    avatar:
-      'https://api.dicebear.com/9.x/avataaars/svg?seed=SandayAzisPrayogi&backgroundColor=c0aede',
-    color: '#4ade80',
     Icon: Palette,
-    stat: 'Design Engineer',
-    rep: 912,
+    stat: 'Frontend Engineer',
+    instagram: 'https://www.instagram.com/arijayaa?igsh=dGVndTNtYTZiMWZ1',
+    github: 'https://github.com/ArijayaPutra',
   },
 ];
 
 function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const avatarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    gsap.set(el, { opacity: 0, y: 18 });
+    const glow = glowRef.current;
+    const avatar = avatarRef.current;
+    if (!el || !glow || !avatar) return;
+
+    gsap.set(el, { opacity: 0, y: 60, scale: 0.8, rotateX: 15 });
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          gsap.to(el, { opacity: 1, y: 0, duration: 0.55, delay: 0.18 + index * 0.1, ease: 'power3.out' });
+          gsap.to(el, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            rotateX: 0,
+            duration: 0.8,
+            delay: 0.2 + index * 0.15,
+            ease: 'back.out(1.2)',
+          });
+
+          gsap.to(glow, {
+            opacity: 0.6,
+            scale: 1.1,
+            duration: 2,
+            delay: 0.5 + index * 0.15,
+            ease: 'sine.inOut',
+            repeat: -1,
+            yoyo: true,
+          });
+
+          gsap.to(avatar, {
+            y: -8,
+            duration: 2.5,
+            delay: 0.3 + index * 0.1,
+            ease: 'sine.inOut',
+            repeat: -1,
+            yoyo: true,
+          });
+
           observer.unobserve(el);
         }
       },
-      { threshold: 0, rootMargin: '-10px' }
+      { threshold: 0, rootMargin: '-10px' },
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, [index]);
 
+  const handleMouseEnter = () => {
+    if (!ref.current || !glowRef.current) return;
+    gsap.to(ref.current, {
+      y: -6,
+      filter: 'brightness(1.15)',
+      duration: 0.3,
+      ease: 'power2.out',
+    });
+    gsap.to(glowRef.current, {
+      opacity: 0.8,
+      blur: 30,
+      duration: 0.3,
+      ease: 'power2.out',
+    });
+  };
+
+  const handleMouseLeave = () => {
+    if (!ref.current || !glowRef.current) return;
+    gsap.to(ref.current, {
+      y: 0,
+      filter: 'brightness(1)',
+      duration: 0.3,
+      ease: 'power2.out',
+    });
+    gsap.to(glowRef.current, {
+      opacity: 0.4,
+      blur: 20,
+      duration: 0.3,
+      ease: 'power2.out',
+    });
+  };
+
   return (
     <div
       ref={ref}
-      className="relative rounded-xl overflow-hidden flex flex-col border border-white/6 bg-surface-panel hover:border-white/15 transition-all duration-300 hover:-translate-y-1"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative rounded-xl overflow-hidden flex flex-col border border-white/10 bg-surface-panel cursor-pointer"
+      style={{
+        transformStyle: 'preserve-3d',
+        perspective: '1000px',
+        boxShadow: `0 0 20px ${c.color}15, 0 4px 20px rgba(0,0,0,0.3)`,
+      }}
     >
-      {/* Top contributor badge */}
       <div
-        className="absolute top-3 right-3 px-1.5 py-0.5 rounded text-[7px] font-bold tracking-widest uppercase z-20 border"
+        ref={glowRef}
+        className="absolute inset-0 pointer-events-none opacity-40 z-0"
         style={{
-          backgroundColor: c.color + '15',
-          borderColor: c.color + '30',
+          background: `radial-gradient(ellipse at 50% 30%, ${c.color}30 0%, transparent 70%)`,
+          filter: 'blur(20px)',
+        }}
+      />
+
+      <div
+        className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-[10px] font-bold tracking-widest uppercase z-20 border backdrop-blur-sm"
+        style={{
+          backgroundColor: c.color + '20',
+          borderColor: c.color + '40',
           color: c.color,
+          boxShadow: `0 0 10px ${c.color}30`,
         }}
       >
-        Top Contributor
+        {c.domain}
       </div>
 
-      {/* Avatar section */}
-      <div className="w-full aspect-4/3 overflow-hidden border-b border-white/5 flex items-center justify-center relative bg-surface-node">
+      <div className="w-full aspect-video overflow-hidden border-b border-white/5 flex items-center justify-center relative bg-surface-node">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at 50% 0%, ' + c.color + '12 0%, transparent 72%)',
+            background: `radial-gradient(ellipse at 50% 0%, ${c.color}20 0%, transparent 72%)`,
             filter: 'blur(24px)',
           }}
         />
         <div
-          className="w-24 h-24 rounded-full overflow-hidden border-2 relative z-10"
-          style={{ borderColor: c.color + '40' }}
+          className="absolute w-38 h-38 rounded-full border-2 border-dashed opacity-20 animate-spin"
+          style={{
+            borderColor: c.color,
+            animationDuration: '20s',
+          }}
+        />
+        <div
+          ref={avatarRef}
+          className="w-32 h-32 rounded-full overflow-hidden border-3 relative z-10"
+          style={{
+            borderColor: c.color,
+            boxShadow: `0 0 30px ${c.color}60, 0 0 60px ${c.color}30`,
+          }}
         >
           <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
         </div>
       </div>
 
       {/* Info */}
-      <div className="p-4 flex flex-col flex-1 gap-2">
+      <div className="p-2 flex flex-col flex-1 gap-1.5 relative z-10">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-[14px] font-bold text-white">{c.name}</h3>
-            <p className="text-[11px] font-semibold" style={{ color: c.color }}>
+            <h3 className="text-base font-bold text-white">{c.name}</h3>
+            <p className="text-xs font-semibold" style={{ color: c.color }}>
               {c.role}
             </p>
           </div>
-          <span className="font-bold text-[12px]" style={{ color: c.color }}>
-            {c.rep} Rep
-          </span>
         </div>
 
-        <p className="text-[10px] text-slate-500 leading-relaxed flex-1">{c.bio}</p>
+        <p className="text-xs text-slate-400 leading-relaxed flex-1 mt-4">{c.bio}</p>
 
-        {/* Contribution badge */}
+        {/* Social Links */}
+        <div className="flex gap-3 py-1.5">
+          <a
+            href={c.instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-lg border transition-all duration-300 hover:bg-opacity-20 hover:-translate-y-1"
+            style={{
+              backgroundColor: c.color + '10',
+              borderColor: c.color + '25',
+              color: c.color,
+            }}
+          >
+            <Instagram size={16} />
+          </a>
+          <a
+            href={c.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-lg border transition-all duration-300 hover:bg-opacity-20 hover:-translate-y-1"
+            style={{
+              backgroundColor: c.color + '10',
+              borderColor: c.color + '25',
+              color: c.color,
+            }}
+          >
+            <Github size={14} />
+          </a>
+        </div>
+
         <div
-          className="flex items-center gap-1.5 p-2 rounded-lg border"
+          className="flex items-center gap-2 p-1.5 rounded-lg border transition-all duration-300 hover:bg-opacity-30"
           style={{
-            backgroundColor: c.color + '08',
-            borderColor: c.color + '15',
+            backgroundColor: c.color + '10',
+            borderColor: c.color + '25',
+            boxShadow: `inset 0 0 15px ${c.color}10`,
           }}
         >
           <c.Icon size={14} style={{ color: c.color }} />
-          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-300">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
             {c.stat}
           </span>
         </div>
@@ -142,7 +262,7 @@ export function ContributorsSection() {
           observer.unobserve(el);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -169,19 +289,16 @@ export function ContributorsSection() {
       </div>
 
       {/* Header */}
-      <div
-        ref={headRef}
-        className="relative z-10 shrink-0 px-5 pt-5 pb-3 text-center"
-      >
-        <h2 className="text-3xl font-bold text-white tracking-tight">
+      <div ref={headRef} className="relative z-10 shrink-0 px-5 pt-4 pb-2 text-center">
+        <h2 className="text-4xl font-bold text-white tracking-tight">
           Built by <span className="text-primary">Architects</span> of the Future.
         </h2>
-        <div className="h-1 w-16 bg-white/20 mx-auto rounded-full mt-3" />
+        <div className="h-1 w-16 bg-white/20 mx-auto rounded-full mt-2" />
       </div>
 
       {/* Cards */}
-      <div className="relative z-10 flex-1 px-5 pb-4 min-h-0 overflow-hidden">
-        <div className="grid grid-cols-3 gap-4 h-full">
+      <div className="relative z-10 flex-1 px-8 sm:px-12 md:px-16 lg:px-20 pb-8 min-h-0 overflow-visible flex items-center justify-center">
+        <div className="grid grid-cols-3 gap-6 h-fit w-full max-h-full">
           {contributors.map((c, i) => (
             <ContributorCard key={c.name} c={c} index={i} />
           ))}

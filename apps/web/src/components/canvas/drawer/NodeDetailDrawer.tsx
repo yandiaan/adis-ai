@@ -29,7 +29,7 @@ import { CollageLayoutPanel } from './panels/CollageLayoutPanel';
 import { PreviewPanel } from './panels/PreviewPanel';
 import { ExportPanelNew } from './panels/ExportPanelNew';
 
-type Props= {
+type Props = {
   selectedNode: Node<CustomNodeData> | null;
   onClose: () => void;
   closing?: boolean;
