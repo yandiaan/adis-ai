@@ -64,4 +64,4 @@ EXPOSE 4321
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:4321/ || exit 1
 
-CMD ["node", "node_modules/astro/astro.js", "preview", "--host", "0.0.0.0", "--port", "4321", "--allowed-hosts", "adisai.xyz,www.adisai.xyz,adisai.cobadomain.com,www.adisai.cobadomain.com,http://adisai.cobadomain.com,https://adisai.cobadomain.com,8.219.190.235"]
+CMD ["node", "node_modules/astro/astro.js", "preview", "--host", "0.0.0.0", "--port", "4321", "--allowed-hosts", "adisai.xyz,www.adisai.xyz, adisai.cobadomain.com, www.adisai.cobadomain.com, http://adisai.cobadomain.com, https://adisai.cobadomain.com, 8.219.190.235"]
