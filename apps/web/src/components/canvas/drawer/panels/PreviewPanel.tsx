@@ -3,6 +3,7 @@ import type { PreviewData, PreviewPreset, FitMode } from '../../types/node-types
 import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData, VideoData } from '../../types/port-types';
 import { ColorInput } from '../../ui/ColorInput';
+import { resolveMediaUrl } from '../../../../utils/runtimeUrl';
 
 type Props = {
   nodeId: string;
@@ -26,18 +27,24 @@ export function PreviewPanel({ nodeId, data }: Props) {
 
   const { getNodeState } = useExecutionContext();
   const edges = useEdges();
-  const incomingEdge = edges.find(e => e.target === nodeId);
+  const incomingEdge = edges.find((e) => e.target === nodeId);
   const upstreamState = incomingEdge ? getNodeState(incomingEdge.source) : null;
   const output = upstreamState?.output ?? null;
 
   // useNodesData is reactive — re-renders when upstream node's data changes
   const upstreamNodesData = useNodesData(incomingEdge?.source ? [incomingEdge.source] : []);
-  const upstreamExportUrl = (upstreamNodesData?.[0]?.data as Record<string, unknown>)?.exportDataUrl as string | null | undefined;
+  const upstreamExportUrl = (upstreamNodesData?.[0]?.data as Record<string, unknown>)
+    ?.exportDataUrl as string | null | undefined;
 
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
   const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;
   // upstreamExportUrl (manual editor composite) has highest priority — it is the edited result
   const mediaUrl = upstreamExportUrl ?? imageUrl ?? videoUrl;
+
+  const resolvedUpstreamExportUrl = resolveMediaUrl(upstreamExportUrl);
+  const resolvedImageUrl = resolveMediaUrl(imageUrl);
+  const resolvedVideoUrl = resolveMediaUrl(videoUrl);
+  const resolvedMediaUrl = resolvedUpstreamExportUrl ?? resolvedImageUrl ?? resolvedVideoUrl;
 
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
@@ -55,16 +62,18 @@ export function PreviewPanel({ nodeId, data }: Props) {
   return (
     <>
       {/* Live preview */}
-      {mediaUrl && (
+      {resolvedMediaUrl && (
         <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Preview</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+            Preview
+          </label>
           <div
             className="w-full rounded-xl overflow-hidden border border-white/10 flex items-center justify-center"
             style={{ backgroundColor: config.backgroundColor, maxHeight: 220 }}
           >
             {videoUrl && !imageUrl && !upstreamExportUrl ? (
               <video
-                src={videoUrl}
+                src={resolvedVideoUrl ?? videoUrl}
                 className="w-full max-h-[220px]"
                 style={{ objectFit: config.fit }}
                 controls
@@ -72,7 +81,7 @@ export function PreviewPanel({ nodeId, data }: Props) {
               />
             ) : (
               <img
-                src={mediaUrl}
+                src={resolvedMediaUrl}
                 alt="Output preview"
                 className="w-full max-h-[220px]"
                 style={{ objectFit: config.fit }}
@@ -83,7 +92,9 @@ export function PreviewPanel({ nodeId, data }: Props) {
       )}
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Platform Preset</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Platform Preset
+        </label>
         <div className="grid grid-cols-3 gap-1.5">
           {PRESETS.map((p) => (
             <button
@@ -98,7 +109,9 @@ export function PreviewPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-2">Dimensions</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-2">
+          Dimensions
+        </label>
         <div className="flex gap-2">
           <div className="flex-1">
             <label className="block text-white/40 text-[10px] mb-1">Width</label>
@@ -122,7 +135,9 @@ export function PreviewPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Fit</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Fit
+        </label>
         <div className="flex gap-2">
           {FIT_MODES.map((fit) => (
             <button
@@ -137,7 +152,9 @@ export function PreviewPanel({ nodeId, data }: Props) {
       </div>
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Background Color</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Background Color
+        </label>
         <ColorInput
           value={config.backgroundColor}
           onChange={(v) => updateConfig({ backgroundColor: v })}

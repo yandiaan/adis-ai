@@ -9,8 +9,9 @@ import type { NodeOutput } from '../types/port-types';
 import type { LogEntry } from './logStore';
 import { getFingerprint } from '../../../utils/fingerprint';
 import { getSessionStartMs } from '../../../utils/sessionContext';
+import { apiUrl } from '../../../utils/runtimeUrl';
 
-const API_BASE = 'http://localhost:3000/api/node';
+const API_BASE = '/api/node';
 
 export type LogCallback = (entry: Omit<LogEntry, 'id' | 'timestamp'>) => void;
 
@@ -378,7 +379,7 @@ async function executeNodeOnServer(
   if (!endpoint) throw new Error(`No API endpoint for ${nodeType}`);
 
   const [fpHash] = await Promise.all([getFingerprint()]);
-  const response = await fetch(`${API_BASE}/${endpoint}/run`, {
+  const response = await fetch(apiUrl(`${API_BASE}/${endpoint}/run`), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

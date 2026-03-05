@@ -13,8 +13,10 @@ services:
     networks:
       - app-network
     depends_on:
-      - api-server
-      - web-frontend
+      api-server:
+        condition: service_healthy
+      web-frontend:
+        condition: service_healthy
 
   certbot:
     image: certbot/certbot
@@ -32,11 +34,12 @@ services:
     container_name: penginfo-api-server
     restart: unless-stopped
     ports:
-      - '${SERVER_PORT:-3000}:3000'
+      - '127.0.0.1:${SERVER_PORT:-3000}:3000'
     environment:
       - NODE_ENV=production
       - PORT=3000
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - TRUST_PROXY=1
     volumes:
       - server-data:/app/apps/server/data
       - server-uploads:/app/apps/server/uploads
@@ -57,7 +60,7 @@ services:
     container_name: penginfo-web-frontend
     restart: unless-stopped
     ports:
-      - '${WEB_PORT:-4321}:4321'
+      - '127.0.0.1:${WEB_PORT:-4321}:4321'
     environment:
       - NODE_ENV=production
       - HOST=0.0.0.0

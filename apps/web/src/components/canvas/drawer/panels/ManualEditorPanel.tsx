@@ -1,11 +1,16 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useReactFlow, useEdges } from '@xyflow/react';
 import { Pencil, Type, MousePointer, Trash2, X, Plus } from 'lucide-react';
-import type { ManualEditorData, ManualEditorTool, ManualEditorConfig } from '../../types/node-types';
+import type {
+  ManualEditorData,
+  ManualEditorTool,
+  ManualEditorConfig,
+} from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData } from '../../types/port-types';
 import { useCanvasEditor, getFontFamily } from '../../hooks/useCanvasEditor';
 import { ColorInput } from '../../ui/ColorInput';
+import { resolveMediaUrl } from '../../../../utils/runtimeUrl';
 
 type Props = {
   nodeId: string;
@@ -15,7 +20,12 @@ type Props = {
 const TOOLS: { id: ManualEditorTool; label: string; icon: typeof Pencil; hint: string }[] = [
   { id: 'draw', label: 'Draw', icon: Pencil, hint: 'Click and drag to draw' },
   { id: 'text', label: 'Text', icon: Type, hint: 'Type and click Add' },
-  { id: 'select', label: 'Select', icon: MousePointer, hint: 'Click to select, drag to move, double-click to edit' },
+  {
+    id: 'select',
+    label: 'Select',
+    icon: MousePointer,
+    hint: 'Click to select, drag to move, double-click to edit',
+  },
 ];
 
 const FONTS = [
@@ -51,13 +61,14 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
   const upstreamState = incomingEdge ? getNodeState(incomingEdge.source) : null;
   const output = upstreamState?.output ?? null;
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
+  const resolvedImageUrl = resolveMediaUrl(imageUrl);
 
   // FIX: Use both refs so this callback is stable and never causes re-renders
   const updateConfig = useCallback(
     (updates: Partial<ManualEditorConfig>) => {
       updateNodeDataRef.current(nodeId, { config: { ...configRef.current, ...updates } });
     },
-    [nodeId]
+    [nodeId],
   );
 
   // ── Composite export: draw background + overlay, store as separate data field ──
@@ -66,25 +77,25 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
 
   // Load and cache the background image only when the source URL changes
   useEffect(() => {
-    if (!imageUrl) {
+    if (!resolvedImageUrl) {
       bgImageCacheRef.current = null;
       return;
     }
     // Already cached for this URL
-    if (bgImageCacheRef.current?.url === imageUrl) return;
+    if (bgImageCacheRef.current?.url === resolvedImageUrl) return;
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      bgImageCacheRef.current = { url: imageUrl, img };
+      bgImageCacheRef.current = { url: resolvedImageUrl, img };
     };
     img.onerror = () => {
       // If image fails to load, still proceed with composite (draw annotations without background)
-      console.warn(`Failed to load background image: ${imageUrl}`);
+      console.warn(`Failed to load background image: ${resolvedImageUrl}`);
       bgImageCacheRef.current = null;
     };
-    img.src = imageUrl;
-  }, [imageUrl]);
+    img.src = resolvedImageUrl;
+  }, [resolvedImageUrl]);
 
   // Re-compose when drawings, text layers, or source image change
   // Note: Don't include composeExport in deps to avoid stale closure cycle
@@ -95,7 +106,7 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
 
         const cached = bgImageCacheRef.current;
         const canvas = document.createElement('canvas');
-        
+
         if (cached) {
           canvas.width = cached.img.naturalWidth || 1024;
           canvas.height = cached.img.naturalHeight || 1024;
@@ -103,7 +114,7 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
           canvas.width = canvasRef.current?.width || 1024;
           canvas.height = canvasRef.current?.height || 1024;
         }
-        
+
         const ctx = canvas.getContext('2d')!;
 
         if (cached) {
@@ -120,11 +131,11 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
         // ignore errors
       }
     }, 500);
-    
+
     return () => clearTimeout(timerId);
-  // updateNodeData intentionally omitted — we use the ref to avoid re-firing on every render
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageUrl, config.drawings, config.textLayers, nodeId]);
+    // updateNodeData intentionally omitted — we use the ref to avoid re-firing on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedImageUrl, config.drawings, config.textLayers, nodeId]);
 
   const {
     startDrawing,
@@ -173,7 +184,9 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
   };
 
   // Calculate screen position of a text layer for the inline input overlay
-  const getLayerScreenPosition = (layerId: string): { left: number; top: number; fontSize: number } | null => {
+  const getLayerScreenPosition = (
+    layerId: string,
+  ): { left: number; top: number; fontSize: number } | null => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return null;
@@ -186,8 +199,8 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
     const scaleY = canvasRect.height / canvas.height;
 
     return {
-      left: (layer.x * scaleX) + (canvasRect.left - containerRect.left),
-      top: (layer.y * scaleY) + (canvasRect.top - containerRect.top),
+      left: layer.x * scaleX + (canvasRect.left - containerRect.left),
+      top: layer.y * scaleY + (canvasRect.top - containerRect.top),
       fontSize: layer.fontSize * scaleX,
     };
   };
@@ -207,11 +220,14 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
             </span>
           )}
         </label>
-        <div ref={containerRef} className="relative w-full rounded-xl overflow-hidden border border-white/10 bg-[#1a1a24]">
+        <div
+          ref={containerRef}
+          className="relative w-full rounded-xl overflow-hidden border border-white/10 bg-[#1a1a24]"
+        >
           {/* Background image layer */}
           {imageUrl && (
             <img
-              src={imageUrl}
+              src={resolvedImageUrl ?? imageUrl}
               alt="Source"
               className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
               draggable={false}
@@ -256,17 +272,19 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
                 }
               }}
               className="absolute z-10 resize-none outline-none border border-[#60a5fa] rounded-sm bg-black/60 text-white overflow-hidden"
-              style={{
-                left: editingPos.left,
-                top: editingPos.top,
-                fontSize: editingPos.fontSize,
-                fontFamily: getFontFamily(editingLayer.font),
-                color: editingLayer.color,
-                lineHeight: 1.2,
-                padding: '2px 4px',
-                minWidth: 80,
-                rows: 1,
-              } as React.CSSProperties}
+              style={
+                {
+                  left: editingPos.left,
+                  top: editingPos.top,
+                  fontSize: editingPos.fontSize,
+                  fontFamily: getFontFamily(editingLayer.font),
+                  color: editingLayer.color,
+                  lineHeight: 1.2,
+                  padding: '2px 4px',
+                  minWidth: 80,
+                  rows: 1,
+                } as React.CSSProperties
+              }
               rows={1}
               autoFocus
             />
@@ -484,87 +502,94 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
       )}
 
       {/* Selected text style edit (no position inputs — use canvas drag instead) */}
-      {selectedTextId && config.activeTool === 'select' && !editingTextId && (() => {
-        const layer = config.textLayers.find((l) => l.id === selectedTextId);
-        if (!layer) return null;
-        return (
-          <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]">
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/60">
-                Selected Text Style
-              </label>
-              <span className="text-[9px] text-white/30">double-click on canvas to edit text</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-white/40 text-[10px] mb-1.5">Font</label>
-                <select
-                  value={layer.font}
-                  onChange={(e) => updateTextLayer(layer.id, { font: e.target.value })}
-                  className="w-full p-2 bg-black/30 border border-white/10 rounded-xl text-white text-[11px] outline-none cursor-pointer"
-                >
-                  {FONTS.map((f) => (
-                    <option key={f.value} value={f.value}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-white/40 text-[10px] mb-1.5">
-                  Size: {layer.fontSize}px
+      {selectedTextId &&
+        config.activeTool === 'select' &&
+        !editingTextId &&
+        (() => {
+          const layer = config.textLayers.find((l) => l.id === selectedTextId);
+          if (!layer) return null;
+          return (
+            <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/60">
+                  Selected Text Style
                 </label>
-                <input
-                  type="range"
-                  min={12}
-                  max={72}
-                  value={layer.fontSize}
-                  onChange={(e) => updateTextLayer(layer.id, { fontSize: Number(e.target.value) })}
-                  className="w-full accent-[var(--editor-accent)] cursor-pointer"
-                />
+                <span className="text-[9px] text-white/30">
+                  double-click on canvas to edit text
+                </span>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div>
-                <label className="block text-white/40 text-[10px] mb-1.5">Color</label>
-                <ColorInput
-                  value={layer.color}
-                  onChange={(v) => updateTextLayer(layer.id, { color: v })}
-                  className="w-10 h-8 border-none cursor-pointer rounded-md"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-white/40 text-[10px] mb-1.5">Stroke</label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateTextLayer(layer.id, { stroke: !layer.stroke })}
-                    className={`motion-lift motion-press focus-ring-orange px-3 py-1.5 rounded-xl border cursor-pointer text-[11px] transition-colors ${
-                      layer.stroke
-                        ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] text-white'
-                        : 'border-white/10 bg-white/5 text-white/60'
-                    }`}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-white/40 text-[10px] mb-1.5">Font</label>
+                  <select
+                    value={layer.font}
+                    onChange={(e) => updateTextLayer(layer.id, { font: e.target.value })}
+                    className="w-full p-2 bg-black/30 border border-white/10 rounded-xl text-white text-[11px] outline-none cursor-pointer"
                   >
-                    {layer.stroke ? 'ON' : 'OFF'}
-                  </button>
-                  {layer.stroke && (
-                    <ColorInput
-                      value={layer.strokeColor}
-                      onChange={(v) => updateTextLayer(layer.id, { strokeColor: v })}
-                      className="w-8 h-6 border-none cursor-pointer rounded-md"
-                    />
-                  )}
+                    {FONTS.map((f) => (
+                      <option key={f.value} value={f.value}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-white/40 text-[10px] mb-1.5">
+                    Size: {layer.fontSize}px
+                  </label>
+                  <input
+                    type="range"
+                    min={12}
+                    max={72}
+                    value={layer.fontSize}
+                    onChange={(e) =>
+                      updateTextLayer(layer.id, { fontSize: Number(e.target.value) })
+                    }
+                    className="w-full accent-[var(--editor-accent)] cursor-pointer"
+                  />
                 </div>
               </div>
+              <div className="flex items-center gap-3">
+                <div>
+                  <label className="block text-white/40 text-[10px] mb-1.5">Color</label>
+                  <ColorInput
+                    value={layer.color}
+                    onChange={(v) => updateTextLayer(layer.id, { color: v })}
+                    className="w-10 h-8 border-none cursor-pointer rounded-md"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-white/40 text-[10px] mb-1.5">Stroke</label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateTextLayer(layer.id, { stroke: !layer.stroke })}
+                      className={`motion-lift motion-press focus-ring-orange px-3 py-1.5 rounded-xl border cursor-pointer text-[11px] transition-colors ${
+                        layer.stroke
+                          ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] text-white'
+                          : 'border-white/10 bg-white/5 text-white/60'
+                      }`}
+                    >
+                      {layer.stroke ? 'ON' : 'OFF'}
+                    </button>
+                    {layer.stroke && (
+                      <ColorInput
+                        value={layer.strokeColor}
+                        onChange={(v) => updateTextLayer(layer.id, { strokeColor: v })}
+                        className="w-8 h-6 border-none cursor-pointer rounded-md"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => removeTextLayer(selectedTextId)}
+                className="mt-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl border border-red-400/30 bg-red-400/10 text-red-200 text-[11px] cursor-pointer hover:bg-red-400/15"
+              >
+                <Trash2 size={11} /> Delete This Layer
+              </button>
             </div>
-            <button
-              onClick={() => removeTextLayer(selectedTextId)}
-              className="mt-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl border border-red-400/30 bg-red-400/10 text-red-200 text-[11px] cursor-pointer hover:bg-red-400/15"
-            >
-              <Trash2 size={11} /> Delete This Layer
-            </button>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* Info */}
       <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-300/80 text-xs">
@@ -572,9 +597,15 @@ export function ManualEditorPanel({ nodeId, data }: Props) {
           <Pencil size={12} /> Tips
         </div>
         <div className="text-blue-300/60 space-y-0.5">
-          <div>• <b>Draw</b>: paint freely on the image</div>
-          <div>• <b>Text</b>: type and click + to add a text layer</div>
-          <div>• <b>Select</b>: click text to select, drag to move, double-click to edit content</div>
+          <div>
+            • <b>Draw</b>: paint freely on the image
+          </div>
+          <div>
+            • <b>Text</b>: type and click + to add a text layer
+          </div>
+          <div>
+            • <b>Select</b>: click text to select, drag to move, double-click to edit content
+          </div>
         </div>
       </div>
     </>

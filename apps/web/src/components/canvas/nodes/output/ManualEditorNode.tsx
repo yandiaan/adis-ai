@@ -5,6 +5,7 @@ import type { ManualEditorData } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData, VideoData } from '../../types/port-types';
 import { Pencil, Type, MousePointer } from 'lucide-react';
+import { resolveMediaUrl } from '../../../../utils/runtimeUrl';
 
 const TOOL_ICONS = {
   draw: Pencil,
@@ -23,7 +24,7 @@ export function ManualEditorNode({ data, selected }: NodeProps<Node<ManualEditor
 
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
   const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;
-  const mediaUrl = imageUrl ?? videoUrl;
+  const mediaUrl = resolveMediaUrl(imageUrl ?? videoUrl);
 
   const ToolIcon = TOOL_ICONS[config.activeTool];
   const drawingCount = config.drawings.length;
@@ -33,9 +34,7 @@ export function ManualEditorNode({ data, selected }: NodeProps<Node<ManualEditor
     <CompactNode nodeType="manualEditor" icon="" title={data.label} selected={selected}>
       <div className="flex items-start gap-2">
         {/* Preview box */}
-        <div
-          className="w-16 h-16 rounded-md overflow-hidden border border-white/15 flex-shrink-0 flex items-center justify-center bg-white/5"
-        >
+        <div className="w-16 h-16 rounded-md overflow-hidden border border-white/15 flex-shrink-0 flex items-center justify-center bg-white/5">
           {mediaUrl ? (
             <img src={mediaUrl} alt="Source" className="w-full h-full object-cover" />
           ) : (
@@ -59,18 +58,20 @@ export function ManualEditorNode({ data, selected }: NodeProps<Node<ManualEditor
           </div>
           <div className="text-[9px] text-white/40">
             {drawingCount > 0 && (
-              <span className="mr-2">{drawingCount} drawing{drawingCount > 1 ? 's' : ''}</span>
+              <span className="mr-2">
+                {drawingCount} drawing{drawingCount > 1 ? 's' : ''}
+              </span>
             )}
             {textCount > 0 && (
-              <span>{textCount} text{textCount > 1 ? 's' : ''}</span>
+              <span>
+                {textCount} text{textCount > 1 ? 's' : ''}
+              </span>
             )}
             {drawingCount === 0 && textCount === 0 && (
               <span className="text-white/25">No edits yet</span>
             )}
           </div>
-          <div className="text-[9px] text-white/20 mt-0.5">
-            Brush: {config.brushSize}px
-          </div>
+          <div className="text-[9px] text-white/20 mt-0.5">Brush: {config.brushSize}px</div>
         </div>
       </div>
     </CompactNode>
