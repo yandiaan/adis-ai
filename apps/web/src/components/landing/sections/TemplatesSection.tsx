@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { gsap } from 'gsap';
 import {
   Wand2,
@@ -71,7 +71,7 @@ const templates = [
   },
 ];
 
-function PipelineChip({ nodeType }: { nodeType: string }) {
+const PipelineChip = memo(function PipelineChip({ nodeType }: { nodeType: string }) {
   const meta = NODE_META[nodeType];
   if (!meta) return null;
   return (
@@ -80,13 +80,13 @@ function PipelineChip({ nodeType }: { nodeType: string }) {
       style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}25` }}
       title={meta.label}
     >
-      <meta.Icon size={8} style={{ color: meta.color }} />
-      <span style={{ color: meta.color }} className="text-[7px] font-semibold">{meta.label}</span>
+      <meta.Icon size={10} style={{ color: meta.color }} />
+      <span style={{ color: meta.color }} className="text-[9px] font-semibold">{meta.label}</span>
     </div>
   );
-}
+});
 
-function TemplateCard({
+const TemplateCard = memo(function TemplateCard({
   t,
   index,
   inView,
@@ -105,13 +105,22 @@ function TemplateCard({
 
   useEffect(() => {
     if (!inView || !ref.current) return;
-    gsap.to(ref.current, { opacity: 1, x: 0, y: 0, duration: 0.55, delay: 0.15 + index * 0.08, ease: 'power3.out' });
+    gsap.to(ref.current, {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      duration: 0.55,
+      delay: 0.15 + index * 0.08,
+      ease: 'power3.out',
+      willChange: 'transform, opacity',
+    });
   }, [inView, index]);
 
   return (
     <div
       ref={ref}
       className="group rounded-xl border border-white/8 bg-surface-panel overflow-hidden hover:border-white/15 transition-all flex"
+      style={{ willChange: 'transform, opacity' }}
     >
       {/* Left accent strip */}
       <div
@@ -120,26 +129,26 @@ function TemplateCard({
       />
 
       {/* Content */}
-      <div className="flex-1 p-3 flex flex-col gap-2 min-w-0">
+      <div className="flex-1 p-3 sm:p-4 flex flex-col gap-2.5 min-w-0">
         {/* Top row */}
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2.5">
           <div
-            className="size-7 rounded-lg flex items-center justify-center shrink-0 border"
+            className="size-8 sm:size-9 rounded-lg flex items-center justify-center shrink-0 border"
             style={{ background: `${t.accent}12`, borderColor: `${t.accent}25` }}
           >
-            <t.Icon size={14} style={{ color: t.accent }} />
+            <t.Icon size={16} style={{ color: t.accent }} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h3 className="text-white font-bold text-[10px] truncate">{t.name}</h3>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3 className="text-white font-bold text-xs sm:text-sm truncate">{t.name}</h3>
               <span
-                className="shrink-0 text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
+                className="shrink-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
                 style={{ color: t.accent, background: `${t.accent}12` }}
               >
                 {t.category}
               </span>
             </div>
-            <p className="text-slate-500 text-[8px] leading-relaxed mt-0.5 truncate">{t.description}</p>
+            <p className="text-slate-400 text-[10px] sm:text-xs leading-relaxed mt-0.5 line-clamp-2">{t.description}</p>
           </div>
         </div>
 
@@ -149,27 +158,27 @@ function TemplateCard({
             <div key={nodeType} className="flex items-center gap-0.5">
               <PipelineChip nodeType={nodeType} />
               {i < t.pipeline.length - 1 && (
-                <ChevronRight size={8} className="text-white/15 shrink-0" />
+                <ChevronRight size={9} className="text-white/15 shrink-0" />
               )}
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-auto pt-1 border-t border-white/5">
-          <span className="text-white/20 text-[7px] font-medium">{t.pipeline.length} nodes</span>
+        <div className="flex items-center justify-between mt-auto pt-1.5 border-t border-white/5">
+          <span className="text-white/30 text-[10px] font-medium">{t.pipeline.length} nodes</span>
           <button
             onClick={onGetStarted}
-            className="cursor-pointer flex items-center gap-0.5 text-[8px] font-bold transition-opacity hover:opacity-80"
+            className="cursor-pointer flex items-center gap-1 text-xs font-bold transition-opacity hover:opacity-80"
             style={{ color: t.accent }}
           >
-            Open <ArrowRight size={8} />
+            Open <ArrowRight size={11} />
           </button>
         </div>
       </div>
     </div>
   );
-}
+});
 
 export function TemplatesSection({ onGetStarted }: SectionProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -182,17 +191,20 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { setInView(true); observer.unobserve(el); }
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.unobserve(el);
+        }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    gsap.set(headerRef.current, { opacity: 0, y: -14 });
-    gsap.set(btnRef.current, { opacity: 0, y: 10 });
+    gsap.set(headerRef.current, { opacity: 0, y: -16 });
+    gsap.set(btnRef.current, { opacity: 0, y: 12 });
   }, []);
 
   useEffect(() => {
@@ -205,7 +217,7 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-surface-node">
       {/* Background dot grid */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-30 pointer-events-none"
         style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '24px 24px' }}
       />
 
@@ -214,22 +226,21 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
         style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 70%)', filter: 'blur(40px)' }}
       />
 
-      <div ref={ref} className="relative z-10 flex flex-col h-full px-5 py-5">
+      <div ref={ref} className="relative z-10 flex flex-col h-full px-6 sm:px-10 md:px-14 py-6 sm:py-8 overflow-y-auto">
         {/* Header */}
-        <div
-          ref={headerRef}
-          className="text-center mb-4 shrink-0"
-        >
-          <p className="text-white/30 text-[9px] font-bold tracking-[0.2em] uppercase mb-2">Quick Start</p>
-          <h2 className="text-3xl font-black text-white leading-tight tracking-tight uppercase">Templates</h2>
-          <p className="text-slate-500 text-[10px] mt-2 max-w-xs mx-auto">
+        <div ref={headerRef} className="text-center mb-6 sm:mb-8 shrink-0">
+          <p className="text-white/30 text-xs font-bold tracking-[0.25em] uppercase mb-2">Quick Start</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight uppercase">
+            Templates
+          </h2>
+          <p className="text-slate-400 text-sm mt-3 max-w-sm mx-auto leading-relaxed">
             Pre-built AI pipelines. Each template is a complete node graph ready to run.
           </p>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center min-h-0 gap-3">
+        <div className="flex-1 flex flex-col justify-center min-h-0 gap-4">
           {/* 2x2 template grid */}
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {templates.map((t, i) => (
               <TemplateCard key={t.id} t={t} index={i} inView={inView} onGetStarted={onGetStarted} />
             ))}
@@ -239,16 +250,20 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
           <button
             ref={btnRef}
             onClick={onGetStarted}
-            className="cursor-pointer w-full rounded-xl border-2 border-dashed border-white/10 hover:border-primary/40 bg-white/2 hover:bg-primary/5 transition-all p-3 flex items-center gap-3 group"
+            className="cursor-pointer w-full rounded-xl border-2 border-dashed border-white/10 hover:border-primary/40 bg-white/2 hover:bg-primary/5 transition-all p-4 flex items-center gap-4 group"
           >
-            <div className="size-7 rounded-lg border-2 border-dashed border-white/15 group-hover:border-primary/40 flex items-center justify-center transition-colors">
-              <Plus size={14} className="text-white/30 group-hover:text-primary transition-colors" />
+            <div className="size-9 rounded-lg border-2 border-dashed border-white/15 group-hover:border-primary/40 flex items-center justify-center transition-colors shrink-0">
+              <Plus size={16} className="text-white/30 group-hover:text-primary transition-colors" />
             </div>
             <div className="text-left flex-1">
-              <p className="text-white/50 group-hover:text-white font-bold text-[10px] transition-colors">Start from Scratch</p>
-              <p className="text-white/25 text-[8px]">Empty canvas — drag in nodes and build your own pipeline</p>
+              <p className="text-white/50 group-hover:text-white font-bold text-sm transition-colors">
+                Start from Scratch
+              </p>
+              <p className="text-white/30 text-xs mt-0.5">
+                Empty canvas — drag in nodes and build your own pipeline
+              </p>
             </div>
-            <ArrowRight size={12} className="text-white/20 group-hover:text-primary transition-colors shrink-0" />
+            <ArrowRight size={14} className="text-white/20 group-hover:text-primary transition-colors shrink-0" />
           </button>
         </div>
       </div>

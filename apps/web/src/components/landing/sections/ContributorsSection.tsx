@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { gsap } from 'gsap';
 import { Code2, Terminal, Palette, Github, Instagram } from 'lucide-react';
 
@@ -41,7 +41,13 @@ const contributors = [
   },
 ];
 
-function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: number }) {
+const ContributorCard = memo(function ContributorCard({
+  c,
+  index,
+}: {
+  c: (typeof contributors)[0];
+  index: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
@@ -75,6 +81,7 @@ function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: num
             ease: 'sine.inOut',
             repeat: -1,
             yoyo: true,
+            willChange: 'opacity, transform',
           });
 
           gsap.to(avatar, {
@@ -84,6 +91,7 @@ function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: num
             ease: 'sine.inOut',
             repeat: -1,
             yoyo: true,
+            willChange: 'transform',
           });
 
           observer.unobserve(el);
@@ -169,21 +177,33 @@ function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: num
           }}
         />
         <div
-          className="absolute w-38 h-38 rounded-full border-2 border-dashed opacity-20 animate-spin"
+          className="absolute rounded-full border-2 border-dashed opacity-20 animate-spin"
           style={{
+            width: '42%',
+            aspectRatio: '1 / 1',
             borderColor: c.color,
             animationDuration: '20s',
+            willChange: 'transform',
           }}
         />
         <div
           ref={avatarRef}
-          className="w-32 h-32 rounded-full overflow-hidden border-3 relative z-10"
+          className="rounded-full overflow-hidden relative z-10"
           style={{
-            borderColor: c.color,
+            width: '35%',
+            aspectRatio: '1 / 1',
+            border: `2px solid ${c.color}`,
             boxShadow: `0 0 30px ${c.color}60, 0 0 60px ${c.color}30`,
+            willChange: 'transform',
           }}
         >
-          <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
+          <img
+            src={c.avatar}
+            alt={c.name}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 
@@ -246,7 +266,7 @@ function ContributorCard({ c, index }: { c: (typeof contributors)[0]; index: num
       </div>
     </div>
   );
-}
+});
 
 export function ContributorsSection() {
   const headRef = useRef<HTMLDivElement>(null);

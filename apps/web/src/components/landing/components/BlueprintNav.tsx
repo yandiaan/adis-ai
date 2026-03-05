@@ -18,7 +18,7 @@ export function BlueprintNav({ onIndexChange }: { onIndexChange?: (index: number
     gsap.set(progressRefs.current, { scaleX: 0, transformOrigin: 'left' });
 
     const tl = gsap.timeline({ repeat: -1 });
-    const defaultDuration = 5;
+    const defaultDuration = 6;
     const contributorsDuration = 15;
 
     navItems.forEach((_, index) => {

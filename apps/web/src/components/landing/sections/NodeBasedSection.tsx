@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { gsap } from 'gsap';
 import {
   Type,
   Sparkles,
   Image,
-  SlidersHorizontal,
   ArrowRight,
 } from 'lucide-react';
 import type { SectionProps } from './sectionsConfig';
@@ -65,7 +64,7 @@ const previewNodes = [
 ];
 
 // Wire connector between two nodes — matches the color gradient of the source→target
-function WireConnector({
+const WireConnector = memo(function WireConnector({
   fromColor,
   toColor,
   delay,
@@ -106,7 +105,7 @@ function WireConnector({
   }, [inView, delay]);
 
   return (
-    <div className="flex items-center justify-center w-10 shrink-0 relative" style={{ height: 70 }}>
+    <div className="flex items-center justify-center w-8 sm:w-12 shrink-0 relative" style={{ height: 70 }}>
       <svg
         viewBox="0 0 40 70"
         className="w-full h-full overflow-visible"
@@ -134,10 +133,10 @@ function WireConnector({
       </svg>
     </div>
   );
-}
+});
 
 // Static node card that exactly mirrors CompactNode's visual structure
-function StaticNode({
+const StaticNode = memo(function StaticNode({
   node,
   index,
   inView,
@@ -154,63 +153,65 @@ function StaticNode({
 
   useEffect(() => {
     if (!inView || !ref.current) return;
-    gsap.to(ref.current, { opacity: 1, y: 0, scale: 1, duration: 0.55, delay: 0.2 + index * 0.12, ease: 'power3.out' });
+    gsap.to(ref.current, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.55,
+      delay: 0.2 + index * 0.12,
+      ease: 'power3.out',
+    });
   }, [inView, index]);
 
   return (
     <div
       ref={ref}
-      className="relative rounded-xl overflow-visible flex-1 min-w-0 shrink-0"
+      className="relative rounded-xl overflow-visible flex-1 min-w-0"
       style={{
         background: 'var(--color-surface-node)',
         border: `2px solid ${node.borderColor}`,
         boxShadow: '0 10px 30px rgba(0,0,0,0.34)',
-        maxWidth: 200,
-        minWidth: 150,
+        willChange: 'transform, opacity',
       }}
     >
       {/* Input port */}
       {node.inPort && (
         <div
           className="absolute -left-2 top-1/2 -translate-y-1/2 size-3 rounded-full"
-          style={{
-            background: 'var(--color-surface-node)',
-            border: `2px solid ${node.borderColor}`,
-            zIndex: 10,
-          }}
+          style={{ background: 'var(--color-surface-node)', border: `2px solid ${node.borderColor}`, zIndex: 10 }}
         />
       )}
 
-      {/* Header — matches CompactNode header exactly */}
-      <div className="flex items-center gap-2.5 px-3.5 py-3" style={{ backgroundColor: node.bgColor }}>
-        <span className="grid place-items-center size-7 rounded-lg bg-white/5 border border-white/10 shrink-0">
-          <node.Icon size={14} className="text-white/85" />
+      {/* Header */}
+      <div className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-3.5 py-2.5 sm:py-3" style={{ backgroundColor: node.bgColor }}>
+        <span className="grid place-items-center size-7 sm:size-8 rounded-lg bg-white/5 border border-white/10 shrink-0">
+          <node.Icon size={15} className="text-white/85" />
         </span>
         <div className="flex-1 min-w-0">
           <div
-            className="text-[11px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
+            className="text-xs sm:text-sm font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
             style={{ color: node.color }}
           >
             {node.title}
           </div>
-          <div className="text-white/40 text-[9px] whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="text-white/40 text-[10px] sm:text-xs whitespace-nowrap overflow-hidden text-ellipsis">
             {node.subtitle}
           </div>
         </div>
       </div>
 
-      {/* Fields preview — matches CompactNode content area */}
+      {/* Fields preview */}
       <div
-        className="px-3.5 py-2.5 space-y-1.5"
+        className="px-3 sm:px-3.5 py-2 sm:py-2.5 space-y-1.5"
         style={{ borderTop: `1px solid ${node.borderColor}` }}
       >
         {node.fields.map((f) => (
           <div key={f.label} className="flex items-center gap-1.5">
-            <span className="text-white/35 text-[8px] font-medium capitalize w-12 shrink-0">
+            <span className="text-white/35 text-[10px] sm:text-xs font-medium capitalize w-12 sm:w-14 shrink-0">
               {f.label}
             </span>
-            <div className="flex-1 h-4 rounded bg-white/5 border border-white/5 px-1.5 flex items-center overflow-hidden">
-              <span className="text-white/30 text-[7px] truncate">{f.value}</span>
+            <div className="flex-1 h-5 rounded bg-white/5 border border-white/5 px-1.5 flex items-center overflow-hidden">
+              <span className="text-white/40 text-[9px] sm:text-[10px] truncate">{f.value}</span>
             </div>
           </div>
         ))}
@@ -220,16 +221,12 @@ function StaticNode({
       {node.outPort && (
         <div
           className="absolute -right-2 top-1/2 -translate-y-1/2 size-3 rounded-full"
-          style={{
-            background: 'var(--color-surface-node)',
-            border: `2px solid ${node.borderColor}`,
-            zIndex: 10,
-          }}
+          style={{ background: 'var(--color-surface-node)', border: `2px solid ${node.borderColor}`, zIndex: 10 }}
         />
       )}
     </div>
   );
-}
+});
 
 export function NodeBasedSection({ onGetStarted }: SectionProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -244,19 +241,22 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { setInView(true); observer.unobserve(el); }
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.unobserve(el);
+        }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    gsap.set(headerRef.current, { opacity: 0, y: -14 });
+    gsap.set(headerRef.current, { opacity: 0, y: -16 });
     gsap.set(legendRef.current, { opacity: 0 });
     gsap.set(pillsRef.current, { opacity: 0 });
-    gsap.set(ctaRef.current, { opacity: 0, y: 8 });
+    gsap.set(ctaRef.current, { opacity: 0, y: 10 });
   }, []);
 
   useEffect(() => {
@@ -271,7 +271,7 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-surface-node">
       {/* Dot grid pattern */}
       <div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-40 pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
           backgroundSize: '20px 20px',
@@ -279,45 +279,56 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
       />
 
       {/* Category glow accents */}
-      <div className="absolute top-10 left-10 w-64 h-64 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.05) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-      <div className="absolute bottom-10 right-10 w-64 h-64 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(96,165,250,0.05) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+      <div
+        className="absolute top-10 left-10 w-64 h-64 pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.05) 0%, transparent 70%)', filter: 'blur(40px)' }}
+      />
+      <div
+        className="absolute bottom-10 right-10 w-64 h-64 pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(96,165,250,0.05) 0%, transparent 70%)', filter: 'blur(40px)' }}
+      />
 
-      <div ref={ref} className="relative z-10 flex flex-col h-full px-5 py-5">
+      <div ref={ref} className="relative z-10 flex flex-col h-full px-6 sm:px-10 md:px-14 py-6 sm:py-8 overflow-y-auto">
         {/* Header */}
-        <div
-          ref={headerRef}
-          className="text-center mb-5 shrink-0"
-        >
-          <p className="text-white/30 text-[9px] font-bold tracking-[0.2em] uppercase mb-2">Visual Programming</p>
-          <h2 className="text-3xl font-black text-white leading-tight tracking-tight uppercase">Node Based System</h2>
-          <p className="text-slate-500 text-[10px] mt-2 max-w-xs mx-auto">
+        <div ref={headerRef} className="text-center mb-6 sm:mb-8 shrink-0">
+          <p className="text-white/30 text-xs font-bold tracking-[0.25em] uppercase mb-2">
+            Visual Programming
+          </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight uppercase">
+            Node Based System
+          </h2>
+          <p className="text-slate-400 text-sm mt-3 max-w-sm mx-auto leading-relaxed">
             Connect intelligent building blocks to create powerful AI pipelines.
           </p>
         </div>
 
         {/* Pipeline preview */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-0">
-          {/* Node row with wires */}
-          <div className="flex items-center justify-center gap-0 w-full px-2">
-            {previewNodes.map((node, i) => (
-              <div key={node.type} className="flex items-center">
-                <StaticNode node={node} index={i} inView={inView} />
-                {i < previewNodes.length - 1 && (
-                  <WireConnector
-                    fromColor={previewNodes[i].color}
-                    toColor={previewNodes[i + 1].color}
-                    delay={0.3 + i * 0.15}
-                    inView={inView}
-                  />
-                )}
-              </div>
-            ))}
+        <div className="flex-1 flex flex-col items-center justify-center gap-5 sm:gap-6 min-h-0">
+          {/* Node row with wires — horizontally scrollable on very small screens */}
+          <div className="w-full overflow-x-auto pb-2">
+            <div className="flex items-center justify-center gap-0 min-w-max mx-auto px-2">
+              {previewNodes.map((node, i) => (
+                <div key={node.type} className="flex items-center">
+                  <div className="w-44 sm:w-52 md:w-60">
+                    <StaticNode node={node} index={i} inView={inView} />
+                  </div>
+                  {i < previewNodes.length - 1 && (
+                    <WireConnector
+                      fromColor={previewNodes[i].color}
+                      toColor={previewNodes[i + 1].color}
+                      delay={0.3 + i * 0.15}
+                      inView={inView}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Category legend */}
           <div
             ref={legendRef}
-            className="flex items-center justify-center gap-3 flex-wrap"
+            className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap"
           >
             {[
               { label: 'Input', color: '#4ade80' },
@@ -326,9 +337,9 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
               { label: 'Compose', color: '#f59e0b' },
               { label: 'Output', color: '#f87171' },
             ].map((cat) => (
-              <div key={cat.label} className="flex items-center gap-1">
-                <div className="size-1.5 rounded-full" style={{ background: cat.color }} />
-                <span className="text-[8px] font-medium text-white/30">{cat.label}</span>
+              <div key={cat.label} className="flex items-center gap-1.5">
+                <div className="size-2 rounded-full" style={{ background: cat.color }} />
+                <span className="text-xs font-medium text-white/40">{cat.label}</span>
               </div>
             ))}
           </div>
@@ -339,7 +350,12 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
             className="flex items-center justify-center gap-2 flex-wrap"
           >
             {['Drag & Drop', 'Auto-connect', 'Type Safety', '10+ Node Types'].map((tag) => (
-              <span key={tag} className="text-white/30 text-[8px] font-medium bg-white/5 rounded-full px-2.5 py-1 border border-white/5">{tag}</span>
+              <span
+                key={tag}
+                className="text-white/40 text-xs font-medium bg-white/5 rounded-full px-3 py-1 border border-white/8"
+              >
+                {tag}
+              </span>
             ))}
           </div>
 
@@ -347,10 +363,10 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
           <div ref={ctaRef}>
             <button
               onClick={onGetStarted}
-              className="cursor-pointer bg-primary text-white font-bold text-[9px] px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1"
+              className="cursor-pointer bg-primary text-white font-bold text-sm px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2"
             >
               Try the Editor
-              <ArrowRight size={10} />
+              <ArrowRight size={14} />
             </button>
           </div>
         </div>

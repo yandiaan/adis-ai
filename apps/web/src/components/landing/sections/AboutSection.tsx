@@ -1,59 +1,112 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { RainEffect } from '../components/RainEffect';
 
+const IMG_SRC = '/about-ilustration.svg';
+
+const GLITCH_FRAMES = [
+  'drop-shadow(6px 0 0 rgba(255,0,60,0.95)) drop-shadow(-6px 0 0 rgba(0,255,240,0.95))',
+  'drop-shadow(-8px 0 0 rgba(255,0,60,0.95)) drop-shadow(8px 0 0 rgba(0,255,240,0.95))',
+  'drop-shadow(3px 0 0 rgba(255,0,60,0.7)) drop-shadow(-3px 0 0 rgba(0,255,240,0.7))',
+  'drop-shadow(10px 0 0 rgba(255,0,60,0.95)) drop-shadow(-10px 0 0 rgba(0,255,240,0.95))',
+  'drop-shadow(-4px 0 0 rgba(255,0,60,0.8)) drop-shadow(4px 0 0 rgba(0,255,240,0.8))',
+];
+
 export function AboutSection() {
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgWrapperRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const glitchTlRef = useRef<gsap.core.Timeline | null>(null);
+  const ctxRef = useRef<gsap.Context | null>(null);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [inView, setInView] = useState(false);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
-      const isMobile = containerWidth < 768;
-      const isTablet = containerWidth < 1024;
-
-      const textSlideDistance = isMobile ? -80 : isTablet ? -120 : -180;
-      const imgSlideDistance = isMobile ? 80 : isTablet ? 120 : 180;
-
-      gsap.fromTo(
-        textRef.current,
-        { opacity: 0, x: 0 },
-        {
-          opacity: 1,
-          x: textSlideDistance,
-          duration: 1.5,
-          ease: 'power3.out',
-          delay: 0.2,
-        },
-      );
-
-      gsap.fromTo(
-        imgRef.current,
-        {
-          opacity: 0,
-          x: 0,
-        },
-        {
-          opacity: 1,
-          x: imgSlideDistance,
-          duration: 1.5,
-          ease: 'power3.out',
-          onComplete: () => {
-            gsap.to(imgRef.current, {
-              y: '-=15',
-              duration: 2.5,
-              ease: 'sine.inOut',
-              repeat: -1,
-              yoyo: true,
-            });
-          },
-        },
-      );
-    });
-
-    return () => ctx.revert();
+    const preload = new window.Image();
+    preload.src = IMG_SRC;
+    if (preload.complete) {
+      setImgLoaded(true);
+    } else {
+      preload.onload = () => setImgLoaded(true);
+      preload.onerror = () => setImgLoaded(true);
+    }
   }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const startGlitch = useCallback((el: HTMLDivElement) => {
+    glitchTlRef.current?.kill();
+
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 2.8 });
+
+    tl.to(el, { filter: GLITCH_FRAMES[0], duration: 0.05, ease: 'none' })
+      .to(el, { filter: GLITCH_FRAMES[1], duration: 0.05, ease: 'none' })
+      .to(el, { filter: GLITCH_FRAMES[2], duration: 0.04, ease: 'none' })
+      .to(el, { filter: GLITCH_FRAMES[3], duration: 0.04, ease: 'none' })
+      .to(el, { filter: 'none', duration: 0.08, ease: 'power2.out' })
+      .to(el, { duration: 1.0 })
+      .to(el, { filter: GLITCH_FRAMES[4], duration: 0.06, ease: 'none' })
+      .to(el, { filter: GLITCH_FRAMES[2], duration: 0.05, ease: 'none' })
+      .to(el, { filter: 'none', duration: 0.08, ease: 'power2.out' });
+
+    glitchTlRef.current = tl;
+  }, []);
+
+  const runAnimations = useCallback(() => {
+    if (!textRef.current || !imgWrapperRef.current) return;
+
+    ctxRef.current?.revert();
+    glitchTlRef.current?.kill();
+
+    ctxRef.current = gsap.context(() => {
+      gsap.set(textRef.current, { opacity: 0, x: -40 });
+      gsap.to(textRef.current, {
+        opacity: 1,
+        x: 0,
+        duration: 1.4,
+        ease: 'power3.out',
+        delay: 0.2,
+      });
+
+      gsap.set(imgWrapperRef.current, { opacity: 0, x: 80 });
+      gsap.to(imgWrapperRef.current, {
+        opacity: 1,
+        x: 0,
+        duration: 1.4,
+        ease: 'power3.out',
+        onComplete: () => {
+          if (imgWrapperRef.current) startGlitch(imgWrapperRef.current);
+        },
+      });
+    });
+  }, [startGlitch]);
+
+  useEffect(() => {
+    if (imgLoaded && inView) {
+      runAnimations();
+    }
+
+    return () => {
+      glitchTlRef.current?.kill();
+      ctxRef.current?.revert();
+    };
+  }, [imgLoaded, inView, runAnimations]);
 
   return (
     <div
@@ -68,10 +121,38 @@ export function AboutSection() {
     >
       <RainEffect />
 
-      <div className="relative w-full h-full flex items-center justify-center px-6 sm:px-10 md:px-16 lg:px-24 overflow-hidden">
+      <div
+        aria-hidden
+        className="absolute inset-0 z-30 pointer-events-none overflow-hidden"
+        style={{
+          background:
+            'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.13) 2px, rgba(0,0,0,0.13) 4px)',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            width: '100%',
+            height: '4px',
+            background:
+              'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 70%, transparent 100%)',
+            animation: 'vhs-track 5s linear infinite',
+          }}
+        />
+      </div>
+      <style>{`
+        @keyframes vhs-track {
+          0%   { top: -4px; }
+          100% { top: 100%; }
+        }
+      `}</style>
+
+      <div className="relative w-full h-full overflow-hidden">
         <div
           ref={textRef}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl px-4"
+          className="absolute left-8 sm:left-14 md:left-20 top-1/2 -translate-y-1/2 z-20 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg"
+          style={{ opacity: 0, willChange: 'transform, opacity' }}
         >
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold italic mb-3 sm:mb-4 text-white uppercase tracking-tighter leading-tight">
             Redefining Digital Expression
@@ -84,12 +165,15 @@ export function AboutSection() {
         </div>
 
         <div
-          ref={imgRef}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-full flex items-end justify-center"
+          ref={imgWrapperRef}
+          className="absolute right-0 top-0 h-full flex items-end justify-end"
+          style={{ opacity: 0, willChange: 'transform, filter' }}
         >
           <img
-            src="/about-ilustration.svg"
+            src={IMG_SRC}
             alt="AI Illustration"
+            fetchPriority="high"
+            decoding="async"
             className="h-full w-auto object-contain object-bottom"
           />
         </div>
