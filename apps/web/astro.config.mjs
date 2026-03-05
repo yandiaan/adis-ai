@@ -13,7 +13,9 @@ export default defineConfig({
   },
   vite: {
     server: {
-      middlewareMode: true,
+      allowedHosts: ['adisai.xyz', 'www.adisai.xyz', '8.219.190.235', 'localhost'],
+    },
+    preview: {
       allowedHosts: ['adisai.xyz', 'www.adisai.xyz', '8.219.190.235', 'localhost'],
     },
     plugins: [tailwindcss()],
