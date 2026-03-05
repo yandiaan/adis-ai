@@ -2,9 +2,9 @@ import { useReactFlow } from '@xyflow/react';
 import { Check, FolderOpen, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import type { VideoUploadData } from '../../types/node-types';
+import { apiUrl, resolveMediaUrl } from '../../../../utils/runtimeUrl';
 
-const API_BASE = 'http://localhost:3000/api';
-const SERVER_URL = 'http://localhost:3000';
+const API_BASE = '/api';
 
 type Props = {
   nodeId: string;
@@ -21,7 +21,7 @@ export function VideoUploadPanel({ nodeId, data }: Props) {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const response = await fetch(`${API_BASE}/upload/video`, {
+    const response = await fetch(apiUrl(`${API_BASE}/upload/video`), {
       method: 'POST',
       headers: {
         'Content-Type': file.type || 'application/octet-stream',
@@ -64,14 +64,14 @@ export function VideoUploadPanel({ nodeId, data }: Props) {
     updateConfig({ previewUrl: null, fileName: null, fileSizeMB: null });
   };
 
-  const resolvedUrl = config.previewUrl?.startsWith('/uploads/')
-    ? `${SERVER_URL}${config.previewUrl}`
-    : config.previewUrl;
+  const resolvedUrl = resolveMediaUrl(config.previewUrl);
 
   return (
     <>
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Video Upload</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Video Upload
+        </label>
         {resolvedUrl ? (
           <div>
             <video
@@ -92,7 +92,9 @@ export function VideoUploadPanel({ nodeId, data }: Props) {
                   </span>
                 )}
                 {!isUploading && config.previewUrl?.startsWith('/uploads/') && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-green-400"><Check size={12} /> Uploaded</span>
+                  <span className="ml-2 inline-flex items-center gap-1 text-green-400">
+                    <Check size={12} /> Uploaded
+                  </span>
                 )}
               </span>
               <button
@@ -115,7 +117,9 @@ export function VideoUploadPanel({ nodeId, data }: Props) {
               </span>
             </div>
             <div className="text-white/50 text-[13px]">Click or drop video here</div>
-            <div className="text-white/30 text-[11px] mt-1">MP4 · MOV · WEBM · max {config.maxSizeMB}MB</div>
+            <div className="text-white/30 text-[11px] mt-1">
+              MP4 · MOV · WEBM · max {config.maxSizeMB}MB
+            </div>
           </div>
         )}
         <input

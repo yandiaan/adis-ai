@@ -2,9 +2,9 @@ import { useReactFlow } from '@xyflow/react';
 import { Check, FolderOpen, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import type { ImageUploadData } from '../../types/node-types';
+import { apiUrl, resolveMediaUrl } from '../../../../utils/runtimeUrl';
 
-const API_BASE = 'http://localhost:3000/api';
-const SERVER_URL = 'http://localhost:3000';
+const API_BASE = '/api';
 
 type Props = {
   nodeId: string;
@@ -21,7 +21,7 @@ export function ImageUploadPanel({ nodeId, data }: Props) {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const response = await fetch(`${API_BASE}/upload/image`, {
+    const response = await fetch(apiUrl(`${API_BASE}/upload/image`), {
       method: 'POST',
       headers: {
         'Content-Type': file.type || 'application/octet-stream',
@@ -74,18 +74,20 @@ export function ImageUploadPanel({ nodeId, data }: Props) {
     updateConfig({ previewUrl: null, fileName: null, fileSizeMB: null });
   };
 
+  const resolvedUrl = resolveMediaUrl(config.previewUrl);
+
   return (
     <>
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Image Upload</label>
-        {config.previewUrl ? (
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Image Upload
+        </label>
+        {resolvedUrl ? (
           <div>
             <img
-              src={config.previewUrl.startsWith('/uploads/') ? `${SERVER_URL}${config.previewUrl}` : config.previewUrl}
+              src={resolvedUrl}
               alt="Preview"
               className="w-full max-h-[200px] object-contain rounded-lg mb-2"
-              onError={(e) => console.error('[ImageUploadPanel] Image failed to load:', e.currentTarget.src)}
-              onLoad={() => console.log('[ImageUploadPanel] Image loaded successfully')}
             />
             <div className="flex justify-between items-center text-xs text-white/50">
               <span>
@@ -96,8 +98,10 @@ export function ImageUploadPanel({ nodeId, data }: Props) {
                     Uploading...
                   </span>
                 )}
-                {!isUploading && config.previewUrl.startsWith('/uploads/') && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-green-400"><Check size={12} /> Uploaded</span>
+                {!isUploading && config.previewUrl?.startsWith('/uploads/') && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-green-400">
+                    <Check size={12} /> Uploaded
+                  </span>
                 )}
               </span>
               <button

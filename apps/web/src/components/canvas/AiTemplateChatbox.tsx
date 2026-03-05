@@ -13,6 +13,7 @@ import {
 import type { PipelineTemplate } from './templates';
 import { getFingerprint } from '../../utils/fingerprint';
 import { getSessionStartMs } from '../../utils/sessionContext';
+import { apiUrl } from '../../utils/runtimeUrl';
 
 type ChatboxState = 'idle' | 'loading' | 'preview' | 'error';
 
@@ -69,7 +70,7 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
     setIsEnhancing(true);
     try {
       const fpHash = await getFingerprint();
-      const res = await fetch('http://localhost:3000/api/ai/enhance-prompt', {
+      const res = await fetch(apiUrl('/api/ai/enhance-prompt'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +105,7 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
     const timeout = setTimeout(() => controller.abort(), 120000);
     try {
       const fpHash = await getFingerprint();
-      const res = await fetch('http://localhost:3000/api/ai/generate-template', {
+      const res = await fetch(apiUrl('/api/ai/generate-template'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { Clipboard, Download, Link, MessageCircle } from 'lucide-react';
 import type { ExportData, ExportFormat, ShareTarget } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData, VideoData } from '../../types/port-types';
+import { resolveMediaUrl } from '../../../../utils/runtimeUrl';
 
 type Props = {
   nodeId: string;
@@ -23,32 +24,35 @@ export function ExportPanelNew({ nodeId, data }: Props) {
 
   const { getNodeState } = useExecutionContext();
   const edges = useEdges();
-  const incomingEdge = edges.find(e => e.target === nodeId);
+  const incomingEdge = edges.find((e) => e.target === nodeId);
   const upstreamState = incomingEdge ? getNodeState(incomingEdge.source) : null;
   const output = upstreamState?.output ?? null;
 
   // useNodesData is reactive — re-renders this component when node data changes
   const upstreamNodesData = useNodesData(incomingEdge?.source ? [incomingEdge.source] : []);
-  const upstreamExportUrl = (upstreamNodesData?.[0]?.data as Record<string, unknown>)?.exportDataUrl as string | null | undefined;
+  const upstreamExportUrl = (upstreamNodesData?.[0]?.data as Record<string, unknown>)
+    ?.exportDataUrl as string | null | undefined;
 
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
   const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;
   // upstreamExportUrl (manual editor composite) has highest priority — it is the edited result
   // imageUrl from execution context may be the original AI image if pipeline ran before edits
   const mediaUrl = upstreamExportUrl ?? imageUrl ?? videoUrl ?? null;
+  const resolvedMediaUrl = resolveMediaUrl(mediaUrl) ?? mediaUrl;
+  const resolvedVideoUrl = resolveMediaUrl(videoUrl) ?? videoUrl;
 
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
   };
 
   const handleExport = async () => {
-    if (!mediaUrl) return;
+    if (!resolvedMediaUrl) return;
 
     if (config.shareTarget === 'download') {
       // Handle both data URLs and remote URLs
-      if (mediaUrl.startsWith('data:')) {
+      if (resolvedMediaUrl.startsWith('data:')) {
         // data URL → convert to blob for proper download
-        const res = await fetch(mediaUrl);
+        const res = await fetch(resolvedMediaUrl);
         const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -58,51 +62,73 @@ export function ExportPanelNew({ nodeId, data }: Props) {
         URL.revokeObjectURL(blobUrl);
       } else {
         const a = document.createElement('a');
-        a.href = mediaUrl;
+        a.href = resolvedMediaUrl;
         a.download = `export.${config.format}`;
         a.target = '_blank';
         a.click();
       }
     } else if (config.shareTarget === 'clipboard') {
       try {
-        const res = await fetch(mediaUrl);
+        const res = await fetch(resolvedMediaUrl);
         const blob = await res.blob();
         await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
       } catch {
-        navigator.clipboard.writeText(mediaUrl);
+        navigator.clipboard.writeText(resolvedMediaUrl);
       }
     } else if (config.shareTarget === 'whatsapp') {
-      window.open(`https://wa.me/?text=${encodeURIComponent(mediaUrl)}`, '_blank');
+      window.open(`https://wa.me/?text=${encodeURIComponent(resolvedMediaUrl)}`, '_blank');
     } else if (config.shareTarget === 'copy-url') {
-      navigator.clipboard.writeText(mediaUrl);
+      navigator.clipboard.writeText(resolvedMediaUrl);
     }
   };
 
   return (
     <>
       {/* Media preview + export button */}
-      {mediaUrl && (
+      {resolvedMediaUrl && (
         <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Output</label>
-          <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-black/30 flex items-center justify-center" style={{ maxHeight: 200 }}>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+            Output
+          </label>
+          <div
+            className="w-full rounded-xl overflow-hidden border border-white/10 bg-black/30 flex items-center justify-center"
+            style={{ maxHeight: 200 }}
+          >
             {videoUrl && !imageUrl && !upstreamExportUrl ? (
-              <video src={videoUrl} className="w-full max-h-[200px]" controls playsInline />
+              <video
+                src={resolvedVideoUrl ?? videoUrl ?? ''}
+                className="w-full max-h-[200px]"
+                controls
+                playsInline
+              />
             ) : (
-              <img src={mediaUrl!} alt="Export preview" className="w-full max-h-[200px] object-contain" />
+              <img
+                src={resolvedMediaUrl}
+                alt="Export preview"
+                className="w-full max-h-[200px] object-contain"
+              />
             )}
           </div>
           <button
             onClick={handleExport}
             className="motion-lift motion-press focus-ring-orange w-full py-2.5 rounded-xl border border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] text-white text-sm font-medium hover:bg-[var(--editor-accent-25)] transition-colors cursor-pointer"
           >
-            {config.shareTarget === 'download' ? 'Download' : config.shareTarget === 'clipboard' ? 'Copy to Clipboard' : config.shareTarget === 'copy-url' ? 'Copy URL' : 'Share to WhatsApp'}
+            {config.shareTarget === 'download'
+              ? 'Download'
+              : config.shareTarget === 'clipboard'
+                ? 'Copy to Clipboard'
+                : config.shareTarget === 'copy-url'
+                  ? 'Copy URL'
+                  : 'Share to WhatsApp'}
           </button>
           <p className="text-[10px] text-yellow-400/70">⚠ URL expires in 24h — save now</p>
         </div>
       )}
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Format</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Format
+        </label>
         <div className="flex gap-1.5">
           {FORMATS.map((fmt) => (
             <button
@@ -110,7 +136,7 @@ export function ExportPanelNew({ nodeId, data }: Props) {
               onClick={() => updateConfig({ format: fmt })}
               className={`motion-lift motion-press focus-ring-orange flex-1 px-1 py-2 rounded-xl border cursor-pointer text-white text-xs transition-colors ${
                 config.format === fmt
-                ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] font-semibold'
+                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] font-semibold'
                   : 'border-white/10 bg-white/5 hover:bg-white/7 font-normal'
               }`}
             >
@@ -121,7 +147,9 @@ export function ExportPanelNew({ nodeId, data }: Props) {
       </div>
 
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Share Target</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+          Share Target
+        </label>
         <div className="flex gap-2">
           {SHARE_TARGETS.map((target) => (
             <button
@@ -129,7 +157,7 @@ export function ExportPanelNew({ nodeId, data }: Props) {
               onClick={() => updateConfig({ shareTarget: target.value })}
               className={`motion-lift motion-press focus-ring-orange flex-1 px-1 py-2.5 rounded-xl border cursor-pointer text-white text-xs text-center transition-colors ${
                 config.shareTarget === target.value
-                ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] font-semibold'
+                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] font-semibold'
                   : 'border-white/10 bg-white/5 hover:bg-white/7 font-normal'
               }`}
             >
