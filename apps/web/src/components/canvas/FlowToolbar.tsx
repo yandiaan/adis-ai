@@ -10,6 +10,7 @@ import type { CustomNodeType } from './types/node-types';
 import type { MouseMode } from './types';
 import {
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Hand,
   Loader2,
@@ -343,6 +344,8 @@ export function FlowToolbar({
   const [submenuTop, setSubmenuTop] = useState<number | null>(null);
   const [submenuAnchorTop, setSubmenuAnchorTop] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileDrillCategory, setMobileDrillCategory] = useState<NodeCategory | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const submenuWrapRef = useRef<HTMLDivElement | null>(null);
@@ -386,6 +389,7 @@ export function FlowToolbar({
       setActiveCategory(null);
       setSubmenuTop(null);
       setSubmenuAnchorTop(null);
+      setMobileDrillCategory(null);
     }, 140);
   };
 
@@ -443,6 +447,13 @@ export function FlowToolbar({
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
       if (nodeDetailTimerRef.current) window.clearTimeout(nodeDetailTimerRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   // Handle node item hover for detail popover
@@ -604,11 +615,11 @@ export function FlowToolbar({
                     >
                       <Plus size={18} className="text-white/85" />
                     </span>
-                    <span className="text-[13px] font-medium font-[system-ui,sans-serif]">
+                    <span className="hidden sm:inline text-[13px] font-medium font-[system-ui,sans-serif]">
                       New Node
                     </span>
                     <span
-                      className="ml-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide border"
+                      className="hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide border"
                       style={{
                         borderColor: 'rgba(255,255,255,0.14)',
                         color: 'rgba(255,255,255,0.6)',
@@ -632,18 +643,33 @@ export function FlowToolbar({
               {/* Dropdown */}
               {menuMounted && (
                 <div
-                  className={`absolute bottom-full left-1/2 mb-2 rounded-3xl p-3 ${dropdownWidthClass} max-w-[calc(100vw-32px)] z-[200] shadow-[0_18px_60px_rgba(0,0,0,0.62)] transition-all glass-surface-strong overflow-visible`}
-                  style={{
-                    background: 'var(--editor-surface-2)',
-                    border: '1px solid rgba(255,255,255,0.14)',
-                    boxShadow: '0 18px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.06)',
-                    transformOrigin: 'bottom center',
-                    opacity: menuOpen ? 1 : 0,
-                    transform: menuOpen
-                      ? 'translate(-50%, 0px) scale(1)'
-                      : 'translate(-50%, 8px) scale(0.98)',
-                    pointerEvents: menuOpen ? 'auto' : 'none',
-                  }}
+                  className={`${isMobile ? 'fixed' : 'absolute bottom-full left-1/2 mb-2'} rounded-3xl p-3 ${isMobile ? 'w-auto' : dropdownWidthClass} max-w-[calc(100vw-32px)] z-[200] shadow-[0_18px_60px_rgba(0,0,0,0.62)] transition-all glass-surface-strong overflow-visible`}
+                  style={
+                    isMobile
+                      ? {
+                          background: 'var(--editor-surface-2)',
+                          border: '1px solid rgba(255,255,255,0.14)',
+                          boxShadow: '0 18px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.06)',
+                          transformOrigin: 'bottom center',
+                          opacity: menuOpen ? 1 : 0,
+                          transform: menuOpen ? 'scale(1)' : 'scale(0.98)',
+                          pointerEvents: menuOpen ? 'auto' : 'none',
+                          left: '16px',
+                          right: '16px',
+                          bottom: `calc(env(safe-area-inset-bottom) + 80px + ${logOpen ? LOG_PANEL_HEIGHT : 0}px)`,
+                        }
+                      : {
+                          background: 'var(--editor-surface-2)',
+                          border: '1px solid rgba(255,255,255,0.14)',
+                          boxShadow: '0 18px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.06)',
+                          transformOrigin: 'bottom center',
+                          opacity: menuOpen ? 1 : 0,
+                          transform: menuOpen
+                            ? 'translate(-50%, 0px) scale(1)'
+                            : 'translate(-50%, 8px) scale(0.98)',
+                          pointerEvents: menuOpen ? 'auto' : 'none',
+                        }
+                  }
                 >
                   {/* Header + Search */}
                   <div className="flex items-start justify-between gap-2 px-2 pt-0.5 pb-3">
@@ -795,190 +821,261 @@ export function FlowToolbar({
                         </div>
                       </div>
                     ) : (
-                      <div
-                        className="relative"
-                        ref={submenuWrapRef}
-                        onMouseLeave={() => {
-                          setActiveCategory(null);
-                          setSubmenuTop(null);
-                          setSubmenuAnchorTop(null);
-                        }}
-                      >
-                        {/* Main menu list */}
-                        <div
-                          className="w-full rounded-2xl border border-white/10 overflow-hidden"
-                          style={{
-                            background: 'var(--editor-surface-1)',
-                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                          }}
-                        >
+                      /* ── Non-search body ── */
+                      isMobile ? (
+                        /* Mobile: drilldown pattern */
+                        mobileDrillCategory ? (
+                          /* Level 2: nodes for selected category */
+                          <div>
+                            <button
+                              onClick={() => setMobileDrillCategory(null)}
+                              className="flex items-center gap-2 w-full px-2 py-2 mb-2 text-white/50 hover:text-white/80 transition-colors text-[13px]"
+                            >
+                              <ChevronLeft size={15} />
+                              Kembali ke Kategori
+                            </button>
+                            <div
+                              className="addnode-scroll max-h-[40vh] overflow-auto flex flex-col rounded-2xl border border-white/10 overflow-hidden"
+                              style={{ background: 'var(--editor-surface-1)' }}
+                            >
+                              <div className="flex flex-col px-2 py-2">
+                                {(NODE_TYPES_BY_CATEGORY[mobileDrillCategory] || []).map((node) => (
+                                  <button
+                                    key={node.type}
+                                    onClick={() => { onAddNode(node.type); closeMenu(); }}
+                                    className="motion-press focus-ring-orange group w-full flex items-center gap-3 px-2 py-3 rounded-xl text-left active:bg-white/10 transition-colors cursor-pointer"
+                                  >
+                                    <span
+                                      className="grid place-items-center w-9 h-9 rounded-xl border border-white/10 bg-white/4 shrink-0"
+                                      style={{ color: NODE_CATEGORIES[mobileDrillCategory].color }}
+                                    >
+                                      {renderNodeTypeIcon(node.type as CustomNodeType, { size: 16, className: 'text-current' }) ?? <Plus size={16} className="text-current" />}
+                                    </span>
+                                    <span className="text-[15px] font-medium text-white/90 truncate">{node.label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Level 1: category list */
                           <div
-                            ref={mainListScrollRef}
-                            className="addnode-scroll max-h-[360px] overflow-auto px-2 py-2"
+                            className="w-full rounded-2xl border border-white/10 overflow-hidden"
+                            style={{ background: 'var(--editor-surface-1)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
                           >
-                            {nodesByCategory.map(({ categoryId, category, nodes }) => {
-                              const isActive = categoryId === activeCategory;
-                              const count = nodes.length;
-
-                              return (
+                            <div className="addnode-scroll max-h-[40vh] overflow-auto px-2 py-2">
+                              {nodesByCategory.map(({ categoryId, category, nodes }) => (
                                 <button
                                   key={categoryId}
                                   type="button"
-                                  onMouseEnter={(e) =>
-                                    openSubmenuFromTarget(
-                                      categoryId as NodeCategory,
-                                      e.currentTarget,
-                                    )
-                                  }
-                                  onFocus={(e) =>
-                                    openSubmenuFromTarget(
-                                      categoryId as NodeCategory,
-                                      e.currentTarget,
-                                    )
-                                  }
-                                  onClick={(e) =>
-                                    openSubmenuFromTarget(
-                                      categoryId as NodeCategory,
-                                      e.currentTarget,
-                                    )
-                                  }
-                                  className={`focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left transition-colors border cursor-pointer ${
-                                    isActive
-                                      ? 'bg-white/5 border-white/10'
-                                      : 'bg-transparent border-transparent hover:bg-white/4'
-                                  }`}
-                                  aria-haspopup="menu"
-                                  aria-expanded={isActive}
+                                  onClick={() => setMobileDrillCategory(categoryId as NodeCategory)}
+                                  className="focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-3 rounded-xl text-left transition-colors border border-transparent active:bg-white/10 cursor-pointer"
                                 >
                                   <span className="flex items-center gap-2.5 min-w-0">
                                     <span
-                                      className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
+                                      className="grid place-items-center w-9 h-9 rounded-xl border border-white/10 bg-white/4 shrink-0"
                                       style={{ color: category.color }}
                                     >
-                                      {renderNodeCategoryIcon(categoryId as NodeCategory, {
-                                        size: 16,
-                                        className: 'text-current',
-                                      })}
+                                      {renderNodeCategoryIcon(categoryId as NodeCategory, { size: 16, className: 'text-current' })}
                                     </span>
                                     <span className="min-w-0">
-                                      <span className="block text-[14px] font-semibold text-white/90 truncate">
-                                        {category.label}
-                                      </span>
-                                      <span className="block text-[11px] text-white/35 truncate">
-                                        {count} node{count === 1 ? '' : 's'}
-                                      </span>
+                                      <span className="block text-[14px] font-semibold text-white/90 truncate">{category.label}</span>
+                                      <span className="block text-[11px] text-white/35">{nodes.length} nodes</span>
                                     </span>
                                   </span>
-                                  <ChevronRight
-                                    size={16}
-                                    className={`text-white/20 transition-transform ${
-                                      isActive ? 'translate-x-0.5' : 'group-hover:translate-x-0.5'
-                                    }`}
-                                  />
+                                  <ChevronRight size={16} className="text-white/30" />
                                 </button>
-                              );
-                            })}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-
-                        {/* Detached submenu popover */}
+                        )
+                      ) : (
+                        /* Desktop: original flyout submenu */
                         <div
-                          className="absolute left-full ml-0 w-[300px] rounded-2xl border border-white/10 overflow-hidden"
-                          ref={submenuPopoverRef}
-                          style={{
-                            background: 'var(--editor-surface-1)',
-                            boxShadow:
-                              '0 18px 60px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.05)',
-                            top: submenuTop ?? 8,
-                            maxHeight: '315px',
-                            opacity: hoveredCategoryId ? 1 : 0,
-                            transform: hoveredCategoryId ? 'translateX(0px)' : 'translateX(-6px)',
-                            transitionProperty: 'opacity, transform',
-                            transitionDuration: 'var(--motion-fast)',
-                            transitionTimingFunction: 'var(--motion-ease-out)',
-                            pointerEvents: hoveredCategoryId ? 'auto' : 'none',
+                          className="relative"
+                          ref={submenuWrapRef}
+                          onMouseLeave={() => {
+                            setActiveCategory(null);
+                            setSubmenuTop(null);
+                            setSubmenuAnchorTop(null);
                           }}
-                          role="menu"
-                          aria-label="Node options"
                         >
-                          <div className="px-3 pt-3 pb-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="min-w-0">
-                                <div className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/35">
-                                  {hoveredCategoryId ? 'Select node' : '—'}
-                                </div>
-                                <div className="text-[14px] font-semibold text-white/90 mt-1 truncate">
-                                  {hoveredCategory ? hoveredCategory.label : 'Hover a category'}
-                                </div>
-                              </div>
-                              {hoveredCategoryId && hoveredCategory && (
-                                <span
-                                  className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4 shrink-0"
-                                  style={{ color: hoveredCategory.color }}
-                                >
-                                  {renderNodeCategoryIcon(hoveredCategoryId, {
-                                    size: 16,
-                                    className: 'text-current',
-                                  })}
-                                </span>
-                              )}
+                          {/* Main menu list */}
+                          <div
+                            className="w-full rounded-2xl border border-white/10 overflow-hidden"
+                            style={{
+                              background: 'var(--editor-surface-1)',
+                              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                            }}
+                          >
+                            <div
+                              ref={mainListScrollRef}
+                              className="addnode-scroll max-h-[360px] overflow-auto px-2 py-2"
+                            >
+                              {nodesByCategory.map(({ categoryId, category, nodes }) => {
+                                const isActive = categoryId === activeCategory;
+                                const count = nodes.length;
+
+                                return (
+                                  <button
+                                    key={categoryId}
+                                    type="button"
+                                    onMouseEnter={(e) =>
+                                      openSubmenuFromTarget(
+                                        categoryId as NodeCategory,
+                                        e.currentTarget,
+                                      )
+                                    }
+                                    onFocus={(e) =>
+                                      openSubmenuFromTarget(
+                                        categoryId as NodeCategory,
+                                        e.currentTarget,
+                                      )
+                                    }
+                                    onClick={(e) =>
+                                      openSubmenuFromTarget(
+                                        categoryId as NodeCategory,
+                                        e.currentTarget,
+                                      )
+                                    }
+                                    className={`focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left transition-colors border cursor-pointer ${
+                                      isActive
+                                        ? 'bg-white/5 border-white/10'
+                                        : 'bg-transparent border-transparent hover:bg-white/4'
+                                    }`}
+                                    aria-haspopup="menu"
+                                    aria-expanded={isActive}
+                                  >
+                                    <span className="flex items-center gap-2.5 min-w-0">
+                                      <span
+                                        className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
+                                        style={{ color: category.color }}
+                                      >
+                                        {renderNodeCategoryIcon(categoryId as NodeCategory, {
+                                          size: 16,
+                                          className: 'text-current',
+                                        })}
+                                      </span>
+                                      <span className="min-w-0">
+                                        <span className="block text-[14px] font-semibold text-white/90 truncate">
+                                          {category.label}
+                                        </span>
+                                        <span className="block text-[11px] text-white/35 truncate">
+                                          {count} node{count === 1 ? '' : 's'}
+                                        </span>
+                                      </span>
+                                    </span>
+                                    <ChevronRight
+                                      size={16}
+                                      className={`text-white/20 transition-transform ${
+                                        isActive ? 'translate-x-0.5' : 'group-hover:translate-x-0.5'
+                                      }`}
+                                    />
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
 
+                          {/* Detached submenu popover */}
                           <div
-                            className="addnode-scroll max-h-[250px] overflow-auto px-2 pb-2"
+                            className="absolute left-full ml-0 w-[300px] rounded-2xl border border-white/10 overflow-hidden"
+                            ref={submenuPopoverRef}
                             style={{
-                              borderTop: '1px solid rgba(255,255,255,0.08)',
-                              background: 'var(--editor-surface-0)',
+                              background: 'var(--editor-surface-1)',
+                              boxShadow:
+                                '0 18px 60px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.05)',
+                              top: submenuTop ?? 8,
+                              maxHeight: '315px',
+                              opacity: hoveredCategoryId ? 1 : 0,
+                              transform: hoveredCategoryId ? 'translateX(0px)' : 'translateX(-6px)',
+                              transitionProperty: 'opacity, transform',
+                              transitionDuration: 'var(--motion-fast)',
+                              transitionTimingFunction: 'var(--motion-ease-out)',
+                              pointerEvents: hoveredCategoryId ? 'auto' : 'none',
                             }}
+                            role="menu"
+                            aria-label="Node options"
                           >
-                            {hoveredCategoryId && (
-                              <div className="py-2">
-                                <div className="flex flex-col">
-                                  {hoveredNodes.map((node) => (
-                                    <button
-                                      key={node.type}
-                                      onClick={() => {
-                                        onAddNode(node.type);
-                                        closeMenu();
-                                      }}
-                                      onMouseEnter={(e) =>
-                                        handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
-                                      }
-                                      onMouseLeave={() => handleNodeItemHover(null)}
-                                      onFocus={(e) =>
-                                        handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
-                                      }
-                                      onBlur={() => handleNodeItemHover(null)}
-                                      className="motion-press focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer"
-                                    >
-                                      <span className="flex items-center gap-2.5 min-w-0">
-                                        <span
-                                          className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
-                                          style={{
-                                            color:
-                                              hoveredCategory?.color || 'rgba(255,255,255,0.75)',
-                                          }}
-                                        >
-                                          {renderNodeTypeIcon(node.type as CustomNodeType, {
-                                            size: 16,
-                                            className: 'text-current',
-                                          }) ?? <Plus size={16} className="text-current" />}
-                                        </span>
-                                        <span className="min-w-0">
-                                          <span className="block text-[15px] font-medium text-white/90 truncate">
-                                            {node.label}
+                            <div className="px-3 pt-3 pb-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/35">
+                                    {hoveredCategoryId ? 'Select node' : '—'}
+                                  </div>
+                                  <div className="text-[14px] font-semibold text-white/90 mt-1 truncate">
+                                    {hoveredCategory ? hoveredCategory.label : 'Hover a category'}
+                                  </div>
+                                </div>
+                                {hoveredCategoryId && hoveredCategory && (
+                                  <span
+                                    className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4 shrink-0"
+                                    style={{ color: hoveredCategory.color }}
+                                  >
+                                    {renderNodeCategoryIcon(hoveredCategoryId, {
+                                      size: 16,
+                                      className: 'text-current',
+                                    })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div
+                              className="addnode-scroll max-h-[250px] overflow-auto px-2 pb-2"
+                              style={{
+                                borderTop: '1px solid rgba(255,255,255,0.08)',
+                                background: 'var(--editor-surface-0)',
+                              }}
+                            >
+                              {hoveredCategoryId && (
+                                <div className="py-2">
+                                  <div className="flex flex-col">
+                                    {hoveredNodes.map((node) => (
+                                      <button
+                                        key={node.type}
+                                        onClick={() => {
+                                          onAddNode(node.type);
+                                          closeMenu();
+                                        }}
+                                        onMouseEnter={(e) =>
+                                          handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
+                                        }
+                                        onMouseLeave={() => handleNodeItemHover(null)}
+                                        onFocus={(e) =>
+                                          handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
+                                        }
+                                        onBlur={() => handleNodeItemHover(null)}
+                                        className="motion-press focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer"
+                                      >
+                                        <span className="flex items-center gap-2.5 min-w-0">
+                                          <span
+                                            className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
+                                            style={{
+                                              color:
+                                                hoveredCategory?.color || 'rgba(255,255,255,0.75)',
+                                            }}
+                                          >
+                                            {renderNodeTypeIcon(node.type as CustomNodeType, {
+                                              size: 16,
+                                              className: 'text-current',
+                                            }) ?? <Plus size={16} className="text-current" />}
+                                          </span>
+                                          <span className="min-w-0">
+                                            <span className="block text-[15px] font-medium text-white/90 truncate">
+                                              {node.label}
+                                            </span>
                                           </span>
                                         </span>
-                                      </span>
-                                    </button>
-                                  ))}
+                                      </button>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )
                     )}
                   </div>
                 </div>
@@ -1008,7 +1105,7 @@ export function FlowToolbar({
                   }}
                 >
                   <MousePointer2 size={18} />
-                  <span className="absolute -bottom-1 -right-1 text-[8px] font-bold leading-none px-1 py-px rounded bg-[rgba(0,0,0,0.55)] border border-white/10 text-white/50">
+                  <span className="hidden sm:block absolute -bottom-1 -right-1 text-[8px] font-bold leading-none px-1 py-px rounded bg-[rgba(0,0,0,0.55)] border border-white/10 text-white/50">
                     V
                   </span>
                 </button>
@@ -1037,7 +1134,7 @@ export function FlowToolbar({
                   }}
                 >
                   <Hand size={18} />
-                  <span className="absolute -bottom-1 -right-1 text-[8px] font-bold leading-none px-1 py-px rounded bg-[rgba(0,0,0,0.55)] border border-white/10 text-white/50">
+                  <span className="hidden sm:block absolute -bottom-1 -right-1 text-[8px] font-bold leading-none px-1 py-px rounded bg-[rgba(0,0,0,0.55)] border border-white/10 text-white/50">
                     H
                   </span>
                 </button>
@@ -1094,11 +1191,11 @@ export function FlowToolbar({
                           </span>
                         )}
                       </span>
-                      <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
+                      <span className="hidden sm:inline text-[13px] font-semibold font-[system-ui,sans-serif]">
                         Logs
                         {logCount > 0 && !logOpen ? ` (${logCount > 99 ? '99+' : logCount})` : ''}
                       </span>
-                      <KbdBadge>` </KbdBadge>
+                      <span className="hidden sm:inline"><KbdBadge>` </KbdBadge></span>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">
@@ -1153,10 +1250,10 @@ export function FlowToolbar({
                         <Play size={14} />
                       )}
                     </span>
-                    <span className="text-[13px] font-semibold font-[system-ui,sans-serif]">
+                    <span className="hidden sm:inline text-[13px] font-semibold font-[system-ui,sans-serif]">
                       {pipelineRunning ? 'Running…' : 'Run'}
                     </span>
-                    {!pipelineRunning && <KbdBadge>⌘↵</KbdBadge>}
+                    {!pipelineRunning && <span className="hidden sm:inline"><KbdBadge>⌘↵</KbdBadge></span>}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top">

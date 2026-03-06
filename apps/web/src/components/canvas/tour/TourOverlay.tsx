@@ -4,9 +4,14 @@ import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { TourStep } from './tourSteps';
 import type { Node } from '@xyflow/react';
 
-const TOOLTIP_WIDTH = 360;
+const TOOLTIP_WIDTH_MAX = 360;
 const SPOTLIGHT_PADDING = 12;
 const TOOLTIP_GAP = 16;
+
+function getTooltipWidth() {
+  if (typeof window === 'undefined') return TOOLTIP_WIDTH_MAX;
+  return Math.min(TOOLTIP_WIDTH_MAX, window.innerWidth - 32);
+}
 
 interface SpotlightRect {
   left: number;
@@ -43,6 +48,7 @@ function computeLayout(
   el: Element | null,
   placement: TourStep['placement'],
   tooltipHeight: number,
+  tooltipWidth: number,
 ): { spotlight: SpotlightRect | null; tooltip: TooltipPos } {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -51,7 +57,7 @@ function computeLayout(
   if (!el || placement === 'center') {
     return {
       spotlight: null,
-      tooltip: { x: vw / 2 - TOOLTIP_WIDTH / 2, y: vh / 2 - tooltipHeight / 2 },
+      tooltip: { x: vw / 2 - tooltipWidth / 2, y: vh / 2 - tooltipHeight / 2 },
     };
   }
 
@@ -69,11 +75,11 @@ function computeLayout(
 
   switch (placement) {
     case 'top':
-      x = rect.left + rect.width / 2 - TOOLTIP_WIDTH / 2;
+      x = rect.left + rect.width / 2 - tooltipWidth / 2;
       y = spotlight.top - TOOLTIP_GAP - tooltipHeight;
       break;
     case 'bottom':
-      x = rect.left + rect.width / 2 - TOOLTIP_WIDTH / 2;
+      x = rect.left + rect.width / 2 - tooltipWidth / 2;
       y = spotlight.top + spotlight.height + TOOLTIP_GAP;
       break;
     case 'right':
@@ -81,12 +87,12 @@ function computeLayout(
       y = rect.top + rect.height / 2 - tooltipHeight / 2;
       break;
     case 'left':
-      x = spotlight.left - TOOLTIP_GAP - TOOLTIP_WIDTH;
+      x = spotlight.left - TOOLTIP_GAP - tooltipWidth;
       y = rect.top + rect.height / 2 - tooltipHeight / 2;
       break;
   }
 
-  x = Math.max(margin, Math.min(x, vw - TOOLTIP_WIDTH - margin));
+  x = Math.max(margin, Math.min(x, vw - tooltipWidth - margin));
   y = Math.max(margin, Math.min(y, vh - tooltipHeight - margin));
 
   return { spotlight, tooltip: { x, y } };
@@ -109,14 +115,22 @@ export function TourOverlay({ step, stepIndex, totalSteps, nodes, onNext, onPrev
     tooltip: TooltipPos;
   } | null>(null);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [tooltipWidth, setTooltipWidth] = useState(TOOLTIP_WIDTH_MAX);
+  const [isMobile, setIsMobile] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const updateLayout = useCallback(() => {
     if (!step) return;
+    const tw = getTooltipWidth();
+    setTooltipWidth(tw);
     const tooltipHeight = tooltipRef.current?.offsetHeight ?? 220;
     const el = resolveTargetElement(step, nodes);
 
@@ -127,7 +141,7 @@ export function TourOverlay({ step, stepIndex, totalSteps, nodes, onNext, onPrev
       setHighlightedNodeId(null);
     }
 
-    setLayout(computeLayout(el, step.placement, tooltipHeight));
+    setLayout(computeLayout(el, step.placement, tooltipHeight, tw));
   }, [step, nodes]);
 
   // Double RAF: first lets React commit DOM, second measures height
@@ -162,7 +176,7 @@ export function TourOverlay({ step, stepIndex, totalSteps, nodes, onNext, onPrev
 
   const { spotlight, tooltip } = layout ?? {
     spotlight: null,
-    tooltip: { x: window.innerWidth / 2 - TOOLTIP_WIDTH / 2, y: window.innerHeight / 2 - 110 },
+    tooltip: { x: window.innerWidth / 2 - tooltipWidth / 2, y: window.innerHeight / 2 - 110 },
   };
 
   const isFirst = stepIndex === 0;
@@ -259,7 +273,7 @@ export function TourOverlay({ step, stepIndex, totalSteps, nodes, onNext, onPrev
         style={{
           left: tooltip.x,
           top: tooltip.y,
-          width: TOOLTIP_WIDTH,
+          width: tooltipWidth,
           zIndex: 9999,
           transition: 'top 0.28s cubic-bezier(0.4,0,0.2,1), left 0.28s cubic-bezier(0.4,0,0.2,1)',
         }}
@@ -349,7 +363,7 @@ export function TourOverlay({ step, stepIndex, totalSteps, nodes, onNext, onPrev
               {!isFirst && (
                 <button
                   onClick={onPrev}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white/50 hover:text-white/80 transition-colors border border-white/10 hover:bg-white/5"
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg text-[12px] font-medium text-white/50 hover:text-white/80 transition-colors border border-white/10 hover:bg-white/5"
                 >
                   <ChevronLeft size={13} />
                   Kembali
@@ -357,7 +371,7 @@ export function TourOverlay({ step, stepIndex, totalSteps, nodes, onNext, onPrev
               )}
               <button
                 onClick={onNext}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white transition-all active:scale-95"
                 style={{ background: isLast ? '#16a34a' : '#f97316' }}
               >
                 {isLast ? 'Selesai ✓' : 'Lanjut'}
@@ -367,12 +381,22 @@ export function TourOverlay({ step, stepIndex, totalSteps, nodes, onNext, onPrev
           </div>
         </div>
 
-        {/* Subtle counter */}
-        <div className="text-center mt-2">
-          <span className="text-white/22 text-[11px] select-none">
-            {stepIndex + 1} / {totalSteps} · Esc untuk lewati · ← → untuk navigasi
-          </span>
-        </div>
+        {/* Keyboard hint — desktop only */}
+        {!isMobile && (
+          <div className="text-center mt-2">
+            <span className="text-white/22 text-[11px] select-none">
+              {stepIndex + 1} / {totalSteps} · Esc untuk lewati · ← → untuk navigasi
+            </span>
+          </div>
+        )}
+        {/* Mobile step counter */}
+        {isMobile && (
+          <div className="text-center mt-2">
+            <span className="text-white/22 text-[11px] select-none">
+              {stepIndex + 1} / {totalSteps}
+            </span>
+          </div>
+        )}
       </div>
     </div>,
     document.body,
