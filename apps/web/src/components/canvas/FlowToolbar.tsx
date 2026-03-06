@@ -649,7 +649,8 @@ export function FlowToolbar({
                       ? {
                           background: 'var(--editor-surface-2)',
                           border: '1px solid rgba(255,255,255,0.14)',
-                          boxShadow: '0 18px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.06)',
+                          boxShadow:
+                            '0 18px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.06)',
                           transformOrigin: 'bottom center',
                           opacity: menuOpen ? 1 : 0,
                           transform: menuOpen ? 'scale(1)' : 'scale(0.98)',
@@ -661,7 +662,8 @@ export function FlowToolbar({
                       : {
                           background: 'var(--editor-surface-2)',
                           border: '1px solid rgba(255,255,255,0.14)',
-                          boxShadow: '0 18px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.06)',
+                          boxShadow:
+                            '0 18px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.06)',
                           transformOrigin: 'bottom center',
                           opacity: menuOpen ? 1 : 0,
                           transform: menuOpen
@@ -820,262 +822,278 @@ export function FlowToolbar({
                           )}
                         </div>
                       </div>
-                    ) : (
-                      /* ── Non-search body ── */
-                      isMobile ? (
-                        /* Mobile: drilldown pattern */
-                        mobileDrillCategory ? (
-                          /* Level 2: nodes for selected category */
-                          <div>
-                            <button
-                              onClick={() => setMobileDrillCategory(null)}
-                              className="flex items-center gap-2 w-full px-2 py-2 mb-2 text-white/50 hover:text-white/80 transition-colors text-[13px]"
-                            >
-                              <ChevronLeft size={15} />
-                              Kembali ke Kategori
-                            </button>
-                            <div
-                              className="addnode-scroll max-h-[40vh] overflow-auto flex flex-col rounded-2xl border border-white/10 overflow-hidden"
-                              style={{ background: 'var(--editor-surface-1)' }}
-                            >
-                              <div className="flex flex-col px-2 py-2">
-                                {(NODE_TYPES_BY_CATEGORY[mobileDrillCategory] || []).map((node) => (
-                                  <button
-                                    key={node.type}
-                                    onClick={() => { onAddNode(node.type); closeMenu(); }}
-                                    className="motion-press focus-ring-orange group w-full flex items-center gap-3 px-2 py-3 rounded-xl text-left active:bg-white/10 transition-colors cursor-pointer"
-                                  >
-                                    <span
-                                      className="grid place-items-center w-9 h-9 rounded-xl border border-white/10 bg-white/4 shrink-0"
-                                      style={{ color: NODE_CATEGORIES[mobileDrillCategory].color }}
-                                    >
-                                      {renderNodeTypeIcon(node.type as CustomNodeType, { size: 16, className: 'text-current' }) ?? <Plus size={16} className="text-current" />}
-                                    </span>
-                                    <span className="text-[15px] font-medium text-white/90 truncate">{node.label}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          /* Level 1: category list */
-                          <div
-                            className="w-full rounded-2xl border border-white/10 overflow-hidden"
-                            style={{ background: 'var(--editor-surface-1)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
+                    ) : /* ── Non-search body ── */
+                    isMobile ? (
+                      /* Mobile: drilldown pattern */
+                      mobileDrillCategory ? (
+                        /* Level 2: nodes for selected category */
+                        <div>
+                          <button
+                            onClick={() => setMobileDrillCategory(null)}
+                            className="flex items-center gap-2 w-full px-2 py-2 mb-2 text-white/50 hover:text-white/80 transition-colors text-[13px]"
                           >
-                            <div className="addnode-scroll max-h-[40vh] overflow-auto px-2 py-2">
-                              {nodesByCategory.map(({ categoryId, category, nodes }) => (
+                            <ChevronLeft size={15} />
+                            Kembali ke Kategori
+                          </button>
+                          <div
+                            className="addnode-scroll max-h-[40vh] overflow-auto flex flex-col rounded-2xl border border-white/10 overflow-hidden"
+                            style={{ background: 'var(--editor-surface-1)' }}
+                          >
+                            <div className="flex flex-col px-2 py-2">
+                              {(NODE_TYPES_BY_CATEGORY[mobileDrillCategory] || []).map((node) => (
                                 <button
-                                  key={categoryId}
-                                  type="button"
-                                  onClick={() => setMobileDrillCategory(categoryId as NodeCategory)}
-                                  className="focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-3 rounded-xl text-left transition-colors border border-transparent active:bg-white/10 cursor-pointer"
+                                  key={node.type}
+                                  onClick={() => {
+                                    onAddNode(node.type);
+                                    closeMenu();
+                                  }}
+                                  className="motion-press focus-ring-orange group w-full flex items-center gap-3 px-2 py-3 rounded-xl text-left active:bg-white/10 transition-colors cursor-pointer"
                                 >
-                                  <span className="flex items-center gap-2.5 min-w-0">
-                                    <span
-                                      className="grid place-items-center w-9 h-9 rounded-xl border border-white/10 bg-white/4 shrink-0"
-                                      style={{ color: category.color }}
-                                    >
-                                      {renderNodeCategoryIcon(categoryId as NodeCategory, { size: 16, className: 'text-current' })}
-                                    </span>
-                                    <span className="min-w-0">
-                                      <span className="block text-[14px] font-semibold text-white/90 truncate">{category.label}</span>
-                                      <span className="block text-[11px] text-white/35">{nodes.length} nodes</span>
-                                    </span>
+                                  <span
+                                    className="grid place-items-center w-9 h-9 rounded-xl border border-white/10 bg-white/4 shrink-0"
+                                    style={{ color: NODE_CATEGORIES[mobileDrillCategory].color }}
+                                  >
+                                    {renderNodeTypeIcon(node.type as CustomNodeType, {
+                                      size: 16,
+                                      className: 'text-current',
+                                    }) ?? <Plus size={16} className="text-current" />}
                                   </span>
-                                  <ChevronRight size={16} className="text-white/30" />
+                                  <span className="text-[15px] font-medium text-white/90 truncate">
+                                    {node.label}
+                                  </span>
                                 </button>
                               ))}
                             </div>
                           </div>
-                        )
+                        </div>
                       ) : (
-                        /* Desktop: original flyout submenu */
+                        /* Level 1: category list */
                         <div
-                          className="relative"
-                          ref={submenuWrapRef}
-                          onMouseLeave={() => {
-                            setActiveCategory(null);
-                            setSubmenuTop(null);
-                            setSubmenuAnchorTop(null);
+                          className="w-full rounded-2xl border border-white/10 overflow-hidden"
+                          style={{
+                            background: 'var(--editor-surface-1)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                           }}
                         >
-                          {/* Main menu list */}
-                          <div
-                            className="w-full rounded-2xl border border-white/10 overflow-hidden"
-                            style={{
-                              background: 'var(--editor-surface-1)',
-                              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                            }}
-                          >
-                            <div
-                              ref={mainListScrollRef}
-                              className="addnode-scroll max-h-[360px] overflow-auto px-2 py-2"
-                            >
-                              {nodesByCategory.map(({ categoryId, category, nodes }) => {
-                                const isActive = categoryId === activeCategory;
-                                const count = nodes.length;
-
-                                return (
-                                  <button
-                                    key={categoryId}
-                                    type="button"
-                                    onMouseEnter={(e) =>
-                                      openSubmenuFromTarget(
-                                        categoryId as NodeCategory,
-                                        e.currentTarget,
-                                      )
-                                    }
-                                    onFocus={(e) =>
-                                      openSubmenuFromTarget(
-                                        categoryId as NodeCategory,
-                                        e.currentTarget,
-                                      )
-                                    }
-                                    onClick={(e) =>
-                                      openSubmenuFromTarget(
-                                        categoryId as NodeCategory,
-                                        e.currentTarget,
-                                      )
-                                    }
-                                    className={`focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left transition-colors border cursor-pointer ${
-                                      isActive
-                                        ? 'bg-white/5 border-white/10'
-                                        : 'bg-transparent border-transparent hover:bg-white/4'
-                                    }`}
-                                    aria-haspopup="menu"
-                                    aria-expanded={isActive}
-                                  >
-                                    <span className="flex items-center gap-2.5 min-w-0">
-                                      <span
-                                        className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
-                                        style={{ color: category.color }}
-                                      >
-                                        {renderNodeCategoryIcon(categoryId as NodeCategory, {
-                                          size: 16,
-                                          className: 'text-current',
-                                        })}
-                                      </span>
-                                      <span className="min-w-0">
-                                        <span className="block text-[14px] font-semibold text-white/90 truncate">
-                                          {category.label}
-                                        </span>
-                                        <span className="block text-[11px] text-white/35 truncate">
-                                          {count} node{count === 1 ? '' : 's'}
-                                        </span>
-                                      </span>
-                                    </span>
-                                    <ChevronRight
-                                      size={16}
-                                      className={`text-white/20 transition-transform ${
-                                        isActive ? 'translate-x-0.5' : 'group-hover:translate-x-0.5'
-                                      }`}
-                                    />
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Detached submenu popover */}
-                          <div
-                            className="absolute left-full ml-0 w-[300px] rounded-2xl border border-white/10 overflow-hidden"
-                            ref={submenuPopoverRef}
-                            style={{
-                              background: 'var(--editor-surface-1)',
-                              boxShadow:
-                                '0 18px 60px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.05)',
-                              top: submenuTop ?? 8,
-                              maxHeight: '315px',
-                              opacity: hoveredCategoryId ? 1 : 0,
-                              transform: hoveredCategoryId ? 'translateX(0px)' : 'translateX(-6px)',
-                              transitionProperty: 'opacity, transform',
-                              transitionDuration: 'var(--motion-fast)',
-                              transitionTimingFunction: 'var(--motion-ease-out)',
-                              pointerEvents: hoveredCategoryId ? 'auto' : 'none',
-                            }}
-                            role="menu"
-                            aria-label="Node options"
-                          >
-                            <div className="px-3 pt-3 pb-2">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="min-w-0">
-                                  <div className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/35">
-                                    {hoveredCategoryId ? 'Select node' : '—'}
-                                  </div>
-                                  <div className="text-[14px] font-semibold text-white/90 mt-1 truncate">
-                                    {hoveredCategory ? hoveredCategory.label : 'Hover a category'}
-                                  </div>
-                                </div>
-                                {hoveredCategoryId && hoveredCategory && (
+                          <div className="addnode-scroll max-h-[40vh] overflow-auto px-2 py-2">
+                            {nodesByCategory.map(({ categoryId, category, nodes }) => (
+                              <button
+                                key={categoryId}
+                                type="button"
+                                onClick={() => setMobileDrillCategory(categoryId as NodeCategory)}
+                                className="focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-3 rounded-xl text-left transition-colors border border-transparent active:bg-white/10 cursor-pointer"
+                              >
+                                <span className="flex items-center gap-2.5 min-w-0">
                                   <span
-                                    className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4 shrink-0"
-                                    style={{ color: hoveredCategory.color }}
+                                    className="grid place-items-center w-9 h-9 rounded-xl border border-white/10 bg-white/4 shrink-0"
+                                    style={{ color: category.color }}
                                   >
-                                    {renderNodeCategoryIcon(hoveredCategoryId, {
+                                    {renderNodeCategoryIcon(categoryId as NodeCategory, {
                                       size: 16,
                                       className: 'text-current',
                                     })}
                                   </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div
-                              className="addnode-scroll max-h-[250px] overflow-auto px-2 pb-2"
-                              style={{
-                                borderTop: '1px solid rgba(255,255,255,0.08)',
-                                background: 'var(--editor-surface-0)',
-                              }}
-                            >
-                              {hoveredCategoryId && (
-                                <div className="py-2">
-                                  <div className="flex flex-col">
-                                    {hoveredNodes.map((node) => (
-                                      <button
-                                        key={node.type}
-                                        onClick={() => {
-                                          onAddNode(node.type);
-                                          closeMenu();
-                                        }}
-                                        onMouseEnter={(e) =>
-                                          handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
-                                        }
-                                        onMouseLeave={() => handleNodeItemHover(null)}
-                                        onFocus={(e) =>
-                                          handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
-                                        }
-                                        onBlur={() => handleNodeItemHover(null)}
-                                        className="motion-press focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer"
-                                      >
-                                        <span className="flex items-center gap-2.5 min-w-0">
-                                          <span
-                                            className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
-                                            style={{
-                                              color:
-                                                hoveredCategory?.color || 'rgba(255,255,255,0.75)',
-                                            }}
-                                          >
-                                            {renderNodeTypeIcon(node.type as CustomNodeType, {
-                                              size: 16,
-                                              className: 'text-current',
-                                            }) ?? <Plus size={16} className="text-current" />}
-                                          </span>
-                                          <span className="min-w-0">
-                                            <span className="block text-[15px] font-medium text-white/90 truncate">
-                                              {node.label}
-                                            </span>
-                                          </span>
-                                        </span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                                  <span className="min-w-0">
+                                    <span className="block text-[14px] font-semibold text-white/90 truncate">
+                                      {category.label}
+                                    </span>
+                                    <span className="block text-[11px] text-white/35">
+                                      {nodes.length} nodes
+                                    </span>
+                                  </span>
+                                </span>
+                                <ChevronRight size={16} className="text-white/30" />
+                              </button>
+                            ))}
                           </div>
                         </div>
                       )
+                    ) : (
+                      /* Desktop: original flyout submenu */
+                      <div
+                        className="relative"
+                        ref={submenuWrapRef}
+                        onMouseLeave={() => {
+                          setActiveCategory(null);
+                          setSubmenuTop(null);
+                          setSubmenuAnchorTop(null);
+                        }}
+                      >
+                        {/* Main menu list */}
+                        <div
+                          className="w-full rounded-2xl border border-white/10 overflow-hidden"
+                          style={{
+                            background: 'var(--editor-surface-1)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                          }}
+                        >
+                          <div
+                            ref={mainListScrollRef}
+                            className="addnode-scroll max-h-[360px] overflow-auto px-2 py-2"
+                          >
+                            {nodesByCategory.map(({ categoryId, category, nodes }) => {
+                              const isActive = categoryId === activeCategory;
+                              const count = nodes.length;
+
+                              return (
+                                <button
+                                  key={categoryId}
+                                  type="button"
+                                  onMouseEnter={(e) =>
+                                    openSubmenuFromTarget(
+                                      categoryId as NodeCategory,
+                                      e.currentTarget,
+                                    )
+                                  }
+                                  onFocus={(e) =>
+                                    openSubmenuFromTarget(
+                                      categoryId as NodeCategory,
+                                      e.currentTarget,
+                                    )
+                                  }
+                                  onClick={(e) =>
+                                    openSubmenuFromTarget(
+                                      categoryId as NodeCategory,
+                                      e.currentTarget,
+                                    )
+                                  }
+                                  className={`focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left transition-colors border cursor-pointer ${
+                                    isActive
+                                      ? 'bg-white/5 border-white/10'
+                                      : 'bg-transparent border-transparent hover:bg-white/4'
+                                  }`}
+                                  aria-haspopup="menu"
+                                  aria-expanded={isActive}
+                                >
+                                  <span className="flex items-center gap-2.5 min-w-0">
+                                    <span
+                                      className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
+                                      style={{ color: category.color }}
+                                    >
+                                      {renderNodeCategoryIcon(categoryId as NodeCategory, {
+                                        size: 16,
+                                        className: 'text-current',
+                                      })}
+                                    </span>
+                                    <span className="min-w-0">
+                                      <span className="block text-[14px] font-semibold text-white/90 truncate">
+                                        {category.label}
+                                      </span>
+                                      <span className="block text-[11px] text-white/35 truncate">
+                                        {count} node{count === 1 ? '' : 's'}
+                                      </span>
+                                    </span>
+                                  </span>
+                                  <ChevronRight
+                                    size={16}
+                                    className={`text-white/20 transition-transform ${
+                                      isActive ? 'translate-x-0.5' : 'group-hover:translate-x-0.5'
+                                    }`}
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Detached submenu popover */}
+                        <div
+                          className="absolute left-full ml-0 w-[300px] rounded-2xl border border-white/10 overflow-hidden"
+                          ref={submenuPopoverRef}
+                          style={{
+                            background: 'var(--editor-surface-1)',
+                            boxShadow:
+                              '0 18px 60px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.05)',
+                            top: submenuTop ?? 8,
+                            maxHeight: '315px',
+                            opacity: hoveredCategoryId ? 1 : 0,
+                            transform: hoveredCategoryId ? 'translateX(0px)' : 'translateX(-6px)',
+                            transitionProperty: 'opacity, transform',
+                            transitionDuration: 'var(--motion-fast)',
+                            transitionTimingFunction: 'var(--motion-ease-out)',
+                            pointerEvents: hoveredCategoryId ? 'auto' : 'none',
+                          }}
+                          role="menu"
+                          aria-label="Node options"
+                        >
+                          <div className="px-3 pt-3 pb-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/35">
+                                  {hoveredCategoryId ? 'Select node' : '—'}
+                                </div>
+                                <div className="text-[14px] font-semibold text-white/90 mt-1 truncate">
+                                  {hoveredCategory ? hoveredCategory.label : 'Hover a category'}
+                                </div>
+                              </div>
+                              {hoveredCategoryId && hoveredCategory && (
+                                <span
+                                  className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4 shrink-0"
+                                  style={{ color: hoveredCategory.color }}
+                                >
+                                  {renderNodeCategoryIcon(hoveredCategoryId, {
+                                    size: 16,
+                                    className: 'text-current',
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div
+                            className="addnode-scroll max-h-[250px] overflow-auto px-2 pb-2"
+                            style={{
+                              borderTop: '1px solid rgba(255,255,255,0.08)',
+                              background: 'var(--editor-surface-0)',
+                            }}
+                          >
+                            {hoveredCategoryId && (
+                              <div className="py-2">
+                                <div className="flex flex-col">
+                                  {hoveredNodes.map((node) => (
+                                    <button
+                                      key={node.type}
+                                      onClick={() => {
+                                        onAddNode(node.type);
+                                        closeMenu();
+                                      }}
+                                      onMouseEnter={(e) =>
+                                        handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
+                                      }
+                                      onMouseLeave={() => handleNodeItemHover(null)}
+                                      onFocus={(e) =>
+                                        handleNodeItemHover(node as NodeTypeConfig, e.currentTarget)
+                                      }
+                                      onBlur={() => handleNodeItemHover(null)}
+                                      className="motion-press focus-ring-orange group w-full flex items-center justify-between gap-3 px-2 py-2 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer"
+                                    >
+                                      <span className="flex items-center gap-2.5 min-w-0">
+                                        <span
+                                          className="grid place-items-center w-8 h-8 rounded-xl border border-white/10 bg-white/4"
+                                          style={{
+                                            color:
+                                              hoveredCategory?.color || 'rgba(255,255,255,0.75)',
+                                          }}
+                                        >
+                                          {renderNodeTypeIcon(node.type as CustomNodeType, {
+                                            size: 16,
+                                            className: 'text-current',
+                                          }) ?? <Plus size={16} className="text-current" />}
+                                        </span>
+                                        <span className="min-w-0">
+                                          <span className="block text-[15px] font-medium text-white/90 truncate">
+                                            {node.label}
+                                          </span>
+                                        </span>
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1195,7 +1213,9 @@ export function FlowToolbar({
                         Logs
                         {logCount > 0 && !logOpen ? ` (${logCount > 99 ? '99+' : logCount})` : ''}
                       </span>
-                      <span className="hidden sm:inline"><KbdBadge>` </KbdBadge></span>
+                      <span className="hidden sm:inline">
+                        <KbdBadge>` </KbdBadge>
+                      </span>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">
@@ -1253,7 +1273,11 @@ export function FlowToolbar({
                     <span className="hidden sm:inline text-[13px] font-semibold font-[system-ui,sans-serif]">
                       {pipelineRunning ? 'Running…' : 'Run'}
                     </span>
-                    {!pipelineRunning && <span className="hidden sm:inline"><KbdBadge>⌘↵</KbdBadge></span>}
+                    {!pipelineRunning && (
+                      <span className="hidden sm:inline">
+                        <KbdBadge>⌘↵</KbdBadge>
+                      </span>
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top">
