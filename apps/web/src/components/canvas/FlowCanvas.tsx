@@ -174,7 +174,13 @@ export function FlowCanvasInner({ tourContext = 'empty' }: Props) {
 
   const handleRunPipeline = useCallback(async () => {
     setLogOpen(true); // Auto-open log panel on run
-    await runPipeline(nodes, edges, executionStore, logStore.addLog);
+    const result = await runPipeline(nodes, edges, executionStore, logStore.addLog);
+    if (result.success) {
+      // Auto-open the first output node's panel so user can see the result immediately
+      const OUTPUT_NODE_PRIORITY: CustomNodeType[] = ['preview', 'export', 'manualEditor'];
+      const outputNode = OUTPUT_NODE_PRIORITY.map((t) => nodes.find((n) => n.type === t)).find(Boolean);
+      if (outputNode) setSelectedNode(outputNode as Node<CustomNodeData>);
+    }
   }, [nodes, edges, executionStore, logStore.addLog]);
 
   const handleToggleLog = useCallback(() => {
