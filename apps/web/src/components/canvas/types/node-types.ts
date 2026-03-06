@@ -270,6 +270,7 @@ export interface VideoGeneratorConfig {
   resolution: VideoResolution;
   shot_type?: 'single' | 'multi';
   prompt_extend?: boolean;
+  enableAudio?: boolean;
   model?: string;
   imageVideoModel?: string;
 }
@@ -769,6 +770,7 @@ export const defaultConfigs: Record<CustomNodeType, Record<string, unknown>> = {
     resolution: '720P',
     shot_type: 'single',
     prompt_extend: true,
+    enableAudio: false,
     model: getDefaultModel('textToVideo'),
     imageVideoModel: getDefaultModel('imageToVideo'),
   } satisfies VideoGeneratorConfig,

@@ -107,6 +107,7 @@ export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttribut
   ({ className, children, ...props }, ref) => {
     const { open, setOpen, triggerRef } = useSelect();
     const [rect, setRect] = React.useState<DOMRect | null>(null);
+    const contentRef = React.useRef<HTMLDivElement | null>(null);
 
     React.useEffect(() => {
       if (open && triggerRef.current) {
@@ -118,7 +119,9 @@ export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttribut
       if (!open) return;
       const handler = (e: MouseEvent) => {
         const target = e.target as Node;
+        // Do NOT close if click is on the trigger or inside the portaled dropdown content
         if (triggerRef.current?.contains(target)) return;
+        if (contentRef.current?.contains(target)) return;
         setOpen(false);
       };
       document.addEventListener('mousedown', handler);
@@ -135,7 +138,7 @@ export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttribut
     const style: React.CSSProperties = {
       position: 'fixed',
       left: rect.left,
-      width: rect.width,
+      minWidth: Math.max(rect.width, 200),
       zIndex: 99999,
       ...(openUpward
         ? { bottom: window.innerHeight - rect.top + 4 }
@@ -143,7 +146,14 @@ export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttribut
     };
 
     return createPortal(
-      <div style={style} ref={ref as React.Ref<HTMLDivElement>}>
+      <div
+        style={style}
+        ref={(el) => {
+          contentRef.current = el;
+          if (typeof ref === 'function') ref(el);
+          else if (ref) ref.current = el;
+        }}
+      >
         <div
           className={cx(
             'glass-surface-strong overflow-hidden rounded-xl border border-white/10',

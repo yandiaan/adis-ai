@@ -1,5 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
-import { ArrowRight, Image, Type, Video } from 'lucide-react';
+import { ArrowRight, Image, Type, Video, Volume2 } from 'lucide-react';
 import type { VideoGeneratorData, VideoResolution } from '../../types/node-types';
 import { ModelPicker } from './ModelPicker';
 import { MODEL_OPTIONS } from '../../config/modelOptions';
@@ -21,20 +21,40 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
   };
 
   const isT2V = config.mode === 'text2video';
-  const modelOptions = isT2V ? MODEL_OPTIONS.textToVideo : MODEL_OPTIONS.imageToVideo;
+  const enableAudio = config.enableAudio ?? false;
+
+  // Only show audio-capable models when audio is enabled
+  const allModelOptions = isT2V ? MODEL_OPTIONS.textToVideo : MODEL_OPTIONS.imageToVideo;
+  const modelOptions = enableAudio ? allModelOptions.filter((m) => m.supportsAudio) : allModelOptions;
+
   const activeModelId = isT2V ? (config.model ?? 'wan2.1-t2v-turbo') : (config.imageVideoModel ?? 'wan2.1-i2v-turbo');
-  const activeModel = modelOptions.find((m) => m.id === activeModelId);
+  const activeModel = allModelOptions.find((m) => m.id === activeModelId);
   const supportedResolutions = activeModel?.supportedResolutions
     ? ALL_RESOLUTIONS.filter((r) => activeModel.supportedResolutions!.includes(r))
     : ALL_RESOLUTIONS;
 
   const handleModelChange = (key: 'model' | 'imageVideoModel') => (modelId: string) => {
-    const model = modelOptions.find((m) => m.id === modelId);
+    const model = allModelOptions.find((m) => m.id === modelId);
     const updates: Partial<typeof config> = { [key]: modelId };
     if (model?.supportedResolutions && !model.supportedResolutions.includes(config.resolution)) {
       updates.resolution = model.supportedResolutions[0] as VideoResolution;
     }
     updateConfig(updates);
+  };
+
+  const handleToggleAudio = (enabled: boolean) => {
+    if (enabled) {
+      const currentOpt = allModelOptions.find((m) => m.id === activeModelId);
+      if (!currentOpt?.supportsAudio) {
+        const audioModel = allModelOptions.find((m) => m.supportsAudio);
+        if (audioModel) {
+          const key = isT2V ? 'model' : 'imageVideoModel';
+          updateConfig({ enableAudio: true, [key]: audioModel.id });
+          return;
+        }
+      }
+    }
+    updateConfig({ enableAudio: enabled });
   };
 
   return (
@@ -66,6 +86,31 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
             </div>
             <div className="text-[11px] text-white/30 mt-1">Terdeteksi otomatis dari koneksi</div>
           </div>
+        </div>
+
+        {/* Audio toggle */}
+        <div className="flex items-center justify-between p-3 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+          <div className="flex items-center gap-2.5">
+            <Volume2 size={14} className={enableAudio ? 'text-[#22d3ee]' : 'text-white/30'} />
+            <div>
+              <div className="text-[12px] font-medium" style={{ color: enableAudio ? '#22d3ee' : 'rgba(255,255,255,0.7)' }}>
+                Generate Audio
+              </div>
+              <div className="text-[10px] text-white/35 mt-0.5">
+                {enableAudio ? 'Auto dubbing aktif — hanya model audio yang tersedia' : 'Video tanpa audio'}
+              </div>
+            </div>
+          </div>
+          <button
+            className="w-10 h-5 rounded-full transition-all duration-200 relative cursor-pointer shrink-0"
+            style={{ background: enableAudio ? '#22d3ee' : 'rgba(255,255,255,0.12)' }}
+            onClick={() => handleToggleAudio(!enableAudio)}
+          >
+            <div
+              className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+              style={{ left: enableAudio ? '22px' : '2px' }}
+            />
+          </button>
         </div>
 
         {/* Duration */}
@@ -112,13 +157,13 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
         {/* Model */}
         {isT2V ? (
           <ModelPicker
-            options={MODEL_OPTIONS.textToVideo}
+            options={modelOptions}
             value={config.model ?? 'wan2.1-t2v-turbo'}
             onChange={handleModelChange('model')}
           />
         ) : (
           <ModelPicker
-            options={MODEL_OPTIONS.imageToVideo}
+            options={modelOptions}
             value={config.imageVideoModel ?? 'wan2.1-i2v-turbo'}
             onChange={handleModelChange('imageVideoModel')}
           />

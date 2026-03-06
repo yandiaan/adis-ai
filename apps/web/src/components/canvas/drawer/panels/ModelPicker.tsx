@@ -48,6 +48,9 @@ export function ModelPicker({ options, value, onChange }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-white/80 font-medium">{opt.label}</span>
+                      {opt.supportsAudio && (
+                        <span className="text-[8px] font-semibold px-1 rounded shrink-0" style={{ color: '#22d3ee', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}>🔊 Audio</span>
+                      )}
                       {IS_DEV && opt.devDefault && (
                         <span className="text-[8px] font-mono text-amber-400/80 bg-amber-400/10 px-1 rounded">🔧 DEV</span>
                       )}

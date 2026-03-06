@@ -13,6 +13,7 @@ type Props = {
  * Compact model dropdown for use inside node canvas cards.
  * Shows badge + short label in trigger; full details in dropdown.
  * In dev mode, marks devDefault options with a 🔧 chip.
+ * Models with supportsAudio show a 🔊 chip.
  */
 export function NodeModelSelect({ options, value, onChange }: Props) {
   const selected = options.find((o) => o.id === value) ?? options[0];
@@ -24,6 +25,9 @@ export function NodeModelSelect({ options, value, onChange }: Props) {
         <div className="flex items-center gap-1 min-w-0 truncate">
           <span className="text-[11px] leading-none shrink-0">{selected?.badge}</span>
           <span className="text-[9px] text-white/55 font-medium truncate">{selected?.label}</span>
+          {selected?.supportsAudio && (
+            <span className="text-[7px] font-semibold shrink-0" style={{ color: '#22d3ee' }}>🔊</span>
+          )}
           {IS_DEV && selected?.devDefault && (
             <span className="text-[7px] font-mono text-amber-400/70 shrink-0">DEV</span>
           )}
@@ -41,6 +45,9 @@ export function NodeModelSelect({ options, value, onChange }: Props) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-white/80 font-medium">{opt.label}</span>
+                    {opt.supportsAudio && (
+                      <span className="text-[8px] font-semibold px-1 rounded shrink-0" style={{ color: '#22d3ee', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}>🔊 Audio</span>
+                    )}
                     {IS_DEV && opt.devDefault && (
                       <span className="text-[8px] font-mono text-amber-400/80 bg-amber-400/10 px-1 rounded">DEV</span>
                     )}

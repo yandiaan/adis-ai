@@ -11,6 +11,8 @@ export interface ModelOption {
    * Undefined means all resolutions are supported.
    */
   supportedResolutions?: string[];
+  /** Video model that generates audio (dubbing/voiceover) together with the video */
+  supportsAudio?: boolean;
 }
 
 export const MODEL_OPTIONS = {
@@ -38,13 +40,13 @@ export const MODEL_OPTIONS = {
   textToVideo: [
     { id: 'wan2.1-t2v-turbo', label: 'Wan 2.1 Turbo', badge: '⚡', desc: 'Fast', price: '$0.036/s', devDefault: true },
     { id: 'wan2.2-t2v-plus', label: 'Wan 2.2 Plus', badge: '💸', desc: 'Cheaper at 480P', price: '$0.02/s', supportedResolutions: ['480P', '1080P'] },
-    { id: 'wan2.5-t2v-preview', label: 'Wan 2.5', badge: '🔥', desc: 'Newer + audio', price: '$0.05/s' },
-    { id: 'wan2.6-t2v', label: 'Wan 2.6', badge: '★', desc: 'Latest + audio', price: '$0.10/s', supportedResolutions: ['720P', '1080P'] },
+    { id: 'wan2.5-t2v-preview', label: 'Wan 2.5', badge: '🔥', desc: 'Newer + audio', price: '$0.05/s', supportsAudio: true },
+    { id: 'wan2.6-t2v', label: 'Wan 2.6', badge: '★', desc: 'Latest + audio', price: '$0.10/s', supportedResolutions: ['720P', '1080P'], supportsAudio: true },
   ] as ModelOption[],
   imageToVideo: [
     { id: 'wan2.1-i2v-turbo', label: 'Wan 2.1 Turbo', badge: '⚡', desc: 'Fast', price: '$0.036/s', devDefault: true },
     { id: 'wan2.2-i2v-flash', label: 'Wan 2.2 Flash', badge: '💸', desc: 'Cheapest', price: '$0.015/s', supportedResolutions: ['480P', '720P'] },
-    { id: 'wan2.6-i2v-flash', label: 'Wan 2.6 Flash', badge: '★', desc: 'Latest + audio', price: '$0.025/s', supportedResolutions: ['720P', '1080P'] },
+    { id: 'wan2.6-i2v-flash', label: 'Wan 2.6 Flash', badge: '★', desc: 'Latest + audio', price: '$0.025/s', supportedResolutions: ['720P', '1080P'], supportsAudio: true },
   ] as ModelOption[],
 };
 

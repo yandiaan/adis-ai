@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNodeId } from '@xyflow/react';
 import { useReactFlow } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
@@ -5,7 +6,7 @@ import { CompactNode } from '../CompactNode';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { VideoGeneratorData } from '../../types/node-types';
 import type { NodePortSchema, VideoData } from '../../types/port-types';
-import { Film, Settings2 } from 'lucide-react';
+import { Film, Settings2, Volume2 } from 'lucide-react';
 import { NodeModelSelect } from '../shared/NodeModelSelect';
 import { MODEL_OPTIONS } from '../../config/modelOptions';
 
@@ -83,6 +84,34 @@ export function VideoGeneratorNode({ id, data, selected }: NodeProps<Node<VideoG
   const updateConfig = (updates: Partial<typeof config>) =>
     updateNodeData(id, { config: { ...config, ...updates } });
 
+  const enableAudio = config.enableAudio ?? false;
+
+  const modelOptions = React.useMemo(() => {
+    const list = config.mode === 'text2video' ? MODEL_OPTIONS.textToVideo : MODEL_OPTIONS.imageToVideo;
+    return enableAudio ? list.filter((m) => m.supportsAudio) : list;
+  }, [config.mode, enableAudio]);
+
+  // When audio is toggled ON, auto-switch to an audio-capable model if needed.
+  const handleToggleAudio = (enabled: boolean) => {
+    if (enabled) {
+      const modelList = config.mode === 'text2video' ? MODEL_OPTIONS.textToVideo : MODEL_OPTIONS.imageToVideo;
+      const activeModelId = config.mode === 'text2video' ? config.model : config.imageVideoModel;
+      const currentOpt = modelList.find((m) => m.id === activeModelId);
+      if (!currentOpt?.supportsAudio) {
+        const audioModel = modelList.find((m) => m.supportsAudio);
+        if (audioModel) {
+          const patch =
+            config.mode === 'text2video'
+              ? { enableAudio: true, model: audioModel.id }
+              : { enableAudio: true, imageVideoModel: audioModel.id };
+          updateConfig(patch);
+          return;
+        }
+      }
+    }
+    updateConfig({ enableAudio: enabled });
+  };
+
   return (
     <CompactNode nodeType="videoGenerator" icon="" title={data.label} selected={selected} width={280} portSchema={dynamicSchema} hideOutputThumbnail>
       {/* Preview area */}
@@ -106,6 +135,12 @@ export function VideoGeneratorNode({ id, data, selected }: NodeProps<Node<VideoG
         <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'rgba(0,0,0,0.65)', color: '#f472b6' }}>
           {config.duration}s
         </div>
+        {enableAudio && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold" style={{ background: 'rgba(0,0,0,0.65)', color: '#22d3ee' }}>
+            <Volume2 size={8} />
+            <span>Audio</span>
+          </div>
+        )}
       </div>
 
       {/* Output chip */}
@@ -153,7 +188,7 @@ export function VideoGeneratorNode({ id, data, selected }: NodeProps<Node<VideoG
         <div className="flex items-center gap-1">
           <span className="text-[9px] text-white/25">Model</span>
           <NodeModelSelect
-            options={config.mode === 'text2video' ? MODEL_OPTIONS.textToVideo : MODEL_OPTIONS.imageToVideo}
+            options={modelOptions}
             value={(config.mode === 'text2video' ? config.model : config.imageVideoModel) ?? (config.mode === 'text2video' ? 'wan2.1-t2v-turbo' : 'wan2.1-i2v-turbo')}
             onChange={(m) => config.mode === 'text2video' ? updateConfig({ model: m }) : updateConfig({ imageVideoModel: m })}
           />
@@ -212,6 +247,26 @@ export function VideoGeneratorNode({ id, data, selected }: NodeProps<Node<VideoG
             />
           </button>
         </div>
+      </div>
+
+      {/* Audio toggle */}
+      <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <Volume2 size={10} className={enableAudio ? 'text-[#22d3ee]' : 'text-white/25'} />
+        <span className="text-[9px]" style={{ color: enableAudio ? '#22d3ee' : 'rgba(255,255,255,0.25)' }}>Audio</span>
+        {enableAudio && (
+          <span className="text-[8px] text-white/30 truncate">auto dubbing</span>
+        )}
+        <button
+          className="w-7 h-3.5 rounded-full transition-all duration-150 relative cursor-pointer ml-auto shrink-0"
+          style={{ background: enableAudio ? '#22d3ee' : 'rgba(255,255,255,0.1)' }}
+          onClick={() => handleToggleAudio(!enableAudio)}
+          title={enableAudio ? 'Disable audio generation' : 'Enable audio generation (auto-selects audio-capable model)'}
+        >
+          <div
+            className="absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all duration-150"
+            style={{ left: enableAudio ? '13px' : '2px' }}
+          />
+        </button>
       </div>
     </CompactNode>
   );
