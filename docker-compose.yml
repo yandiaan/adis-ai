@@ -17,9 +17,7 @@ services:
 
   # Server API Service
   api-server:
-    build:
-      context: .
-      dockerfile: apps/server/Dockerfile
+    image: ghcr.io/yandiaan/penginfo-handal-hackathon-api-server:latest
     container_name: penginfo-api-server
     restart: unless-stopped
     ports:
@@ -43,9 +41,7 @@ services:
 
   # Web Frontend Service
   web-frontend:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+    image: ghcr.io/yandiaan/penginfo-handal-hackathon-web-frontend:latest
     container_name: penginfo-web-frontend
     restart: unless-stopped
     ports:
