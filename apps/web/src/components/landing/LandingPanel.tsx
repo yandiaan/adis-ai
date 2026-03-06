@@ -9,8 +9,16 @@ export default function LandingPanel({ onHideLanding }: { onHideLanding?: () => 
   const [hideLanding, setHideLanding] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
   const svgRef = useRef<HTMLImageElement>(null);
   const svgRef2 = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -50,21 +58,29 @@ export default function LandingPanel({ onHideLanding }: { onHideLanding?: () => 
 
   if (hideLanding) return null;
 
+  const mobileNavLabels = ['About', 'How It Works', 'Nodes', 'Templates', 'Team'];
+
   return (
-    <div id="landing-root" className="relative w-full h-full overflow-hidden">
+    <div id="landing-root" className="relative w-full h-full overflow-hidden flex flex-col">
       <img
         ref={svgRef}
         src="/line-white-2.svg"
         alt="line white"
-        className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none translate-x-110"
+        className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none translate-x-110 hidden md:block"
         style={{ opacity: 0.3 }}
       />
-      <header className="flex items-center h-[15vh] px-8">
-        <img src="/logo.svg" alt="Logo" className="w-12 mr-4" />
-        <h1 className="text-5xl font-bold m-0">ADIS AI</h1>
+
+      {/* ── Header ── */}
+      <header className="flex items-center shrink-0 h-[12vh] md:h-[15vh] px-4 md:px-8 z-10">
+        <img src="/logo.svg" alt="Logo" className="w-8 md:w-12 mr-3 md:mr-4" />
+        <h1 className="text-3xl md:text-5xl font-bold m-0">ADIS AI</h1>
       </header>
-      <main className="flex flex-row px-8 h-[75vh]">
-        <aside className="w-80 flex flex-col justify-between h-full">
+
+      {/* ── Main ── */}
+      <main className="flex flex-col md:flex-row px-4 md:px-8 flex-1 min-h-0 z-10">
+
+        {/* Desktop sidebar — hidden on mobile */}
+        <aside className="hidden md:flex w-80 flex-col justify-between h-full">
           <div>
             <p className="text-base mb-8">
               ADIS AI is a modular content generation engine designed to transform your ideas into
@@ -75,34 +91,66 @@ export default function LandingPanel({ onHideLanding }: { onHideLanding?: () => 
           <div className="flex flex-col grow justify-center pt-[10%]">
             <h3 className="text-lg mb-2 text-left self-start -mt-[40%]">The Blueprint:</h3>
             <div className="flex justify-center w-full">
-              <BlueprintNav onIndexChange={setActiveIndex} />
+              {isDesktop && <BlueprintNav onIndexChange={setActiveIndex} />}
             </div>
           </div>
         </aside>
-        <section className="flex-1 flex items-center ml-24 mb-8 justify-end relative overflow-hidden">
-          <DynamicPanel activeIndex={activeIndex} onGetStarted={handleClick} />
-        </section>
-        <img
-          ref={svgRef2}
-          src="/line-white-2.svg"
-          alt="line white"
-          className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none translate-x-130"
-          style={{ opacity: 0.3 }}
-        />
-        <div className="w-20 bg-transparent"></div>
+
+        {/* Panel + mobile nav */}
+        <div className="flex-1 flex flex-col min-h-0 md:ml-24 mb-2 md:mb-8 overflow-hidden">
+          {/* Mobile horizontal tab nav */}
+          <div className="md:hidden flex items-center gap-1 overflow-x-auto py-2 mb-2 shrink-0"
+            style={{ scrollbarWidth: 'none' }}>
+            {mobileNavLabels.map((label, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveIndex(i)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                  activeIndex === i
+                    ? 'bg-white/15 text-white border-white/25'
+                    : 'text-white/40 border-transparent hover:text-white/60 hover:border-white/10'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Dynamic panel */}
+          <section className="flex-1 min-h-0 relative overflow-hidden rounded-lg">
+            <DynamicPanel activeIndex={activeIndex} onGetStarted={handleClick} />
+          </section>
+        </div>
+
+        <div className="hidden md:block w-20 bg-transparent" />
       </main>
-      <footer className="w-full flex flex-row items-center justify-between py-4 px-8 bg-transparent h-[10vh]">
-        <div className="flex flex-col items-start justify-center w-80">
-          <span className="text-sm mb-2">Powered by:</span>
-          <div className="flex gap-6">
-            <img src="/logo-alibaba.svg" alt="Alibaba Cloud" className="h-14" />
-            <img src="/logo-qwen.svg" alt="Star" className="h-12" />
+
+      <img
+        ref={svgRef2}
+        src="/line-white-2.svg"
+        alt="line white"
+        className={`absolute inset-0 w-full h-full object-cover pointer-events-none translate-x-130 hidden md:block ${activeIndex === 0 ? 'z-20' : 'z-0'}`}
+        style={{ opacity: 0.3 }}
+      />
+
+      {/* ── Footer ── */}
+      <footer className="shrink-0 w-full flex flex-col md:flex-row items-center justify-between py-3 md:py-4 px-4 md:px-8 bg-transparent z-10 gap-3 md:gap-0">
+        {/* Powered by logos */}
+        <div className="flex flex-row items-center gap-4 md:flex-col md:items-start md:justify-center md:w-80">
+          <span className="text-sm text-white/60 hidden md:inline">Powered by:</span>
+          <div className="flex gap-4 md:gap-6 items-center">
+            <img src="/logo-alibaba.svg" alt="Alibaba Cloud" className="h-8 md:h-14" />
+            <img src="/logo-qwen.svg" alt="Star" className="h-7 md:h-12" />
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center flex-1">
+
+        {/* CTA */}
+        <div className="flex flex-col items-center justify-center flex-1 order-first md:order-none">
           <GetStartedButton onClick={handleClick} onHoverChange={setButtonHovered} />
         </div>
-        <div className="flex flex-col items-end justify-center w-80">
+
+        {/* Tagline */}
+        <div className="hidden md:flex flex-col items-end justify-center w-80">
           <div className="text-right text-gray-400 text-sm max-w-xs">
             Powered by Wan & Qwen "Modular AI creativity on Alibaba Cloud PAI-EAS."
           </div>

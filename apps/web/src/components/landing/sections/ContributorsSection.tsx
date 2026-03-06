@@ -218,7 +218,7 @@ const ContributorCard = memo(function ContributorCard({
           </div>
         </div>
 
-        <p className="text-xs text-slate-400 leading-relaxed flex-1 mt-4">{c.bio}</p>
+        <p className="text-xs text-slate-400 leading-relaxed flex-1 mt-1 sm:mt-4">{c.bio}</p>
 
         {/* Social Links */}
         <div className="flex gap-3 py-1.5">
@@ -309,16 +309,16 @@ export function ContributorsSection() {
       </div>
 
       {/* Header */}
-      <div ref={headRef} className="relative z-10 shrink-0 px-5 pt-4 pb-2 text-center">
-        <h2 className="text-4xl font-bold text-white tracking-tight">
+      <div ref={headRef} className="relative z-10 shrink-0 px-5 pt-3 sm:pt-4 pb-2 text-center">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight">
           Built by <span className="text-primary">Architects</span> of the Future.
         </h2>
         <div className="h-1 w-16 bg-white/20 mx-auto rounded-full mt-2" />
       </div>
 
       {/* Cards */}
-      <div className="relative z-10 flex-1 px-8 sm:px-12 md:px-16 lg:px-20 pb-8 min-h-0 overflow-visible flex items-center justify-center">
-        <div className="grid grid-cols-3 gap-6 h-fit w-full max-h-full">
+      <div className="relative z-10 flex-1 px-4 sm:px-8 md:px-12 lg:px-16 pb-4 sm:pb-8 min-h-0 overflow-y-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
           {contributors.map((c, i) => (
             <ContributorCard key={c.name} c={c} index={i} />
           ))}

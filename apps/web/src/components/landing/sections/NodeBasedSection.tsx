@@ -288,25 +288,25 @@ export function NodeBasedSection({ onGetStarted }: SectionProps) {
         style={{ background: 'radial-gradient(circle, rgba(96,165,250,0.05) 0%, transparent 70%)', filter: 'blur(40px)' }}
       />
 
-      <div ref={ref} className="relative z-10 flex flex-col h-full px-6 sm:px-10 md:px-14 py-6 sm:py-8 overflow-y-auto">
+      <div ref={ref} className="relative z-10 flex flex-col h-full px-4 sm:px-10 md:px-14 py-4 sm:py-6 md:py-8 overflow-y-auto">
         {/* Header */}
-        <div ref={headerRef} className="text-center mb-6 sm:mb-8 shrink-0">
+        <div ref={headerRef} className="text-center mb-4 sm:mb-6 md:mb-8 shrink-0">
           <p className="text-white/30 text-xs font-bold tracking-[0.25em] uppercase mb-2">
             Visual Programming
           </p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight uppercase">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-tight tracking-tight uppercase">
             Node Based System
           </h2>
-          <p className="text-slate-400 text-sm mt-3 max-w-sm mx-auto leading-relaxed">
+          <p className="text-slate-400 text-sm mt-2 sm:mt-3 max-w-sm mx-auto leading-relaxed">
             Connect intelligent building blocks to create powerful AI pipelines.
           </p>
         </div>
 
         {/* Pipeline preview */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-5 sm:gap-6 min-h-0">
+        <div className="flex-1 flex flex-col items-center min-h-0 gap-4 sm:gap-5 md:gap-6 md:justify-center">
           {/* Node row with wires — horizontally scrollable on very small screens */}
-          <div className="w-full overflow-x-auto pb-2">
-            <div className="flex items-center justify-center gap-0 min-w-max mx-auto px-2">
+          <div className="w-full overflow-x-auto py-4 shrink-0">
+            <div className="flex items-center justify-center gap-0 min-w-max mx-auto px-4">
               {previewNodes.map((node, i) => (
                 <div key={node.type} className="flex items-center">
                   <div className="w-44 sm:w-52 md:w-60">

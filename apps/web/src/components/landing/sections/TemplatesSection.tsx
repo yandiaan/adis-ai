@@ -226,19 +226,19 @@ export function TemplatesSection({ onGetStarted }: SectionProps) {
         style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 70%)', filter: 'blur(40px)' }}
       />
 
-      <div ref={ref} className="relative z-10 flex flex-col h-full px-6 sm:px-10 md:px-14 py-6 sm:py-8 overflow-y-auto">
+      <div ref={ref} className="relative z-10 flex flex-col h-full px-4 sm:px-10 md:px-14 py-4 sm:py-6 md:py-8 overflow-y-auto">
         {/* Header */}
-        <div ref={headerRef} className="text-center mb-6 sm:mb-8 shrink-0">
+        <div ref={headerRef} className="text-center mb-4 sm:mb-6 md:mb-8 shrink-0">
           <p className="text-white/30 text-xs font-bold tracking-[0.25em] uppercase mb-2">Quick Start</p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight uppercase">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-tight tracking-tight uppercase">
             Templates
           </h2>
-          <p className="text-slate-400 text-sm mt-3 max-w-sm mx-auto leading-relaxed">
+          <p className="text-slate-400 text-sm mt-2 sm:mt-3 max-w-sm mx-auto leading-relaxed">
             Pre-built AI pipelines. Each template is a complete node graph ready to run.
           </p>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center min-h-0 gap-4">
+        <div className="flex-1 flex flex-col min-h-0 gap-3 sm:gap-4 md:justify-center">
           {/* 2x2 template grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {templates.map((t, i) => (

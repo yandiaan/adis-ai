@@ -192,26 +192,26 @@ export function HowItWorksSection({ onGetStarted }: SectionProps) {
         }}
       />
 
-      <div ref={ref} className="relative z-10 flex flex-col h-full px-6 sm:px-10 md:px-14 py-6 sm:py-8 overflow-y-auto">
+      <div ref={ref} className="relative z-10 flex flex-col h-full px-4 sm:px-10 md:px-14 py-4 sm:py-6 md:py-8 overflow-y-auto">
         {/* Header */}
-        <div ref={headerRef} className="text-center mb-6 sm:mb-8 shrink-0">
+        <div ref={headerRef} className="text-center mb-4 sm:mb-6 md:mb-8 shrink-0">
           <p className="text-white/30 text-xs font-bold tracking-[0.25em] uppercase mb-2">
             The Logic Engine
           </p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight uppercase">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-tight tracking-tight uppercase">
             How It Works
           </h2>
-          <p className="text-slate-400 text-sm mt-3 max-w-sm mx-auto leading-relaxed">
+          <p className="text-slate-400 text-sm mt-2 sm:mt-3 max-w-sm mx-auto leading-relaxed">
             Visualize your creative process through our advanced node-based workflow.
           </p>
         </div>
 
         {/* Steps flow */}
-        <div className="flex-1 flex flex-col justify-center min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 md:justify-center">
           <div className="relative">
-            {/* Connecting line – only visible on md+ where all 5 fit in a row */}
+            {/* Connecting line – only visible on lg+ where all 5 fit in a row */}
             <div
-              className="absolute left-0 right-0 h-px z-0 hidden md:block"
+              className="absolute left-0 right-0 h-px z-0 hidden lg:block"
               style={{
                 top: '32px',
                 background:
@@ -219,8 +219,8 @@ export function HowItWorksSection({ onGetStarted }: SectionProps) {
               }}
             />
 
-            {/* Responsive grid: 2 col on mobile, 3 on sm, 5 on md+ */}
-            <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+            {/* Responsive grid: 2 cols on mobile, 3 on sm/md, 5 on lg+ */}
+            <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
               {steps.map((s, i) => (
                 <StepNode key={s.n} step={s} index={i} inView={inView} />
               ))}
@@ -230,7 +230,7 @@ export function HowItWorksSection({ onGetStarted }: SectionProps) {
           {/* CTA card */}
           <div
             ref={ctaRef}
-            className="mt-6 sm:mt-8 rounded-xl border border-white/10 bg-surface-panel px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            className="mt-4 sm:mt-6 md:mt-8 rounded-xl border border-white/10 bg-surface-panel px-4 sm:px-5 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4"
           >
             <div>
               <h4 className="text-white font-bold text-sm sm:text-base">

@@ -166,18 +166,30 @@ export function AboutSection() {
       `}</style>
 
       <div className="relative w-full h-full overflow-hidden">
+        {/* Dark gradient on left so text is always readable */}
+        <div
+          className="absolute inset-y-0 left-0 z-10 pointer-events-none w-3/4 md:w-2/3"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(15,15,15,0.92) 0%, rgba(15,15,15,0.75) 50%, transparent 100%)',
+          }}
+        />
+
         <div
           ref={textRef}
-          className="absolute left-8 sm:left-14 md:left-20 top-1/2 -translate-y-1/2 z-20 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg"
+          className="absolute left-5 sm:left-10 md:left-16 lg:left-20 bottom-6 md:top-1/2 md:bottom-auto md:-translate-y-1/2 z-20 max-w-[52%] sm:max-w-[44%] md:max-w-md lg:max-w-lg"
           style={{ opacity: 0, willChange: 'transform, opacity' }}
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold italic mb-3 sm:mb-4 text-white uppercase tracking-tighter leading-tight">
+          <h2 className="text-lg sm:text-2xl md:text-4xl lg:text-5xl font-bold italic mb-2 md:mb-4 text-white uppercase tracking-tighter leading-tight">
             Redefining Digital Expression
           </h2>
-          <p className="text-xs sm:text-sm md:text-base text-gray-300 leading-relaxed">
+          <p className="hidden sm:block text-xs sm:text-sm md:text-base text-gray-300 leading-relaxed">
             Unlike traditional black-box AI where users have zero control over the pipeline, our
             node-based architecture provides full transparency and modularity. Users can audit,
             tweak, and perfect every step of the sticker creation process.
+          </p>
+          <p className="sm:hidden text-[11px] text-gray-300 leading-relaxed">
+            Node-based AI pipeline with full transparency and control.
           </p>
         </div>
 
