@@ -4,6 +4,7 @@ import FlowCanvas from '@/components/canvas';
 import { TemplateSelector } from './canvas/TemplateSelector';
 import { WorkspaceSidebar } from './layout/WorkspaceSidebar';
 import type { PipelineTemplate } from './canvas/templates';
+import type { TourContext } from './canvas/tour/tourSteps';
 
 type AppView = 'landing' | 'template-picker' | 'canvas';
 
@@ -16,6 +17,7 @@ export default function LandingCanvasWrapper() {
     return 'landing';
   });
   const [canvasKey, setCanvasKey] = useState(0);
+  const [tourContext, setTourContext] = useState<TourContext>('empty');
 
   const handleGetStarted = useCallback(() => {
     setView('template-picker');
@@ -31,6 +33,15 @@ export default function LandingCanvasWrapper() {
     }
     window.history.replaceState({}, '', url.toString());
 
+    // Determine tour context based on template type
+    if (!template) {
+      setTourContext('empty');
+    } else if (template.id.startsWith('ai-')) {
+      setTourContext('ai-template');
+    } else {
+      setTourContext('builtin-template');
+    }
+
     // Increment canvasKey to force FlowCanvas remount with new template
     setCanvasKey((prev) => prev + 1);
     setView('canvas');
@@ -41,6 +52,8 @@ export default function LandingCanvasWrapper() {
     const url = new URL(window.location.href);
     url.searchParams.delete('template');
     window.history.replaceState({}, '', url.toString());
+
+    setTourContext('empty');
 
     // Increment canvasKey to force FlowCanvas remount with blank canvas
     setCanvasKey((prev) => prev + 1);
@@ -84,7 +97,7 @@ export default function LandingCanvasWrapper() {
 
       {view === 'canvas' && (
         <div className="ml-16 h-full">
-          <FlowCanvas key={canvasKey} />
+          <FlowCanvas key={canvasKey} tourContext={tourContext} />
         </div>
       )}
     </div>

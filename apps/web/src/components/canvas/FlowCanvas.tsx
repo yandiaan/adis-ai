@@ -32,8 +32,15 @@ import { ConnectPortMenu, type ConnectMenuState } from './ConnectPortMenu';
 import { NODE_PORT_SCHEMAS } from './types/node-types';
 import type { CustomNodeData, CustomNodeType } from './types/node-types';
 import type { PortDataType } from './types/port-types';
+import { useTour } from './tour/useTour';
+import { TourOverlay } from './tour/TourOverlay';
+import type { TourContext } from './tour/tourSteps';
 
-export function FlowCanvasInner() {
+type Props = {
+  tourContext?: TourContext;
+};
+
+export function FlowCanvasInner({ tourContext = 'empty' }: Props) {
   const {
     nodes,
     edges,
@@ -59,6 +66,7 @@ export function FlowCanvasInner() {
   const executionStore = useExecutionStore();
   const logStore = useLogStore();
   const { screenToFlowPosition, getNode } = useReactFlow();
+  const tour = useTour(tourContext, nodes);
 
   // Load template from URL params on mount
   useTemplateLoader(setNodes, setEdges);
@@ -251,6 +259,16 @@ export function FlowCanvasInner() {
         )}
 
         <Toaster position="top-right" richColors />
+
+        <TourOverlay
+          step={tour.currentStep}
+          stepIndex={tour.stepIndex}
+          totalSteps={tour.totalSteps}
+          nodes={nodes}
+          onNext={tour.next}
+          onPrev={tour.prev}
+          onSkip={tour.skip}
+        />
       </div>
     </ExecutionContext.Provider>
   );

@@ -583,6 +583,7 @@ export function FlowToolbar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
+                    data-tour="add-node-btn"
                     onClick={toggleMenu}
                     className="motion-lift motion-press focus-ring-orange group flex items-center gap-2 pl-2 pr-2 py-1.5 rounded-xl border text-white/80 hover:text-white"
                     style={{
@@ -1118,6 +1119,7 @@ export function FlowToolbar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
+                    data-tour="run-btn"
                     onClick={onRunPipeline}
                     disabled={pipelineRunning}
                     aria-label="Run pipeline"

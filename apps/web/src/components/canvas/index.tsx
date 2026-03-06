@@ -1,10 +1,15 @@
 import { ReactFlowProvider } from '@xyflow/react';
 import { FlowCanvasInner } from './FlowCanvas';
+import type { TourContext } from './tour/tourSteps';
 
-export default function FlowCanvas() {
+type Props = {
+  tourContext?: TourContext;
+};
+
+export default function FlowCanvas({ tourContext = 'empty' }: Props) {
   return (
     <ReactFlowProvider>
-      <FlowCanvasInner />
+      <FlowCanvasInner tourContext={tourContext} />
     </ReactFlowProvider>
   );
 }

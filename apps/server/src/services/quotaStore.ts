@@ -79,18 +79,14 @@ const stmtUpsertQuota = db.prepare<[string, string, string]>(`
     date  = excluded.date
 `);
 
-const stmtResetQuota = db.prepare<[string]>(
-  'DELETE FROM quota_usage WHERE composite_key = ?',
-);
+const stmtResetQuota = db.prepare<[string]>('DELETE FROM quota_usage WHERE composite_key = ?');
 
 export function getQuota(
   key: string,
   category: QuotaCategory,
 ): { count: number; limit: number; resetAt: string } {
   const today = todayUTC();
-  const row = stmtGetQuota.get(key, category) as
-    | { count: number; date: string }
-    | undefined;
+  const row = stmtGetQuota.get(key, category) as { count: number; date: string } | undefined;
   const count = row && row.date === today ? row.count : 0;
   return { count, limit: QUOTA_LIMITS[category], resetAt: nextMidnightUTC() };
 }
@@ -122,9 +118,7 @@ export function getSpend(category: QuotaCategory): {
   resetAt: string;
 } {
   const today = todayUTC();
-  const row = stmtGetSpend.get(category) as
-    | { spend: number; date: string }
-    | undefined;
+  const row = stmtGetSpend.get(category) as { spend: number; date: string } | undefined;
   const spend = row && row.date === today ? row.spend : 0;
   return { spend, resetAt: nextMidnightUTC() };
 }
