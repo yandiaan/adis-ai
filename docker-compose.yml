@@ -29,6 +29,10 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - DAILY_BUDGET_VIDEO=5.00
+      - DAILY_BUDGET_IMAGE=5.00
+      - DAILY_BUDGET_TEXT=1.00
+      - DAILY_BUDGET_PIPELINE=5.00
       - TRUST_PROXY=1
     volumes:
       - server-data:/app/apps/server/data

@@ -64,8 +64,16 @@ async function sampleAudio(): Promise<string> {
 
 function sampleFonts(): string {
   const testFonts = [
-    'Arial', 'Verdana', 'Helvetica', 'Times New Roman', 'Courier New',
-    'Georgia', 'Trebuchet MS', 'Impact', 'Comic Sans MS', 'Palatino',
+    'Arial',
+    'Verdana',
+    'Helvetica',
+    'Times New Roman',
+    'Courier New',
+    'Georgia',
+    'Trebuchet MS',
+    'Impact',
+    'Comic Sans MS',
+    'Palatino',
   ];
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');

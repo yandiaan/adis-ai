@@ -36,11 +36,7 @@ function detectCategory(originalUrl: string): QuotaCategory {
   return 'text';
 }
 
-export function compositeIdentityMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
+export function compositeIdentityMiddleware(req: Request, res: Response, next: NextFunction): void {
   if (process.env.NODE_ENV === 'development') return next();
 
   const category = detectCategory(req.originalUrl);
