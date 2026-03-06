@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -89,6 +89,33 @@ export function FlowCanvasInner({ tourContext = 'empty', onOpenTemplatePicker, o
   const handleCloseDrawer = useCallback(() => {
     setSelectedNode(null);
   }, []);
+
+  // Listen for canvas:open-export-node (dispatched from PreviewPanel CTA)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const fromNodeId = (e as CustomEvent<{ fromNodeId: string }>).detail?.fromNodeId;
+
+      // Prefer export node connected downstream from the preview node;
+      // fall back to any export node on the canvas.
+      const exportNode =
+        (fromNodeId
+          ? nodes.find(
+              (n) =>
+                n.type === 'export' &&
+                edges.some((edge) => edge.source === fromNodeId && edge.target === n.id),
+            )
+          : undefined) ?? nodes.find((n) => n.type === 'export');
+
+      if (exportNode) {
+        setSelectedNode(exportNode as Node<CustomNodeData>);
+      } else {
+        toast.info('Tambahkan Export node ke pipeline terlebih dahulu.');
+      }
+    };
+
+    window.addEventListener('canvas:open-export-node', handler);
+    return () => window.removeEventListener('canvas:open-export-node', handler);
+  }, [nodes, edges]);
 
   // ---------------- connect-to-empty-canvas handlers ----------------
   // Wrap onConnect so we know when a real edge was formed during a drag.

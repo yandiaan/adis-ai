@@ -71,7 +71,7 @@ export function TextOverlayNode({ id, data, selected }: NodeProps<Node<TextOverl
   const pos = POSITION_MAP[config.position] ?? POSITION_MAP['bottom-center'];
 
   return (
-    <CompactNode nodeType="textOverlay" icon="" title={data.label} selected={selected}>
+    <CompactNode nodeType="textOverlay" icon="" title={data.label} selected={selected} hideOutputThumbnail>
       {/* Miniature position preview */}
       <div className="relative w-full h-14 rounded-md bg-white/5 border border-white/10 overflow-hidden mb-2">
         <div className="absolute inset-2 rounded bg-white/5" />

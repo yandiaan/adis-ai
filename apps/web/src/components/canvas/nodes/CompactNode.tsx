@@ -23,6 +23,8 @@ export interface CompactNodeProps {
   width?: number;
   maxWidth?: number;
   portSchema?: NodePortSchema;
+  /** Set to true when the node renders its own image/video preview in children */
+  hideOutputThumbnail?: boolean;
 }
 
 const STATUS_COLORS: Record<
@@ -52,6 +54,7 @@ export function CompactNode({
   width,
   maxWidth,
   portSchema,
+  hideOutputThumbnail = false,
 }: CompactNodeProps) {
   const category = getCategoryForNodeType(nodeType);
   const schema = portSchema ?? NODE_PORT_SCHEMAS[nodeType];
@@ -245,8 +248,8 @@ export function CompactNode({
         </div>
       )}
 
-      {/* Output thumbnail — shown when node has image/video output */}
-      {showThumbnail && (
+      {/* Output thumbnail — shown when node has image/video output and no custom preview */}
+      {showThumbnail && !hideOutputThumbnail && (
         <div
           className="relative mx-3 mb-3 rounded-xl overflow-hidden border border-white/10 cursor-pointer group"
           style={{ maxHeight: 140 }}

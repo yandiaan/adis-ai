@@ -16,6 +16,37 @@ import {
 
 const router: RouterType = Router();
 
+// Shared Zod union for prompt inputs — accepts both enhanced (type:'prompt') and raw text (type:'text')
+const promptInputSchema = z
+  .object({
+    type: z.literal('prompt'),
+    data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
+  })
+  .or(
+    z.object({
+      type: z.literal('text'),
+      data: z.object({ text: z.string() }),
+    }),
+  )
+  .optional();
+
+/** Extract prompt text from either input shape */
+function extractPromptText(
+  input: { type: 'prompt'; data: { prompt: string } } | { type: 'text'; data: { text: string } } | undefined,
+): string {
+  if (!input) return '';
+  if (input.type === 'text') return input.data.text;
+  return input.data.prompt;
+}
+
+/** Extract negative prompt (only available from type:'prompt') */
+function extractNegativePrompt(
+  input: { type: 'prompt'; data: { prompt: string; negativePrompt?: string } } | { type: 'text'; data: { text: string } } | undefined,
+): string | undefined {
+  if (!input || input.type !== 'prompt') return undefined;
+  return input.data.negativePrompt;
+}
+
 // --- Prompt Enhancer ---
 const promptEnhancerSchema = z.object({
   config: z.object({
@@ -115,12 +146,7 @@ const imageGeneratorSchema = z.object({
     imageEditModel: z.string().optional(),
   }),
   inputs: z.object({
-    prompt: z
-      .object({
-        type: z.literal('prompt'),
-        data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
-      })
-      .optional(),
+    prompt: promptInputSchema,
     style: z.any().optional(),
     image: z
       .object({
@@ -143,10 +169,9 @@ router.post('/image-generator/run', async (req, res, next) => {
     const startTime = Date.now();
     const { config, inputs } = imageGeneratorSchema.parse(req.body);
 
-    const promptData = inputs.prompt?.data as
-      | { prompt: string; negativePrompt?: string }
-      | undefined;
-    if (!promptData?.prompt) {
+    const promptText = extractPromptText(inputs.prompt as any);
+    const negativePrompt = extractNegativePrompt(inputs.prompt as any);
+    if (!promptText) {
       res.status(400).json({ error: 'Prompt input required' });
       return;
     }
@@ -158,9 +183,9 @@ router.post('/image-generator/run', async (req, res, next) => {
       const urls = await editImage({
         model: config.imageEditModel,
         images: [(inputs.image.data as { url: string }).url],
-        text: promptData.prompt,
+        text: promptText,
         size,
-        negative_prompt: promptData.negativePrompt,
+        negative_prompt: negativePrompt,
         prompt_extend: config.prompt_extend,
         seed: config.seed ?? undefined,
       });
@@ -186,8 +211,8 @@ router.post('/image-generator/run', async (req, res, next) => {
         // Qwen image models use the DashScope multimodal-generation sync endpoint
         const urls = await generateImageWithQwen({
           model,
-          prompt: promptData.prompt,
-          negative_prompt: promptData.negativePrompt,
+          prompt: promptText,
+          negative_prompt: negativePrompt,
           size,
           prompt_extend: config.prompt_extend,
           seed: config.seed ?? undefined,
@@ -197,8 +222,8 @@ router.post('/image-generator/run', async (req, res, next) => {
         // Wan models use the DashScope async task endpoint
         const taskId = await generateImage({
           model,
-          prompt: promptData.prompt,
-          negative_prompt: promptData.negativePrompt,
+          prompt: promptText,
+          negative_prompt: negativePrompt,
           size,
           prompt_extend: config.prompt_extend,
           seed: config.seed ?? undefined,
@@ -237,12 +262,7 @@ const videoGeneratorSchema = z.object({
     imageVideoModel: z.string().optional(),
   }),
   inputs: z.object({
-    prompt: z
-      .object({
-        type: z.literal('prompt'),
-        data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
-      })
-      .optional(),
+    prompt: promptInputSchema,
     style: z.any().optional(),
     image: z
       .object({
@@ -270,10 +290,8 @@ router.post('/video-generator/run', async (req, res, next) => {
     const startTime = Date.now();
     const { config, inputs } = videoGeneratorSchema.parse(req.body);
 
-    const promptData = inputs.prompt?.data as
-      | { prompt: string; negativePrompt?: string }
-      | undefined;
-    if (!promptData?.prompt) {
+    const promptText = extractPromptText(inputs.prompt as any);
+    if (!promptText) {
       res.status(400).json({ error: 'Prompt input required' });
       return;
     }
@@ -285,7 +303,7 @@ router.post('/video-generator/run', async (req, res, next) => {
       // Image-to-video: uses resolution param (e.g., "720P")
       taskId = await generateVideoFromImage({
         model: config.imageVideoModel,
-        prompt: promptData.prompt,
+        prompt: promptText,
         img_url: (inputs.image.data as { url: string }).url,
         resolution: config.resolution,
         duration: config.duration,
@@ -297,7 +315,7 @@ router.post('/video-generator/run', async (req, res, next) => {
       // Text-to-video: uses size param (e.g., "1280*720")
       taskId = await generateVideo({
         model: config.model,
-        prompt: promptData.prompt,
+        prompt: promptText,
         size: resolutionToSizeMap[config.resolution] || '1280*720',
         duration: config.duration,
         shot_type: config.shot_type as 'single' | 'multi' | undefined,
@@ -1243,12 +1261,7 @@ const videoRepaintingSchema = z.object({
     prompt_extend: z.boolean().optional(),
   }),
   inputs: z.object({
-    prompt: z
-      .object({
-        type: z.literal('prompt'),
-        data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
-      })
-      .optional(),
+    prompt: promptInputSchema,
     video: z
       .object({
         type: z.literal('video'),
@@ -1269,8 +1282,8 @@ router.post('/video-repainting/run', async (req, res, next) => {
     const startTime = Date.now();
     const { config, inputs } = videoRepaintingSchema.parse(req.body);
 
-    const promptData = inputs.prompt?.data;
-    if (!promptData?.prompt) {
+    const promptText = extractPromptText(inputs.prompt as any);
+    if (!promptText) {
       res.status(400).json({ error: 'Prompt input required' });
       return;
     }
@@ -1283,7 +1296,7 @@ router.post('/video-repainting/run', async (req, res, next) => {
     const refImageUrl = (inputs.image?.data as { url: string })?.url;
 
     const taskId = await repaintVideo({
-      prompt: promptData.prompt,
+      prompt: promptText,
       video_url: videoUrl,
       control_condition: config.control_condition as 'posebodyface' | 'posebody' | 'depth' | 'scribble',
       strength: config.strength,
@@ -1316,12 +1329,7 @@ const videoExtensionSchema = z.object({
     prompt_extend: z.boolean().optional(),
   }),
   inputs: z.object({
-    prompt: z
-      .object({
-        type: z.literal('prompt'),
-        data: z.object({ prompt: z.string(), negativePrompt: z.string().optional() }),
-      })
-      .optional(),
+    prompt: promptInputSchema,
     video: z
       .object({
         type: z.literal('video'),
@@ -1342,8 +1350,8 @@ router.post('/video-extension/run', async (req, res, next) => {
     const startTime = Date.now();
     const { config, inputs } = videoExtensionSchema.parse(req.body);
 
-    const promptData = inputs.prompt?.data;
-    if (!promptData?.prompt) {
+    const promptText = extractPromptText(inputs.prompt as any);
+    if (!promptText) {
       res.status(400).json({ error: 'Prompt input required' });
       return;
     }
@@ -1357,7 +1365,7 @@ router.post('/video-extension/run', async (req, res, next) => {
     }
 
     const taskId = await extendVideo({
-      prompt: promptData.prompt,
+      prompt: promptText,
       ...(config.direction === 'forward'
         ? videoUrl
           ? { first_clip_url: videoUrl }

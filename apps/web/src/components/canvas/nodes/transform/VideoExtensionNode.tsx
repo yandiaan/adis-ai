@@ -54,7 +54,7 @@ export function VideoExtensionNode({ id, data, selected }: NodeProps<Node<VideoE
     updateNodeData(id, { config: { ...config, ...updates } });
 
   return (
-    <CompactNode nodeType="videoExtension" icon="⏩" title={data.label} selected={selected} width={240}>
+    <CompactNode nodeType="videoExtension" icon="⏩" title={data.label} selected={selected} width={240} hideOutputThumbnail>
       {/* Preview */}
       <div className="relative w-full overflow-hidden rounded-lg mb-3" style={{ height: 120, background: '#0e0e16' }}>
         {outputVideo ? (

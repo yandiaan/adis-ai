@@ -36,6 +36,7 @@ export function ColorFilterNode({ id, data, selected }: NodeProps<Node<ColorFilt
       icon=""
       title={data.label}
       selected={selected}
+      hideOutputThumbnail
     >
       {/* Filter gradient preview */}
       <div

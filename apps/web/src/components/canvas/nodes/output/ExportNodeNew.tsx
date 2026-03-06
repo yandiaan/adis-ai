@@ -73,7 +73,7 @@ export function ExportNode({ data, selected }: NodeProps<Node<ExportData>>) {
   };
 
   return (
-    <CompactNode nodeType="export" icon="" title={data.label} selected={selected} width={220}>
+    <CompactNode nodeType="export" icon="" title={data.label} selected={selected} width={220} hideOutputThumbnail>
       {resolvedMediaUrl ? (
         <>
           {/* Thumbnail with lightbox */}

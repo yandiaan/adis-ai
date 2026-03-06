@@ -25,6 +25,7 @@ export function ImageUpscalerNode({ id, data, selected }: NodeProps<Node<ImageUp
       icon=""
       title={data.label}
       selected={selected}
+      hideOutputThumbnail
     >
       <div className="flex items-center gap-3">
         {/* Scale indicator */}

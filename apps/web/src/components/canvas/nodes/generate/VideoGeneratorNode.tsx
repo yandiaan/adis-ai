@@ -84,7 +84,7 @@ export function VideoGeneratorNode({ id, data, selected }: NodeProps<Node<VideoG
     updateNodeData(id, { config: { ...config, ...updates } });
 
   return (
-    <CompactNode nodeType="videoGenerator" icon="" title={data.label} selected={selected} width={280} portSchema={dynamicSchema}>
+    <CompactNode nodeType="videoGenerator" icon="" title={data.label} selected={selected} width={280} portSchema={dynamicSchema} hideOutputThumbnail>
       {/* Preview area */}
       <div className="relative w-full overflow-hidden rounded-lg mb-3" style={{ height: 168, background: '#0e0e16' }}>
         {outputVideo ? (

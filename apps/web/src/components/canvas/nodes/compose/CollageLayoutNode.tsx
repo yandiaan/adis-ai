@@ -185,6 +185,7 @@ export function CollageLayoutNode({ id, data, selected }: NodeProps<Node<Collage
       title={data.label}
       selected={selected}
       portSchema={dynamicSchema}
+      hideOutputThumbnail
     >
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0">

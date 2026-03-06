@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useReactFlow, useEdges, useNodesData } from '@xyflow/react';
 import type { PreviewData, PreviewPreset, FitMode } from '../../types/node-types';
 import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData, VideoData } from '../../types/port-types';
 import { ColorInput } from '../../ui/ColorInput';
 import { resolveMediaUrl } from '../../../../utils/runtimeUrl';
-import { DrawerMediaPreview } from '../DrawerMediaPreview';
+import { MediaLightbox } from '../../MediaLightbox';
+import { Maximize2, ArrowRight } from 'lucide-react';
 
 type Props = {
   nodeId: string;
@@ -34,6 +36,7 @@ const FIT_MODES: FitMode[] = ['cover', 'contain', 'fill'];
 export function PreviewPanel({ nodeId, data }: Props) {
   const { updateNodeData } = useReactFlow();
   const config = data.config;
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const { getNodeState } = useExecutionContext();
   const edges = useEdges();
@@ -47,18 +50,14 @@ export function PreviewPanel({ nodeId, data }: Props) {
     ?.exportDataUrl as string | null | undefined;
 
   const [aw, ah] = PRESET_ASPECT[config.preset] ?? [16, 9];
-  const previewMaxH = 240;
-  const previewW = `min(100%, ${Math.round(aw * previewMaxH / ah)}px)`;
 
   const imageUrl = output?.type === 'image' ? (output.data as ImageData).url : null;
   const videoUrl = output?.type === 'video' ? (output.data as VideoData).url : null;
-  // upstreamExportUrl (manual editor composite) has highest priority — it is the edited result
-  const mediaUrl = upstreamExportUrl ?? imageUrl ?? videoUrl;
+  const isVideo = !!(videoUrl && !imageUrl && !upstreamExportUrl);
 
-  const resolvedUpstreamExportUrl = resolveMediaUrl(upstreamExportUrl);
-  const resolvedImageUrl = resolveMediaUrl(imageUrl);
-  const resolvedVideoUrl = resolveMediaUrl(videoUrl);
-  const resolvedMediaUrl = resolvedUpstreamExportUrl ?? resolvedImageUrl ?? resolvedVideoUrl;
+  // upstreamExportUrl (manual editor composite) has highest priority — it is the edited result
+  const resolvedMediaUrl =
+    resolveMediaUrl(upstreamExportUrl) ?? resolveMediaUrl(imageUrl) ?? resolveMediaUrl(videoUrl);
 
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
@@ -74,42 +73,76 @@ export function PreviewPanel({ nodeId, data }: Props) {
   };
 
   const currentPreset = PRESETS.find(p => p.value === config.preset);
+  const objectFit = config.fit === 'fill' ? 'cover' : config.fit as 'contain' | 'cover';
+
+  // For portrait presets cap width so the preview isn't too narrow in the drawer
+  const previewMaxH = 260;
+  const previewMaxW = Math.round(previewMaxH * aw / ah);
 
   return (
     <>
-      {/* Live preview — aspect-ratio enforced */}
-      {resolvedMediaUrl ? (
-        <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-          <div className="flex items-center justify-between">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Preview</label>
-            <span className="text-[10px] text-white/30">
-              {currentPreset?.label} · {currentPreset?.ratio ?? `${config.width}×${config.height}`}
-            </span>
-          </div>
+      {/* Live preview — aspect-ratio changes with platform preset */}
+      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Preview</label>
+          <span className="text-[10px] text-white/30">
+            {currentPreset?.label} · {currentPreset?.ratio ?? `${config.width}×${config.height}`}
+          </span>
+        </div>
+
+        {resolvedMediaUrl ? (
           <div className="flex justify-center">
             <div
-              className="rounded-xl overflow-hidden border border-white/10 w-full"
+              className="relative group rounded-xl overflow-hidden border border-white/10 cursor-pointer w-full"
               style={{
                 aspectRatio: `${aw} / ${ah}`,
-                backgroundColor: config.backgroundColor,
                 maxHeight: previewMaxH,
+                maxWidth: previewMaxW,
+                backgroundColor: config.backgroundColor,
               }}
+              onClick={() => setLightboxOpen(true)}
             >
-              <DrawerMediaPreview
-                src={videoUrl && !imageUrl && !upstreamExportUrl ? (resolvedVideoUrl ?? videoUrl) : resolvedMediaUrl}
-                type={videoUrl && !imageUrl && !upstreamExportUrl ? 'video' : 'image'}
-                maxHeight={previewMaxH}
-                objectFit={config.fit === 'fill' ? 'cover' : config.fit as 'contain' | 'cover'}
-                className="rounded-none border-0"
-              />
+              {isVideo ? (
+                <video
+                  src={resolvedMediaUrl}
+                  className="w-full h-full block"
+                  style={{ objectFit }}
+                  muted
+                  playsInline
+                />
+              ) : (
+                <img
+                  src={resolvedMediaUrl}
+                  alt="Preview"
+                  className="w-full h-full block"
+                  style={{ objectFit }}
+                />
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center pointer-events-none">
+                <Maximize2
+                  size={18}
+                  className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025] text-center">
-          <p className="text-[11px] text-white/25">Connect a node to see preview</p>
-        </div>
-      )}
+        ) : (
+          <div
+            className="flex items-center justify-center rounded-xl border border-dashed border-white/10 w-full mx-auto"
+            style={{
+              aspectRatio: `${aw} / ${ah}`,
+              maxHeight: previewMaxH,
+              maxWidth: previewMaxW,
+              backgroundColor: config.backgroundColor,
+            }}
+          >
+            <div className="text-center">
+              <div className="text-white/20 text-sm font-medium">{aw}:{ah}</div>
+              <div className="text-white/10 text-[10px] mt-0.5">Connect a node to see preview</div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Platform Preset */}
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
@@ -178,7 +211,30 @@ export function PreviewPanel({ nodeId, data }: Props) {
           />
         </div>
       </div>
+
+      {/* Export CTA — only when there's media ready */}
+      {resolvedMediaUrl && (
+        <button
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent('canvas:open-export-node', { detail: { fromNodeId: nodeId } }),
+            )
+          }
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)] hover:bg-[var(--editor-accent-25)] text-white font-semibold text-sm transition-colors motion-lift motion-press focus-ring-orange cursor-pointer"
+        >
+          <span>Lanjutkan ke Export</span>
+          <ArrowRight size={15} />
+        </button>
+      )}
+
+      {/* Lightbox */}
+      {lightboxOpen && resolvedMediaUrl && (
+        <MediaLightbox
+          src={resolvedMediaUrl}
+          type={isVideo ? 'video' : 'image'}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </>
   );
 }
-

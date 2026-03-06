@@ -39,6 +39,7 @@ export function StickerLayerNode({ id, data, selected }: NodeProps<Node<StickerL
       icon=""
       title={data.label}
       selected={selected}
+      hideOutputThumbnail
     >
       {/* Emoji preview strip */}
       <div className="flex items-center justify-between mb-2 px-1">

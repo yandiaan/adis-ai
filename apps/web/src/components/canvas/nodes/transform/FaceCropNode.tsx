@@ -27,7 +27,7 @@ export function FaceCropNode({ id, data, selected }: NodeProps<Node<FaceCropData
   const isSquare = config.format === 'square';
 
   return (
-    <CompactNode nodeType="faceCrop" icon="" title={data.label} selected={selected}>
+    <CompactNode nodeType="faceCrop" icon="" title={data.label} selected={selected} hideOutputThumbnail>
       <div className="flex items-center gap-3">
         {/* Format diagram */}
         <div className="flex items-center justify-center w-12 flex-shrink-0">

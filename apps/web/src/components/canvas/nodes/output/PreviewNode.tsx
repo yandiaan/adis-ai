@@ -53,7 +53,7 @@ export function PreviewNode({ data, selected }: NodeProps<Node<PreviewData>>) {
   const thumbH = Math.round(ah * scale);
 
   return (
-    <CompactNode nodeType="preview" icon="" title={data.label} selected={selected} width={220}>
+    <CompactNode nodeType="preview" icon="" title={data.label} selected={selected} width={220} hideOutputThumbnail>
       {/* Aspect-ratio preview frame */}
       <div className="flex justify-center mb-2">
         <div

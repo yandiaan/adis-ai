@@ -37,6 +37,7 @@ export function FrameBorderNode({ id, data, selected }: NodeProps<Node<FrameBord
       icon=""
       title={data.label}
       selected={selected}
+      hideOutputThumbnail
     >
       {/* Frame preview */}
       <div

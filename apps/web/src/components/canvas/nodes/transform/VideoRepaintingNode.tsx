@@ -54,7 +54,7 @@ export function VideoRepaintingNode({ id, data, selected }: NodeProps<Node<Video
     updateNodeData(id, { config: { ...config, ...updates } });
 
   return (
-    <CompactNode nodeType="videoRepainting" icon="🎨" title={data.label} selected={selected} width={260}>
+    <CompactNode nodeType="videoRepainting" icon="🎨" title={data.label} selected={selected} width={260} hideOutputThumbnail>
       {/* Preview */}
       <div className="relative w-full overflow-hidden rounded-lg mb-3" style={{ height: 140, background: '#0e0e16' }}>
         {outputVideo ? (

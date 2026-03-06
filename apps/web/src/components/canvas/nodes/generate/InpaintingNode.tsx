@@ -26,6 +26,7 @@ export function InpaintingNode({ id, data, selected }: NodeProps<Node<Inpainting
       icon=""
       title={data.label}
       selected={selected}
+      hideOutputThumbnail
     >
       {/* Strength bar */}
       <div className="mb-2">

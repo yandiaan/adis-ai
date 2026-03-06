@@ -77,6 +77,7 @@ export function ImageGeneratorNode({ id, data, selected }: NodeProps<Node<ImageG
       title={data.label}
       selected={selected}
       width={280}
+      hideOutputThumbnail
     >
       {/* ── Image preview area ── */}
       <div
