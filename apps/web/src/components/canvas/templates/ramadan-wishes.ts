@@ -4,9 +4,14 @@ import { defaultConfigs } from '../types/node-types';
 export const ramadanWishesTemplate: PipelineTemplate = {
   id: 'ramadan-wishes',
   name: 'Ramadan Wishes',
-  description: 'Generate beautiful Islamic-themed Ramadan greeting cards',
+  description: 'Buat kartu ucapan Ramadan bertema Islami yang indah dengan AI',
   thumbnail: '🕌',
   category: 'seasonal',
+  difficulty: 'Pemula',
+  examplePrompts: [
+    'Kartu ucapan Ramadan dengan nama: Ahmad & Keluarga',
+    'Ucapan selamat puasa bergaya kaligrafi modern',
+  ],
   nodes: [
     {
       id: 'tp1',

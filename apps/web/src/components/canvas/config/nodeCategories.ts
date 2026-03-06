@@ -206,9 +206,9 @@ export const NODE_TYPE_CONFIGS: NodeTypeConfig[] = [
   {
     type: 'inpainting',
     category: 'generate',
-    label: 'Inpainting',
+    label: 'Hapus/Ganti Area',
     icon: '🪄',
-    description: 'Erase and regenerate parts of an image with AI',
+    description: 'Hapus atau ganti area tertentu pada gambar menggunakan AI',
   },
   {
     type: 'imageUpscaler',

@@ -13,6 +13,8 @@ interface TemplatesSectionProps {
   currentNodeIndex: number;
   onNodeNavigate: (index: number) => void;
   showCarousel: boolean;
+  /** When true, shows a brief pulse ring to draw attention */
+  highlight?: boolean;
 }
 
 export function TemplatesSection({
@@ -22,6 +24,7 @@ export function TemplatesSection({
   currentNodeIndex,
   onNodeNavigate,
   showCarousel,
+  highlight,
 }: TemplatesSectionProps) {
   const filteredTemplates = ALL_TEMPLATES.filter(
     (t) => t.id !== 'blank' && t.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -30,7 +33,10 @@ export function TemplatesSection({
   useTemplateButtonsHover(templateButtonsRef);
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 pb-3" style={{ scrollbarGutter: 'stable' }}>
+    <div
+      className={`flex-1 overflow-y-auto px-3 pb-3 rounded-lg transition-all duration-300 ${highlight ? 'ring-2 ring-primary/60 ring-offset-2 ring-offset-background' : ''}`}
+      style={{ scrollbarGutter: 'stable' }}
+    >
       {/* Header */}
       <div className="flex items-center gap-2 py-3 text-white/50">
         <LayoutTemplate className="w-4 h-4" />

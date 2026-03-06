@@ -14,6 +14,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { useFlowNodes } from './hooks/useFlowNodes';
 import { useMouseMode } from './hooks/useMouseMode';
 import { useTemplateLoader } from './hooks/useTemplateLoader';
@@ -21,6 +22,7 @@ import { useExecutionStore } from './execution/store';
 import { useLogStore } from './execution/logStore';
 import { ExecutionContext } from './execution/ExecutionContext';
 import { runPipeline } from './execution/runner';
+import { validatePipeline } from './execution/validator';
 import { FlowToolbar } from './FlowToolbar';
 import { LogPanel } from './LogPanel';
 import { nodeTypes } from './nodes';
@@ -35,12 +37,15 @@ import type { PortDataType } from './types/port-types';
 import { useTour } from './tour/useTour';
 import { TourOverlay } from './tour/TourOverlay';
 import type { TourContext } from './tour/tourSteps';
+import { CanvasEmptyState } from './CanvasEmptyState';
 
 type Props = {
   tourContext?: TourContext;
+  onOpenTemplatePicker?: () => void;
+  onOpenAiPanel?: () => void;
 };
 
-export function FlowCanvasInner({ tourContext = 'empty' }: Props) {
+export function FlowCanvasInner({ tourContext = 'empty', onOpenTemplatePicker, onOpenAiPanel }: Props) {
   const {
     nodes,
     edges,
@@ -173,12 +178,36 @@ export function FlowCanvasInner({ tourContext = 'empty' }: Props) {
   );
 
   const handleRunPipeline = useCallback(async () => {
+    // Validate pipeline before running
+    const validation = validatePipeline(nodes, edges);
+
+    if (!validation.valid) {
+      const errors = validation.issues.filter((i) => i.severity === 'error');
+      const warnings = validation.issues.filter((i) => i.severity === 'warning');
+
+      errors.forEach((issue) => {
+        toast.error(issue.message, { duration: 6000 });
+      });
+      warnings.forEach((issue) => {
+        toast.warning(issue.message, { duration: 4000 });
+      });
+
+      if (errors.length > 0) return; // Block run on errors
+    } else if (validation.issues.length > 0) {
+      // Only warnings — show them but allow run
+      validation.issues.forEach((issue) => {
+        toast.warning(issue.message, { duration: 4000 });
+      });
+    }
+
     setLogOpen(true); // Auto-open log panel on run
     const result = await runPipeline(nodes, edges, executionStore, logStore.addLog);
     if (result.success) {
       // Auto-open the first output node's panel so user can see the result immediately
       const OUTPUT_NODE_PRIORITY: CustomNodeType[] = ['preview', 'export', 'manualEditor'];
-      const outputNode = OUTPUT_NODE_PRIORITY.map((t) => nodes.find((n) => n.type === t)).find(Boolean);
+      const outputNode = OUTPUT_NODE_PRIORITY.map((t) => nodes.find((n) => n.type === t)).find(
+        Boolean,
+      );
       if (outputNode) setSelectedNode(outputNode as Node<CustomNodeData>);
     }
   }, [nodes, edges, executionStore, logStore.addLog]);
@@ -202,6 +231,8 @@ export function FlowCanvasInner({ tourContext = 'empty' }: Props) {
 
   const logErrorCount = logStore.logs.filter((l) => l.level === 'error').length;
 
+  const isCanvasEmpty = nodes.length === 0 && !executionStore.pipelineRunning;
+
   return (
     <ExecutionContext.Provider value={executionContextValue}>
       <div className="w-full h-full relative">
@@ -222,6 +253,7 @@ export function FlowCanvasInner({ tourContext = 'empty' }: Props) {
           selectionOnDrag={mode === 'select'}
           selectionMode={SelectionMode.Partial}
           panOnScroll={mode === 'select'}
+          className={isCanvasEmpty ? '[&_.react-flow__pane]:pointer-events-none' : ''}
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
           <Controls className="text-black" />
@@ -238,6 +270,15 @@ export function FlowCanvasInner({ tourContext = 'empty' }: Props) {
             onToggleLog={handleToggleLog}
           />
         </ReactFlow>
+
+        {/* Empty state — rendered AFTER ReactFlow so it sits on top in DOM order.
+            The ReactFlow pane has pointer-events-none when empty, so buttons are clickable. */}
+        {isCanvasEmpty && (
+          <CanvasEmptyState
+            onOpenTemplatePicker={onOpenTemplatePicker}
+            onOpenAiPanel={onOpenAiPanel}
+          />
+        )}
 
         {/* Log Panel */}
         <LogPanel

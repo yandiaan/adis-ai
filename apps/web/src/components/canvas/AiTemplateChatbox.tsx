@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Sparkles,
   Send,
@@ -38,9 +38,12 @@ interface SSEEvent {
 interface Props {
   onConfirm: (template: PipelineTemplate) => void;
   onSaveToLibrary?: (template: PipelineTemplate) => void;
+  examplePrompts?: string[];
+  /** If true, focus the textarea on mount */
+  autoFocus?: boolean;
 }
 
-export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
+export function AiTemplateChatbox({ onConfirm, onSaveToLibrary, examplePrompts, autoFocus }: Props) {
   const [state, setState] = useState<ChatboxState>('idle');
   const [prompt, setPrompt] = useState('');
   const [selectedModel, setSelectedModel] = useState('qwen-plus');
@@ -55,6 +58,12 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedModelOption = MODEL_OPTIONS.find((m) => m.value === selectedModel)!;
+
+  useEffect(() => {
+    if (autoFocus) {
+      setTimeout(() => textareaRef.current?.focus(), 80);
+    }
+  }, [autoFocus]);
 
   const pushStep = useCallback((msg: string) => {
     // Move current to completed log, set new as current
@@ -252,6 +261,25 @@ export function AiTemplateChatbox({ onConfirm, onSaveToLibrary }: Props) {
           <span className="text-white/20 text-xs select-none">⌘↵</span>
         </div>
       </div>
+
+      {/* Example prompt chips */}
+      {examplePrompts && examplePrompts.length > 0 && state === 'idle' && !prompt && (
+        <div className="flex flex-wrap gap-1.5 -mt-1">
+          {examplePrompts.map((example) => (
+            <button
+              key={example}
+              type="button"
+              onClick={() => {
+                setPrompt(example);
+                setTimeout(() => textareaRef.current?.focus(), 50);
+              }}
+              className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/50 text-[11px] hover:bg-white/10 hover:text-white/80 transition-colors text-left"
+            >
+              {example}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Model picker + Generate button */}
       <div className="flex items-center gap-3">

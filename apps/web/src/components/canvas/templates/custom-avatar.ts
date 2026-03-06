@@ -4,9 +4,14 @@ import { defaultConfigs } from '../types/node-types';
 export const customAvatarTemplate: PipelineTemplate = {
   id: 'custom-avatar',
   name: 'Custom Avatar',
-  description: 'Create personalized digital avatars from photos or descriptions',
+  description: 'Buat avatar digital personal dari foto atau deskripsi Anda',
   thumbnail: '👤',
   category: 'character',
+  difficulty: 'Menengah',
+  examplePrompts: [
+    'Avatar profesional bergaya anime dari foto selfie',
+    'Karakter game RPG berdasarkan foto wajah saya',
+  ],
   nodes: [
     {
       id: 'iu1',

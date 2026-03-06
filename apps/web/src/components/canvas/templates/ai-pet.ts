@@ -4,9 +4,14 @@ import { defaultConfigs } from '../types/node-types';
 export const aiPetTemplate: PipelineTemplate = {
   id: 'ai-pet',
   name: 'AI Pet',
-  description: 'Design unique virtual pet characters with AI',
+  description: 'Desain karakter hewan peliharaan virtual unik menggunakan AI',
   thumbnail: '🐾',
   category: 'character',
+  difficulty: 'Menengah',
+  examplePrompts: [
+    'Kucing peliharaan warna oranye, gaya kartun lucu',
+    'Anjing Shiba Inu berpose heroik seperti pahlawan super',
+  ],
   nodes: [
     {
       id: 'txt1',

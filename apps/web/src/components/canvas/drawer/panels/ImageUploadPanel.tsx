@@ -3,6 +3,7 @@ import { Check, FolderOpen, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import type { ImageUploadData } from '../../types/node-types';
 import { apiUrl, resolveMediaUrl } from '../../../../utils/runtimeUrl';
+import { DrawerMediaPreview } from '../DrawerMediaPreview';
 
 const API_BASE = '/api';
 
@@ -84,11 +85,7 @@ export function ImageUploadPanel({ nodeId, data }: Props) {
         </label>
         {resolvedUrl ? (
           <div>
-            <img
-              src={resolvedUrl}
-              alt="Preview"
-              className="w-full max-h-[200px] object-contain rounded-lg mb-2"
-            />
+            <DrawerMediaPreview src={resolvedUrl} type="image" maxHeight={200} objectFit="contain" className="mb-2" />
             <div className="flex justify-between items-center text-xs text-white/50">
               <span>
                 {config.fileName} ({config.fileSizeMB?.toFixed(1)}MB)

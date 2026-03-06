@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
 function cx(...classes: Array<string | undefined | false | null>) {
@@ -20,6 +21,7 @@ interface SelectContextValue {
   open: boolean;
   setOpen: (o: boolean) => void;
   options: SelectOption[];
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 // ── Context ──────────────────────────────────────────────────────────────────
@@ -42,9 +44,10 @@ interface SelectProps {
 export function Select({ value, onValueChange, children }: SelectProps) {
   const [open, setOpen] = React.useState(false);
   const options = React.useMemo<SelectOption[]>(() => [], []);
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null);
   const ctx = React.useMemo(
-    () => ({ value, onValueChange, open, setOpen, options }),
-    [value, onValueChange, open, options],
+    () => ({ value, onValueChange, open, setOpen, options, triggerRef }),
+    [value, onValueChange, open, options, triggerRef],
   );
   return <SelectContext.Provider value={ctx}>{children}</SelectContext.Provider>;
 }
@@ -55,10 +58,14 @@ export const SelectTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, children, onClick, ...props }, ref) => {
-  const { open, setOpen } = useSelect();
+  const { open, setOpen, triggerRef } = useSelect();
   return (
     <button
-      ref={ref}
+      ref={(el) => {
+        triggerRef.current = el;
+        if (typeof ref === 'function') ref(el);
+        else if (ref) ref.current = el;
+      }}
       type="button"
       className={cx(
         'flex w-full items-center justify-between gap-1.5 rounded-lg border border-white/10',
@@ -98,29 +105,46 @@ export function SelectValue({ placeholder }: { placeholder?: string }) {
 
 export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => {
-    const { open, setOpen } = useSelect();
-    const containerRef = React.useRef<HTMLDivElement>(null);
+    const { open, setOpen, triggerRef } = useSelect();
+    const [rect, setRect] = React.useState<DOMRect | null>(null);
+
+    React.useEffect(() => {
+      if (open && triggerRef.current) {
+        setRect(triggerRef.current.getBoundingClientRect());
+      }
+    }, [open, triggerRef]);
 
     React.useEffect(() => {
       if (!open) return;
       const handler = (e: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-          setOpen(false);
-        }
+        const target = e.target as Node;
+        if (triggerRef.current?.contains(target)) return;
+        setOpen(false);
       };
       document.addEventListener('mousedown', handler);
       return () => document.removeEventListener('mousedown', handler);
-    }, [open, setOpen]);
+    }, [open, setOpen, triggerRef]);
 
-    if (!open) return null;
+    if (!open || !rect) return null;
 
-    return (
-      <div
-        ref={containerRef}
-        style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, marginTop: 4 }}
-      >
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const dropdownMaxH = 320;
+    const openUpward = spaceBelow < dropdownMaxH && spaceAbove > spaceBelow;
+
+    const style: React.CSSProperties = {
+      position: 'fixed',
+      left: rect.left,
+      width: rect.width,
+      zIndex: 99999,
+      ...(openUpward
+        ? { bottom: window.innerHeight - rect.top + 4 }
+        : { top: rect.bottom + 4 }),
+    };
+
+    return createPortal(
+      <div style={style} ref={ref as React.Ref<HTMLDivElement>}>
         <div
-          ref={ref}
           className={cx(
             'glass-surface-strong overflow-hidden rounded-xl border border-white/10',
             'shadow-[0_20px_50px_rgba(0,0,0,0.6)]',
@@ -131,7 +155,8 @@ export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttribut
         >
           <div className="p-1.5">{children}</div>
         </div>
-      </div>
+      </div>,
+      document.body,
     );
   },
 );

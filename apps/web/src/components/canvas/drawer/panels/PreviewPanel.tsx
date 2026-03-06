@@ -4,6 +4,7 @@ import { useExecutionContext } from '../../execution/ExecutionContext';
 import type { ImageData, VideoData } from '../../types/port-types';
 import { ColorInput } from '../../ui/ColorInput';
 import { resolveMediaUrl } from '../../../../utils/runtimeUrl';
+import { DrawerMediaPreview } from '../DrawerMediaPreview';
 
 type Props = {
   nodeId: string;
@@ -87,30 +88,20 @@ export function PreviewPanel({ nodeId, data }: Props) {
           </div>
           <div className="flex justify-center">
             <div
-              className="rounded-xl overflow-hidden border border-white/10"
+              className="rounded-xl overflow-hidden border border-white/10 w-full"
               style={{
-                width: previewW,
                 aspectRatio: `${aw} / ${ah}`,
                 backgroundColor: config.backgroundColor,
                 maxHeight: previewMaxH,
               }}
             >
-              {videoUrl && !imageUrl && !upstreamExportUrl ? (
-                <video
-                  src={resolvedVideoUrl ?? videoUrl}
-                  className="w-full h-full"
-                  style={{ objectFit: config.fit }}
-                  controls
-                  playsInline
-                />
-              ) : (
-                <img
-                  src={resolvedMediaUrl}
-                  alt="Output preview"
-                  className="w-full h-full"
-                  style={{ objectFit: config.fit }}
-                />
-              )}
+              <DrawerMediaPreview
+                src={videoUrl && !imageUrl && !upstreamExportUrl ? (resolvedVideoUrl ?? videoUrl) : resolvedMediaUrl}
+                type={videoUrl && !imageUrl && !upstreamExportUrl ? 'video' : 'image'}
+                maxHeight={previewMaxH}
+                objectFit={config.fit === 'fill' ? 'cover' : config.fit as 'contain' | 'cover'}
+                className="rounded-none border-0"
+              />
             </div>
           </div>
         </div>

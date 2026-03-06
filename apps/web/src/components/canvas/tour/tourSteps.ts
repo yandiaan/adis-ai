@@ -17,20 +17,7 @@ export interface TourStep {
 const INPUT_NODE_TYPES = ['templatePreset', 'textPrompt', 'imageUpload', 'videoUpload'];
 const GENERATE_NODE_TYPES = ['imageGenerator', 'videoGenerator', 'inpainting', 'imageUpscaler'];
 const STYLE_NODE_TYPES = ['promptEnhancer', 'styleConfig', 'imageToText', 'translateText'];
-const EDIT_NODE_TYPES = [
-  'backgroundRemover',
-  'faceCrop',
-  'objectRemover',
-  'backgroundReplacer',
-  'styleTransfer',
-  'videoRepainting',
-  'videoExtension',
-  'textOverlay',
-  'frameBorder',
-  'stickerLayer',
-  'colorFilter',
-  'collageLayout',
-];
+
 const OUTPUT_NODE_TYPES = ['preview', 'export', 'manualEditor'];
 
 export const TOUR_STEPS: Record<TourContext, TourStep[]> = {
@@ -39,7 +26,7 @@ export const TOUR_STEPS: Record<TourContext, TourStep[]> = {
       id: 'welcome',
       title: 'Selamat datang di Canvas! 👋',
       description:
-        'Canvas adalah workspace visual untuk membangun pipeline AI. Susun node, sambungkan aliran data, lalu jalankan — semuanya di sini. Yuk, kenali bagian-bagiannya!',
+        'Canvas adalah workspace visual untuk membangun pipeline AI. Susun blok, sambungkan aliran data, lalu jalankan — semuanya di sini. Yuk, kenali bagian-bagiannya!',
       placement: 'center',
     },
     {
@@ -52,24 +39,31 @@ export const TOUR_STEPS: Record<TourContext, TourStep[]> = {
     },
     {
       id: 'add-node',
-      title: 'Tambah Node Baru',
+      title: 'Tambah Blok Baru',
       description:
-        'Klik "New Node" untuk menelusuri semua node yang tersedia. Ada node Input, Generator AI, Transform, hingga Output. Klik node untuk langsung menambahkannya ke canvas.',
+        'Klik "New Node" untuk menelusuri semua blok yang tersedia. Ada blok Input, Generator AI, Transform, hingga Output. Klik blok untuk langsung menambahkannya ke canvas.',
       targetSelector: '[data-tour="add-node-btn"]',
       placement: 'top',
     },
     {
       id: 'connect',
-      title: 'Cara Menghubungkan Node',
+      title: 'Cara Menghubungkan Blok',
       description:
-        'Drag dari port output (titik di kanan node) ke port input (titik di kiri node) lainnya. Kamu juga bisa drag ke area kosong — akan muncul menu untuk memilih node baru yang langsung terhubung.',
+        'Drag dari titik output (kanan blok) ke titik input (kiri blok) lainnya. Kamu juga bisa drag ke area kosong — akan muncul menu untuk memilih blok baru yang langsung terhubung.',
+      placement: 'center',
+    },
+    {
+      id: 'shortcuts',
+      title: '⌨️ Pintasan Keyboard',
+      description:
+        'Gunakan shortcut ini untuk bekerja lebih cepat:\n• N — Buka menu tambah blok\n• V — Mode pilih (klik & drag untuk seleksi)\n• H — Mode geser (pan canvas)\n• ` (backtick) — Buka/tutup panel Log\n• Ctrl+Enter — Jalankan pipeline',
       placement: 'center',
     },
     {
       id: 'run',
       title: 'Jalankan Pipeline',
       description:
-        'Setelah node tersusun dan terhubung, klik Run. Hasil akhir akan tampil di node Output. Kamu bisa pantau prosesnya lewat panel Logs.',
+        'Setelah blok tersusun dan terhubung, klik Run. Hasil akhir akan tampil di blok Output. Kamu bisa pantau prosesnya lewat panel Logs.',
       targetSelector: '[data-tour="run-btn"]',
       placement: 'top',
     },
@@ -80,46 +74,53 @@ export const TOUR_STEPS: Record<TourContext, TourStep[]> = {
       id: 'welcome',
       title: 'Template Siap Digunakan! 🎉',
       description:
-        'Template ini sudah berisi node-node yang terhubung. Kamu tinggal review konfigurasinya lalu langsung jalankan. Mari kita kenali setiap bagiannya!',
+        'Template ini sudah berisi blok-blok yang terhubung. Kamu tinggal review konfigurasinya lalu langsung jalankan. Mari kita kenali setiap bagiannya!',
       placement: 'center',
     },
     {
       id: 'input-node',
-      title: '📥 Node Input — Awal Pipeline',
+      title: '📥 Blok Input — Awal Pipeline',
       description:
-        'Node ini adalah pintu masuk data ke pipeline. Isi prompt teks, upload gambar, atau pilih preset template. Klik node untuk membuka panel konfigurasi di sebelah kanan.',
+        'Blok ini adalah pintu masuk data ke pipeline. Isi prompt teks, upload gambar, atau pilih preset template. Klik blok untuk membuka panel konfigurasi di sebelah kanan.',
       targetNodeTypes: INPUT_NODE_TYPES,
       placement: 'right',
     },
     {
       id: 'style-node',
-      title: '✏️ Node Gaya & Teks',
+      title: '✏️ Blok Gaya & Teks',
       description:
-        'Node ini memperkuat input sebelum diproses AI — misalnya memperkaya prompt, menambahkan konfigurasi gaya visual, atau menerjemahkan teks. Klik untuk mengaturnya.',
+        'Blok ini memperkuat input sebelum diproses AI — misalnya memperkaya prompt, menambahkan konfigurasi gaya visual, atau menerjemahkan teks. Klik untuk mengaturnya.',
       targetNodeTypes: STYLE_NODE_TYPES,
       placement: 'right',
     },
     {
       id: 'generate-node',
-      title: '🤖 Node AI Generator — Inti Pipeline',
+      title: '🤖 Blok AI Generator — Inti Pipeline',
       description:
-        'Inilah node yang menjalankan AI! Pilih model AI, atur parameter seperti ukuran gambar atau durasi video, lalu hubungkan ke node input dan output.',
+        'Inilah blok yang menjalankan AI! Pilih model AI, atur parameter seperti ukuran gambar atau durasi video, lalu hubungkan ke blok input dan output.',
       targetNodeTypes: GENERATE_NODE_TYPES,
       placement: 'left',
     },
     {
       id: 'output-node',
-      title: '🖼️ Node Output — Hasil Akhir',
+      title: '🖼️ Blok Output — Hasil Akhir',
       description:
-        'Hasil dari pipeline akan tampil di sini. Node Preview menampilkan gambar/video langsung di canvas. Node Export menyediakan tombol unduh.',
+        'Hasil dari pipeline akan tampil di sini. Blok Preview menampilkan gambar/video langsung di canvas. Blok Export menyediakan tombol unduh.',
       targetNodeTypes: OUTPUT_NODE_TYPES,
       placement: 'left',
+    },
+    {
+      id: 'shortcuts',
+      title: '⌨️ Pintasan Keyboard',
+      description:
+        'Gunakan shortcut ini untuk bekerja lebih cepat:\n• N — Buka menu tambah blok\n• V — Mode pilih\n• H — Mode geser canvas\n• ` (backtick) — Buka/tutup panel Log\n• Ctrl+Enter — Jalankan pipeline',
+      placement: 'center',
     },
     {
       id: 'run',
       title: 'Siap Dijalankan!',
       description:
-        'Semua node sudah terhubung dan siap jalan. Klik Run dan tunggu hasilnya — setiap node akan dieksekusi berurutan sesuai aliran koneksi.',
+        'Semua blok sudah terhubung dan siap jalan. Klik Run dan tunggu hasilnya — setiap blok akan dieksekusi berurutan sesuai aliran koneksi.',
       targetSelector: '[data-tour="run-btn"]',
       placement: 'top',
     },
@@ -130,54 +131,46 @@ export const TOUR_STEPS: Record<TourContext, TourStep[]> = {
       id: 'welcome',
       title: 'Pipeline AI Kamu Siap! ✨',
       description:
-        'AI sudah membuatkan pipeline khusus berdasarkan deskripsimu. Node dan koneksi sudah dikonfigurasi secara otomatis. Mari kita pahami struktur yang dibuat AI!',
+        'AI sudah membuat pipeline sederhana berdasarkan deskripsimu — hanya beberapa blok yang paling penting. Tidak perlu khawatir, kamu bisa kustomisasi sesuai kebutuhan. Mari kita pelajari cara mengubahnya!',
       placement: 'center',
     },
     {
-      id: 'input-node',
-      title: '📥 Node Input',
+      id: 'customize-prompt',
+      title: '✏️ Langkah 1 — Ubah Teks Prompt',
       description:
-        'AI menempatkan node input di awal pipeline. Di sinilah kamu memasukkan bahan baku — teks prompt, gambar, atau preset. Klik node untuk mengisi atau mengubah isinya.',
+        'Klik blok "Text Prompt" (biasanya di paling kiri). Panel konfigurasi akan terbuka di kanan — ubah teks sesuai keinginanmu. Misalnya: "Foto keluarga bergaya anime dengan latar Lebaran". Semakin detail prompt, semakin bagus hasilnya!',
       targetNodeTypes: INPUT_NODE_TYPES,
       placement: 'right',
     },
     {
-      id: 'generate-node',
-      title: '🤖 Node AI — Dibuat Otomatis',
+      id: 'customize-generator',
+      title: '🤖 Langkah 2 — Pilih Model AI',
       description:
-        'AI sudah memilih dan mengkonfigurasi node generator yang paling sesuai dengan permintaanmu. Kamu bisa mengubah model atau parameter dengan klik node ini.',
+        'Klik blok generator (Image Generator atau Video Generator). Di panel kanan, kamu bisa ganti model AI — misalnya dari "wanx" ke "flux" untuk gaya gambar yang berbeda. Setiap model punya karakteristik unik!',
       targetNodeTypes: GENERATE_NODE_TYPES,
       placement: 'left',
     },
     {
-      id: 'edit-compose-node',
-      title: '🎨 Node Transform & Compose',
+      id: 'customize-effects',
+      title: '🎨 Langkah 3 — Tambah Efek (Opsional)',
       description:
-        'AI juga menambahkan node pengolahan tambahan sesuai kebutuhanmu — misalnya hapus background, tambahkan teks, atau atur frame. Klik untuk melihat konfigurasinya.',
-      targetNodeTypes: EDIT_NODE_TYPES,
-      placement: 'left',
-    },
-    {
-      id: 'output-node',
-      title: '🖼️ Node Output',
-      description:
-        'Hasil akhir pipeline akan muncul di sini. Kamu bisa preview langsung atau download hasilnya.',
-      targetNodeTypes: OUTPUT_NODE_TYPES,
-      placement: 'left',
-    },
-    {
-      id: 'customize',
-      title: 'Kustomisasi Pipeline-mu',
-      description:
-        'Ingin menambah langkah lain? Gunakan "New Node" untuk menambah node baru. Drag port node untuk menghubungkannya ke pipeline yang sudah ada.',
+        'Ingin menambah filter warna, teks ucapan, atau frame dekoratif? Klik tombol "+ New Node" dan pilih blok efek (Color Filter, Text Overlay, Frame Border). Lalu hubungkan ke pipeline dengan menarik titik koneksi dari blok sebelumnya.',
       targetSelector: '[data-tour="add-node-btn"]',
       placement: 'top',
     },
     {
-      id: 'run',
-      title: 'Jalankan Pipeline AI-mu!',
+      id: 'output-node',
+      title: '🖼️ Langkah 4 — Preview & Download',
       description:
-        'Semuanya sudah siap. Klik Run dan lihat pipeline AI kamu bekerja! Log eksekusi bisa dilihat di panel Logs di sebelah kanan bawah.',
+        'Blok "Preview" dan "Export" sudah ada di ujung pipeline. Setelah pipeline berjalan, klik ikon expand di blok Preview untuk melihat hasilnya secara penuh — atau klik "Export" untuk download langsung!',
+      targetNodeTypes: OUTPUT_NODE_TYPES,
+      placement: 'left',
+    },
+    {
+      id: 'run',
+      title: '🚀 Sekarang Coba Jalankan!',
+      description:
+        'Klik tombol "Run" untuk menjalankan pipeline. Tunggu beberapa detik — hasilnya akan muncul di blok Preview. Kalau ada yang kurang pas, ubah prompt atau ganti model lalu jalankan lagi. Tidak ada batas percobaan!',
       targetSelector: '[data-tour="run-btn"]',
       placement: 'top',
     },

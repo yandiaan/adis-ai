@@ -1,12 +1,30 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ALL_TEMPLATES, type PipelineTemplate } from './templates';
 import { Plus, X, Wand2, Smile, Sparkles, User2, LayoutTemplate, Trash2 } from 'lucide-react';
 import { AiTemplateChatbox } from './AiTemplateChatbox';
 import { useAiTemplates } from './hooks/useAiTemplates';
+import type { TemplateDifficulty } from './templates/types';
+
+function DifficultyBadge({ difficulty }: { difficulty: TemplateDifficulty }) {
+  const styles: Record<TemplateDifficulty, string> = {
+    Pemula: 'bg-green-500/15 text-green-400 border-green-500/25',
+    Menengah: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+    Lanjutan: 'bg-red-500/15 text-red-400 border-red-500/25',
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-full border text-[9px] font-semibold uppercase tracking-wide ${styles[difficulty]}`}
+    >
+      {difficulty}
+    </span>
+  );
+}
 
 type Props = {
   onSelectTemplate: (template: PipelineTemplate | null) => void;
   onClose?: () => void;
+  /** 'ai' focuses the AI chatbox; 'templates' scrolls to the template grid */
+  initialSection?: 'ai' | 'templates';
 };
 
 const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className: string }>> = {
@@ -21,12 +39,19 @@ const getTemplateIcon = (templateId: string) => {
   return <Icon className="w-6 h-6" />;
 };
 
-export function TemplateSelector({ onSelectTemplate, onClose }: Props) {
+export function TemplateSelector({ onSelectTemplate, onClose, initialSection }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const aiTemplates = useAiTemplates();
   const [aiSavedTemplates, setAiSavedTemplates] = useState<PipelineTemplate[]>(() =>
     aiTemplates.getAll(),
   );
+  const templateGridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialSection === 'templates') {
+      setTimeout(() => templateGridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }, [initialSection]);
 
   const handleSelectEmpty = () => onSelectTemplate(null);
   const handleSelectTemplate = (template: PipelineTemplate) => onSelectTemplate(template);
@@ -49,6 +74,10 @@ export function TemplateSelector({ onSelectTemplate, onClose }: Props) {
     setAiSavedTemplates([]);
   };
 
+  const allExamplePrompts = ALL_TEMPLATES.filter((t) => t.id !== 'blank')
+    .flatMap((t) => t.examplePrompts ?? [])
+    .slice(0, 6);
+
   return (
     <div className="fixed inset-0 bg-background flex items-start justify-center z-50 overflow-y-auto py-6 sm:py-10">
       <div className="relative w-full max-w-5xl px-4 sm:px-8">
@@ -63,13 +92,18 @@ export function TemplateSelector({ onSelectTemplate, onClose }: Props) {
         )}
 
         {/* AI Chatbox */}
-        <AiTemplateChatbox onConfirm={handleAiConfirm} onSaveToLibrary={handleSaveToLibrary} />
+        <AiTemplateChatbox
+          onConfirm={handleAiConfirm}
+          onSaveToLibrary={handleSaveToLibrary}
+          examplePrompts={allExamplePrompts}
+          autoFocus={initialSection === 'ai'}
+        />
 
         {/* Divider */}
-        <div className="flex items-center gap-3 my-6 sm:my-8">
+        <div ref={templateGridRef} className="flex items-center gap-3 my-6 sm:my-8">
           <div className="flex-1 h-px bg-white/10" />
           <span className="text-white/30 text-xs uppercase tracking-widest whitespace-nowrap">
-            or pick a template
+            atau pilih template
           </span>
           <div className="flex-1 h-px bg-white/10" />
         </div>
@@ -115,9 +149,16 @@ export function TemplateSelector({ onSelectTemplate, onClose }: Props) {
                     {getTemplateIcon(template.id)}
                   </div>
                 </div>
+                {/* Node count badge — top-right */}
+                <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/40 border border-white/10 text-[9px] text-white/50 font-medium">
+                  {template.nodes.length} blok
+                </div>
               </button>
               <div className="text-center">
-                <span className="text-white text-xs sm:text-sm font-medium">{template.name}</span>
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                  <span className="text-white text-xs sm:text-sm font-medium">{template.name}</span>
+                  {template.difficulty && <DifficultyBadge difficulty={template.difficulty} />}
+                </div>
                 <p className="text-white/40 text-[10px] sm:text-xs mt-0.5 line-clamp-2">
                   {template.description}
                 </p>

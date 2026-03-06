@@ -4,9 +4,14 @@ import { defaultConfigs } from '../types/node-types';
 export const holidayMemeTemplate: PipelineTemplate = {
   id: 'holiday-meme',
   name: 'Holiday Meme',
-  description: 'Create culturally relevant and funny memes for holidays like Lebaran',
+  description: 'Buat meme lucu dan relevan untuk hari raya seperti Lebaran',
   thumbnail: '🎉',
   category: 'seasonal',
+  difficulty: 'Pemula',
+  examplePrompts: [
+    'Meme Lebaran: "Maaf lahir batin, THR-nya kapan?"',
+    'Meme liburan: foto keluarga dengan caption lucu',
+  ],
   nodes: [
     {
       id: 'txt1',

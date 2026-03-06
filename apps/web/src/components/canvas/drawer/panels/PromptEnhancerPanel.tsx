@@ -8,6 +8,7 @@ import type {
 } from '../../types/node-types';
 import { ModelPicker } from './ModelPicker';
 import { MODEL_OPTIONS } from '../../config/modelOptions';
+import { DrawerSection } from '../DrawerSection';
 
 type Props = {
   nodeId: string;
@@ -19,10 +20,25 @@ const CREATIVITY_OPTIONS: {
   label: string;
   Icon: typeof Target;
 }[] = [
-  { value: 'precise', label: 'Precise', Icon: Target },
-  { value: 'balanced', label: 'Balanced', Icon: Scale },
-  { value: 'creative', label: 'Creative', Icon: Palette },
+  { value: 'precise', label: 'Tepat', Icon: Target },
+  { value: 'balanced', label: 'Seimbang', Icon: Scale },
+  { value: 'creative', label: 'Kreatif', Icon: Palette },
 ];
+
+const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
+  wishes: 'Ucapan',
+  meme: 'Meme',
+  character: 'Karakter',
+  avatar: 'Avatar',
+  general: 'Umum',
+};
+
+const TONE_LABELS: Record<ToneType, string> = {
+  formal: 'Formal',
+  casual: 'Santai',
+  funny: 'Lucu',
+  heartfelt: 'Tulus',
+};
 
 const CONTENT_TYPES: ContentType[] = ['wishes', 'meme', 'character', 'avatar', 'general'];
 const TONES: ToneType[] = ['formal', 'casual', 'funny', 'heartfelt'];
@@ -37,97 +53,116 @@ export function PromptEnhancerPanel({ nodeId, data }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Creativity</label>
-        <div className="flex gap-2">
-          {CREATIVITY_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => updateConfig({ creativity: opt.value })}
-              className={`motion-lift motion-press focus-ring-orange flex-1 p-3 rounded-xl border cursor-pointer text-xs text-center text-white transition-colors ${
-                config.creativity === opt.value
-                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
-                  : 'border-white/10 bg-white/5 hover:bg-white/7'
-              }`}
-            >
-              <div className="grid place-items-center">
-                <opt.Icon size={16} className="text-white/80" />
-              </div>
-              <div className="mt-1">{opt.label}</div>
-            </button>
-          ))}
+      <DrawerSection title="Dasar">
+        {/* Creativity */}
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1.5">
+            Tingkat Kreativitas
+          </label>
+          <div className="flex gap-2">
+            {CREATIVITY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => updateConfig({ creativity: opt.value })}
+                className={`motion-lift motion-press focus-ring-orange flex-1 p-3 rounded-xl border cursor-pointer text-xs text-center text-white transition-colors ${
+                  config.creativity === opt.value
+                    ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                    : 'border-white/10 bg-white/5 hover:bg-white/7'
+                }`}
+              >
+                <div className="grid place-items-center">
+                  <opt.Icon size={16} className="text-white/80" />
+                </div>
+                <div className="mt-1">{opt.label}</div>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Content Type</label>
-        <div className="flex flex-wrap gap-1.5">
-          {CONTENT_TYPES.map((ct) => (
-            <button
-              key={ct}
-              onClick={() => updateConfig({ contentType: ct })}
-              className={`motion-lift motion-press focus-ring-orange px-3 py-1.5 rounded-full border cursor-pointer text-xs text-white transition-colors ${
-                config.contentType === ct
-                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
-                  : 'border-white/10 bg-white/5 hover:bg-white/7'
-              }`}
-            >
-              {ct}
-            </button>
-          ))}
+        {/* Language */}
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1.5">
+            Bahasa Output
+          </label>
+          <div className="flex gap-2">
+            {(['id', 'en', 'mixed'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => updateConfig({ language: lang })}
+                className={`motion-lift motion-press focus-ring-orange flex-1 p-2.5 rounded-xl border cursor-pointer text-xs text-white transition-colors ${
+                  config.language === lang
+                    ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                    : 'border-white/10 bg-white/5 hover:bg-white/7'
+                }`}
+              >
+                <span className="inline-flex items-center justify-center gap-2">
+                  {lang === 'mixed' ? (
+                    <Shuffle size={14} className="text-white/70" />
+                  ) : (
+                    <Languages size={14} className="text-white/70" />
+                  )}
+                  <span>{lang === 'id' ? 'ID' : lang === 'en' ? 'EN' : 'Mix'}</span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Tone</label>
-        <div className="flex flex-wrap gap-1.5">
-          {TONES.map((tone) => (
-            <button
-              key={tone}
-              onClick={() => updateConfig({ tone })}
-              className={`motion-lift motion-press focus-ring-orange px-3 py-1.5 rounded-full border cursor-pointer text-xs text-white transition-colors ${
-                config.tone === tone
-                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
-                  : 'border-white/10 bg-white/5 hover:bg-white/7'
-              }`}
-            >
-              {tone}
-            </button>
-          ))}
+        <ModelPicker
+          options={MODEL_OPTIONS.textGeneration}
+          value={config.model ?? 'qwen-flash'}
+          onChange={(model) => updateConfig({ model })}
+        />
+      </DrawerSection>
+
+      <DrawerSection title="Lanjutan" defaultCollapsed accent="advanced">
+        {/* Content Type */}
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+            Tipe Konten
+          </label>
+          <p className="text-[11px] text-white/30 mb-2">
+            Sesuaikan prompt dengan konteks konten yang dibuat.
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {CONTENT_TYPES.map((ct) => (
+              <button
+                key={ct}
+                onClick={() => updateConfig({ contentType: ct })}
+                className={`motion-lift motion-press focus-ring-orange px-3 py-1.5 rounded-full border cursor-pointer text-xs text-white transition-colors ${
+                  config.contentType === ct
+                    ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                    : 'border-white/10 bg-white/5 hover:bg-white/7'
+                }`}
+              >
+                {CONTENT_TYPE_LABELS[ct]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
-        <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Language</label>
-        <div className="flex gap-2">
-          {(['id', 'en', 'mixed'] as const).map((lang) => (
-            <button
-              key={lang}
-              onClick={() => updateConfig({ language: lang })}
-              className={`motion-lift motion-press focus-ring-orange flex-1 p-2.5 rounded-xl border cursor-pointer text-xs text-white transition-colors ${
-                config.language === lang
-                  ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
-                  : 'border-white/10 bg-white/5 hover:bg-white/7'
-              }`}
-            >
-              <span className="inline-flex items-center justify-center gap-2">
-                {lang === 'mixed' ? (
-                  <Shuffle size={14} className="text-white/70" />
-                ) : (
-                  <Languages size={14} className="text-white/70" />
-                )}
-                <span>{lang === 'id' ? 'ID' : lang === 'en' ? 'EN' : 'Mix'}</span>
-              </span>
-            </button>
-          ))}
+        {/* Tone */}
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">
+            Nada Bicara
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {TONES.map((tone) => (
+              <button
+                key={tone}
+                onClick={() => updateConfig({ tone })}
+                className={`motion-lift motion-press focus-ring-orange px-3 py-1.5 rounded-full border cursor-pointer text-xs text-white transition-colors ${
+                  config.tone === tone
+                    ? 'border-[var(--editor-accent-65)] bg-[var(--editor-accent-14)]'
+                    : 'border-white/10 bg-white/5 hover:bg-white/7'
+                }`}
+              >
+                {TONE_LABELS[tone]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-
-      <ModelPicker
-        options={MODEL_OPTIONS.textGeneration}
-        value={config.model ?? 'qwen-flash'}
-        onChange={(model) => updateConfig({ model })}
-      />
+      </DrawerSection>
     </>
   );
 }

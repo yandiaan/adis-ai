@@ -22,6 +22,7 @@ export function WorkspaceSidebar({ onSelectTemplate, onNewWorkflow, onBackToLand
   const [currentNodeIndex, setCurrentNodeIndex] = useState(0);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showCarousel, setShowCarousel] = useState(false);
+  const [highlightTemplates, setHighlightTemplates] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     type: 'template' | 'new-workflow';
     template?: PipelineTemplate;
@@ -36,6 +37,17 @@ export function WorkspaceSidebar({ onSelectTemplate, onNewWorkflow, onBackToLand
   useEffect(() => {
     document.documentElement.style.setProperty('--sidebar-width', isExpanded ? '256px' : '64px');
   }, [isExpanded]);
+
+  // Listen for canvas empty state "Gunakan Template" CTA
+  useEffect(() => {
+    const handler = () => {
+      setIsExpanded(true);
+      setHighlightTemplates(true);
+      setTimeout(() => setHighlightTemplates(false), 2200);
+    };
+    window.addEventListener('sidebar:expand-templates', handler as EventListener);
+    return () => window.removeEventListener('sidebar:expand-templates', handler as EventListener);
+  }, []);
 
   // Handlers
   const handleTemplateClick = (template: PipelineTemplate) => {
@@ -99,6 +111,7 @@ export function WorkspaceSidebar({ onSelectTemplate, onNewWorkflow, onBackToLand
             currentNodeIndex={currentNodeIndex}
             onNodeNavigate={setCurrentNodeIndex}
             showCarousel={showCarousel}
+            highlight={highlightTemplates}
           />
         )}
 

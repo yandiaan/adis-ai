@@ -201,16 +201,30 @@ ${errorLines}
 Regenerate the COMPLETE pipeline JSON fixing every error above. Do NOT repeat the same mistakes.`;
 }
 
+// Standalone input nodes that are valid with no incoming edges
+const PURE_INPUT_NODE_TYPES = new Set([
+  'textPrompt',
+  'imageUpload',
+  'videoUpload',
+  'templatePreset',
+  'styleConfig',
+]);
+
 /**
- * Strip edges that have invalid handle IDs (not present in NODE_HANDLES).
+ * Strip edges that have invalid handle IDs, then remove any nodes that
+ * become fully orphaned (no edges at all) — except pure input nodes which
+ * are valid with only outgoing edges.
+ *
  * Used as a last-resort sanitizer when max retry attempts are exhausted.
  */
 export function sanitizeEdges(
   nodes: TemplateNode[],
   edges: TemplateEdge[],
-): TemplateEdge[] {
+): { nodes: TemplateNode[]; edges: TemplateEdge[] } {
   const nodeMap = new Map<string, string>(nodes.map((n) => [n.id, n.type]));
-  return edges.filter((edge) => {
+
+  // Step 1: remove edges with invalid handles or type mismatches
+  const validEdges = edges.filter((edge) => {
     const srcType = nodeMap.get(edge.source);
     const tgtType = nodeMap.get(edge.target);
     if (!srcType || !tgtType) return false;
@@ -224,5 +238,25 @@ export function sanitizeEdges(
 
     return true;
   });
+
+  // Step 2: find which nodes still have at least one valid edge
+  const connectedNodeIds = new Set<string>();
+  for (const edge of validEdges) {
+    connectedNodeIds.add(edge.source);
+    connectedNodeIds.add(edge.target);
+  }
+
+  // Step 3: keep only connected nodes, OR pure input nodes (they legitimately have no incoming edges)
+  const validNodes = nodes.filter(
+    (n) => connectedNodeIds.has(n.id) || PURE_INPUT_NODE_TYPES.has(n.type),
+  );
+
+  // Step 4: remove edges that reference nodes we just dropped
+  const validNodeIds = new Set(validNodes.map((n) => n.id));
+  const finalEdges = validEdges.filter(
+    (e) => validNodeIds.has(e.source) && validNodeIds.has(e.target),
+  );
+
+  return { nodes: validNodes, edges: finalEdges };
 }
 

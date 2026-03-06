@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import LandingPanel from './landing/LandingPanel';
 import FlowCanvas from '@/components/canvas';
 import { TemplateSelector } from './canvas/TemplateSelector';
+import { AiGeneratePanel } from './canvas/AiGeneratePanel';
 import { WorkspaceSidebar } from './layout/WorkspaceSidebar';
 import SplashScreen from './SplashScreen';
 import type { PipelineTemplate } from './canvas/templates';
@@ -20,6 +21,8 @@ export default function LandingCanvasWrapper() {
   });
   const [canvasKey, setCanvasKey] = useState(0);
   const [tourContext, setTourContext] = useState<TourContext>('empty');
+  const [templateInitialSection, setTemplateInitialSection] = useState<'ai' | 'templates' | undefined>();
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   const handleGetStarted = useCallback(() => {
     setView('template-picker');
@@ -65,6 +68,7 @@ export default function LandingCanvasWrapper() {
   const handleDismissTemplatePicker = useCallback(() => {
     // Go to canvas with current state
     setView('canvas');
+    setTemplateInitialSection(undefined);
   }, []);
 
   const handleBackToLanding = useCallback(() => {
@@ -94,14 +98,31 @@ export default function LandingCanvasWrapper() {
           <TemplateSelector
             onSelectTemplate={handleSelectTemplate}
             onClose={canvasKey > 0 ? handleDismissTemplatePicker : undefined}
+            initialSection={templateInitialSection}
           />
         </div>
       )}
 
       {view === 'canvas' && (
         <div className="ml-16 h-full">
-          <FlowCanvas key={canvasKey} tourContext={tourContext} />
+          <FlowCanvas
+            key={canvasKey}
+            tourContext={tourContext}
+            onOpenTemplatePicker={() => { setTemplateInitialSection('templates'); setView('template-picker'); }}
+            onOpenAiPanel={() => setShowAiPanel(true)}
+          />
         </div>
+      )}
+
+      {/* AI Generate Panel — floats above canvas */}
+      {showAiPanel && (
+        <AiGeneratePanel
+          onConfirm={(template) => {
+            setShowAiPanel(false);
+            handleSelectTemplate(template);
+          }}
+          onClose={() => setShowAiPanel(false)}
+        />
       )}
     </div>
   );

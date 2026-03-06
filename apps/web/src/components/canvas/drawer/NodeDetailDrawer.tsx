@@ -146,7 +146,7 @@ export function NodeDetailDrawer({ selectedNode, onClose, closing = false }: Pro
                   background: 'rgba(255,255,255,0.04)',
                 }}
               >
-                {nodeType}
+                {category?.label || nodeType}
               </span>
             </div>
             <div className="text-[11px] text-white/50 mt-1 leading-snug">
@@ -157,7 +157,7 @@ export function NodeDetailDrawer({ selectedNode, onClose, closing = false }: Pro
         <button
           onClick={onClose}
           className="motion-lift motion-press focus-ring-orange grid place-items-center w-10 h-10 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-white cursor-pointer transition-colors"
-          aria-label="Close inspector"
+          aria-label="Tutup konfigurasi"
         >
           <X size={18} />
         </button>
@@ -173,7 +173,7 @@ export function NodeDetailDrawer({ selectedNode, onClose, closing = false }: Pro
           className="motion-lift motion-press focus-ring-orange flex-1 py-3 px-4 bg-red-400/10 border border-red-400/30 rounded-xl text-red-200 text-[13px] font-medium cursor-pointer hover:bg-red-400/15 flex items-center justify-center gap-2"
         >
           <Trash2 size={16} className="text-red-200" />
-          Delete Node
+          Hapus Blok
         </button>
       </div>
     </div>

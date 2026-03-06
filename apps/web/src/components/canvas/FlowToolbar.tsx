@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Hand,
+  HelpCircle,
   Loader2,
   MousePointer2,
   Play,
@@ -239,9 +240,9 @@ function NodeDetailPopover({ node, category, visible, position }: NodeDetailPopo
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/8">
             <ArrowLeft size={14} className="text-white/40" />
             <div>
-              <div className="text-[10px] text-white/40 uppercase tracking-wider">Inputs</div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider">Input</div>
               <div className="text-[12px] font-medium text-white/80">
-                {inputCount === 0 ? 'None' : `${inputCount} port${inputCount > 1 ? 's' : ''}`}
+                {inputCount === 0 ? 'Tidak ada' : `${inputCount} koneksi`}
               </div>
             </div>
           </div>
@@ -250,9 +251,9 @@ function NodeDetailPopover({ node, category, visible, position }: NodeDetailPopo
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/8">
             <ArrowRight size={14} className="text-white/40" />
             <div>
-              <div className="text-[10px] text-white/40 uppercase tracking-wider">Outputs</div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider">Output</div>
               <div className="text-[12px] font-medium text-white/80">
-                {outputCount === 0 ? 'None' : `${outputCount} port${outputCount > 1 ? 's' : ''}`}
+                {outputCount === 0 ? 'Tidak ada' : `${outputCount} koneksi`}
               </div>
             </div>
           </div>
@@ -265,12 +266,10 @@ function NodeDetailPopover({ node, category, visible, position }: NodeDetailPopo
           className="px-4 py-3 border-t border-white/8"
           style={{ background: 'rgba(255,255,255,0.02)' }}
         >
-          {/* Input Ports */}
+          {/* Input Connectors */}
           {inputCount > 0 && (
             <div className="mb-2">
-              <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
-                Input Ports
-              </div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">Input</div>
               <div className="flex flex-wrap gap-1.5">
                 {portSchema.inputs.map((input) => (
                   <div
@@ -282,18 +281,20 @@ function NodeDetailPopover({ node, category, visible, position }: NodeDetailPopo
                       style={{ backgroundColor: getPortTypeColor(input.type) }}
                     />
                     <span className="text-[11px] text-white/70">{input.label}</span>
-                    {!input.required && <span className="text-[9px] text-white/40">opt</span>}
+                    {!input.required && (
+                      <span className="text-[9px] text-white/40 italic">opsional</span>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Output Ports */}
+          {/* Output Connectors */}
           {outputCount > 0 && (
             <div>
               <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
-                Output Ports
+                Output
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {portSchema.outputs.map((output) => (
@@ -319,9 +320,71 @@ function NodeDetailPopover({ node, category, visible, position }: NodeDetailPopo
         <div className="px-4 py-2 border-t border-white/8 bg-white/[0.02]">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] text-white/50">Can be run independently</span>
+            <span className="text-[11px] text-white/50">Dapat dijalankan secara mandiri</span>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+const PORT_LEGEND = [
+  { type: 'text', color: '#4ade80', label: 'Teks / Prompt' },
+  { type: 'image', color: '#60a5fa', label: 'Gambar' },
+  { type: 'video', color: '#a78bfa', label: 'Video' },
+  { type: 'style', color: '#f59e0b', label: 'Gaya / Style' },
+  { type: 'media', color: '#f87171', label: 'Media (gambar atau video)' },
+] as const;
+
+function PortLegendButton() {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  return (
+    <div className="relative">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            ref={btnRef}
+            onClick={() => setOpen((v) => !v)}
+            className="motion-lift motion-press focus-ring-orange flex items-center justify-center w-9 h-9 rounded-xl border text-white/50 hover:text-white/80 transition-colors"
+            style={{
+              borderColor: open ? 'var(--editor-accent-65)' : 'var(--editor-border-subtle)',
+              background: open
+                ? 'color-mix(in srgb, var(--editor-accent) 10%, rgba(255,255,255,0.05))'
+                : 'rgba(255,255,255,0.03)',
+            }}
+            aria-label="Legenda warna koneksi"
+          >
+            <HelpCircle size={15} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">Legenda warna koneksi</TooltipContent>
+      </Tooltip>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[199]" onClick={() => setOpen(false)} />
+          <div
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[200] rounded-2xl border border-white/15 overflow-hidden shadow-[0_18px_60px_rgba(0,0,0,0.62)] glass-surface-strong p-3 min-w-[210px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2.5 font-semibold">
+              Warna Koneksi
+            </p>
+            <div className="flex flex-col gap-2">
+              {PORT_LEGEND.map(({ color, label }) => (
+                <div key={label} className="flex items-center gap-2.5">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="text-[12px] text-white/70">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -1099,6 +1162,9 @@ export function FlowToolbar({
                 </div>
               )}
             </div>
+
+            {/* Port Color Legend */}
+            <PortLegendButton />
 
             {/* Divider */}
             <div className="w-px h-7 bg-white/10 mx-1" />

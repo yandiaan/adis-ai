@@ -1,14 +1,16 @@
 import { Handle, Position, useNodeId } from '@xyflow/react';
-import { Fragment, type ReactNode } from 'react';
-import { Check, CircleDot, RotateCw, X } from 'lucide-react';
+import { Fragment, useState, type ReactNode } from 'react';
+import { Check, CircleDot, RotateCw, X, Maximize2 } from 'lucide-react';
 import { renderNodeTypeIcon } from '../icons/nodeTypeIcon';
 import { getCategoryForNodeType } from '../config/nodeCategories';
 import { PORT_COLORS } from '../config/port-colors';
 import { NODE_PORT_SCHEMAS } from '../types/node-types';
 import type { CustomNodeType } from '../types/node-types';
-import type { NodePortSchema, PortDefinition } from '../types/port-types';
+import type { NodePortSchema, PortDefinition, ImageData, VideoData } from '../types/port-types';
 import { useExecutionContext } from '../execution/ExecutionContext';
 import type { NodeExecutionStatus } from '../execution/types';
+import { MediaLightbox } from '../MediaLightbox';
+import { resolveMediaUrl } from '../../../utils/runtimeUrl';
 
 export interface CompactNodeProps {
   nodeType: CustomNodeType;
@@ -28,11 +30,11 @@ const STATUS_COLORS: Record<
   { border: string; glow: string; bg: string; label: string }
 > = {
   idle: { border: 'transparent', glow: 'transparent', bg: 'transparent', label: '' },
-  ready: { border: '#4ade80', glow: '#4ade8040', bg: '#4ade8010', label: 'Ready' },
-  running: { border: '#60a5fa', glow: '#60a5fa50', bg: '#60a5fa10', label: 'Running...' },
-  done: { border: '#4ade80', glow: '#4ade8040', bg: '#4ade8010', label: 'Done' },
-  error: { border: '#f87171', glow: '#f8717150', bg: '#f8717110', label: 'Failed' },
-  stale: { border: '#fb923c', glow: '#fb923c40', bg: '#fb923c10', label: 'Stale' },
+  ready: { border: '#4ade80', glow: '#4ade8040', bg: '#4ade8010', label: 'Siap' },
+  running: { border: '#60a5fa', glow: '#60a5fa50', bg: '#60a5fa10', label: 'Berjalan...' },
+  done: { border: '#4ade80', glow: '#4ade8040', bg: '#4ade8010', label: 'Selesai' },
+  error: { border: '#f87171', glow: '#f8717150', bg: '#f8717110', label: 'Gagal' },
+  stale: { border: '#fb923c', glow: '#fb923c40', bg: '#fb923c10', label: 'Perlu diperbarui' },
 };
 
 function renderFallbackIcon(fallbackIcon?: string): ReactNode {
@@ -58,6 +60,18 @@ export function CompactNode({
   const execState = nodeId ? getNodeState(nodeId) : null;
   const status: NodeExecutionStatus = execState?.status ?? 'idle';
   const colors = STATUS_COLORS[status];
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  // Derive output media URL if node has an image/video output
+  const outputType = execState?.output?.type;
+  const outputMediaUrl =
+    outputType === 'image'
+      ? (execState!.output!.data as ImageData).url
+      : outputType === 'video'
+        ? (execState!.output!.data as VideoData).url
+        : null;
+  const resolvedOutputMediaUrl = resolveMediaUrl(outputMediaUrl);
+  const showThumbnail = status === 'done' && (outputType === 'image' || outputType === 'video') && resolvedOutputMediaUrl;
   const hasStatus = status !== 'idle';
   const isRunning = status === 'running';
   const isError = status === 'error';
@@ -229,6 +243,49 @@ export function CompactNode({
           <X size={10} className="shrink-0" />
           {execState.error}
         </div>
+      )}
+
+      {/* Output thumbnail — shown when node has image/video output */}
+      {showThumbnail && (
+        <div
+          className="relative mx-3 mb-3 rounded-xl overflow-hidden border border-white/10 cursor-pointer group"
+          style={{ maxHeight: 140 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setLightboxOpen(true);
+          }}
+        >
+          {outputType === 'video' ? (
+            <video
+              src={resolvedOutputMediaUrl!}
+              className="w-full rounded-xl"
+              style={{ maxHeight: 140, objectFit: 'cover', display: 'block' }}
+              muted
+              playsInline
+            />
+          ) : (
+            <img
+              src={resolvedOutputMediaUrl!}
+              alt="Output"
+              className="w-full rounded-xl"
+              style={{ maxHeight: 140, objectFit: 'cover', display: 'block' }}
+            />
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+            <Maximize2
+              size={22}
+              className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg"
+            />
+          </div>
+        </div>
+      )}
+
+      {lightboxOpen && outputMediaUrl && (
+        <MediaLightbox
+          src={outputMediaUrl}
+          type={outputType as 'image' | 'video'}
+          onClose={() => setLightboxOpen(false)}
+        />
       )}
 
       {/* Output port handles + external labels */}
