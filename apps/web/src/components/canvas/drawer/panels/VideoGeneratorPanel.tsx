@@ -9,7 +9,7 @@ type Props = {
   data: VideoGeneratorData;
 };
 
-const RESOLUTIONS: VideoResolution[] = ['480P', '720P', '1080P'];
+const ALL_RESOLUTIONS: VideoResolution[] = ['480P', '720P', '1080P'];
 
 export function VideoGeneratorPanel({ nodeId, data }: Props) {
   const { updateNodeData } = useReactFlow();
@@ -17,6 +17,24 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
 
   const updateConfig = (updates: Partial<typeof config>) => {
     updateNodeData(nodeId, { config: { ...config, ...updates } });
+  };
+
+  const isT2V = config.mode === 'text2video';
+  const modelOptions = isT2V ? MODEL_OPTIONS.textToVideo : MODEL_OPTIONS.imageToVideo;
+  const activeModelId = isT2V ? (config.model ?? 'wan2.1-t2v-turbo') : (config.imageVideoModel ?? 'wan2.1-i2v-turbo');
+  const activeModel = modelOptions.find((m) => m.id === activeModelId);
+  const supportedResolutions = activeModel?.supportedResolutions
+    ? ALL_RESOLUTIONS.filter((r) => activeModel.supportedResolutions!.includes(r))
+    : ALL_RESOLUTIONS;
+
+  const handleModelChange = (key: 'model' | 'imageVideoModel') => (modelId: string) => {
+    const model = modelOptions.find((m) => m.id === modelId);
+    const updates: Partial<typeof config> = { [key]: modelId };
+    // Auto-clamp resolution if the new model doesn't support the current one
+    if (model?.supportedResolutions && !model.supportedResolutions.includes(config.resolution)) {
+      updates.resolution = model.supportedResolutions[0] as VideoResolution;
+    }
+    updateConfig(updates);
   };
 
   return (
@@ -66,7 +84,7 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
       <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.025]">
         <label className="block text-[10px] font-semibold uppercase tracking-widest text-white/40 mb-1">Resolution</label>
         <div className="flex gap-2">
-          {RESOLUTIONS.map((res) => (
+          {supportedResolutions.map((res) => (
             <button
               key={res}
               onClick={() => updateConfig({ resolution: res })}
@@ -120,17 +138,17 @@ export function VideoGeneratorPanel({ nodeId, data }: Props) {
         </div>
       </div>
 
-      {config.mode === 'text2video' ? (
+      {isT2V ? (
         <ModelPicker
           options={MODEL_OPTIONS.textToVideo}
           value={config.model ?? 'wan2.1-t2v-turbo'}
-          onChange={(model) => updateConfig({ model })}
+          onChange={handleModelChange('model')}
         />
       ) : (
         <ModelPicker
           options={MODEL_OPTIONS.imageToVideo}
           value={config.imageVideoModel ?? 'wan2.1-i2v-turbo'}
-          onChange={(imageVideoModel) => updateConfig({ imageVideoModel })}
+          onChange={handleModelChange('imageVideoModel')}
         />
       )}
     </>
