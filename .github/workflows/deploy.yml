@@ -63,5 +63,5 @@ jobs:
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             docker compose pull
-            docker compose down
+            docker rm -f penginfo-web-frontend penginfo-api-server penginfo-nginx 2>/dev/null || true
             docker compose up -d
